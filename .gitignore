@@ -26,6 +26,10 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Archivos de bloqueo temporales de Microsoft Office
+~$*.docx
+~$*.xlsx
+
 # Metadata interna de la herramienta de asistencia (no forma parte del proyecto)
 .claude/
 
