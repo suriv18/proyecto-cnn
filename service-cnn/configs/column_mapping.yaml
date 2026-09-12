@@ -1,0 +1,28 @@
+# Mapeo de columnas del archivo real de MIDAGRI/SIEA al esquema interno.
+#
+# PENDIENTE DE CONFIRMACIÓN: el esquema exacto (nombres de columna, formato) del
+# dataset "Información estadística agrícola" en datosabiertos.gob.pe no pudo
+# verificarse programáticamente (el portal requiere navegación manual/CKAN
+# autenticado). Antes de ejecutar la Actividad 1 (auditoría H1):
+#   1. Descargar manualmente el archivo desde:
+#      https://datosabiertos.gob.pe/dataset/midagri-informaci%C3%B3n-estad%C3%ADstica-agr%C3%ADcola
+#   2. Abrir el archivo y reemplazar los valores de la derecha (":") por los
+#      nombres de columna REALES tal como aparecen en el archivo descargado.
+#   3. Guardar una copia sin modificar en data/raw/ y registrar la descarga en
+#      data/manifest/ (fuente, versión, fecha, hash, licencia — sección 4.18).
+#
+# Los valores de la izquierda (esquema interno) NO deben modificarse: son los
+# nombres que usa src/ingestion/midagri_loader.py internamente.
+
+midagri_produccion:
+  departamento: "DEPARTAMENTO"          # placeholder — confirmar con el archivo real
+  provincia: "PROVINCIA"                # placeholder — confirmar con el archivo real
+  campana_id: "ANIO_COSECHA"            # placeholder — año de cosecha (sección 4.4)
+  cultivo: "CULTIVO"                    # placeholder — usado para filtrar "quinua"
+  superficie_sembrada_ha: "SUPERFICIE_SEMBRADA"
+  superficie_cosechada_ha: "SUPERFICIE_COSECHADA"
+  produccion_ton: "PRODUCCION"
+  # rendimiento_kg_ha es OPCIONAL: si el archivo real no lo publica, dejar
+  # este valor como null (~) y el cargador lo reconstruye automáticamente
+  # como produccion_ton * 1000 / superficie_cosechada_ha (sección 4.5.2).
+  rendimiento_kg_ha: "RENDIMIENTO"

@@ -1,0 +1,41 @@
+[project]
+name = "service-cnn"
+version = "0.1.0"
+description = "Modelo interpretable con CNN-1D y SHAP para predecir el rendimiento de quinua en la sierra altoandina del Peru"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+    # Los 5 modelos ajustables (Tabla 8) + tuning + explicabilidad. PyTorch en
+    # vez de TensorFlow/Keras (decisión original de 02-arquitectura-tecnica.md
+    # §1) porque TensorFlow no tiene build para Python 3.14 del entorno de
+    # desarrollo; PyTorch es igualmente válido (precedente: Joshi et al. 2025).
+    # Importadas directamente en src/models/*.py (no inyectadas), por eso son
+    # dependencias principales y no un extra opcional.
+    "scikit-learn>=1.5",
+    "xgboost>=2.1",
+    "optuna>=4.0",
+    "torch>=2.4",
+    "shap>=0.46",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+# geodata es opcional a propósito: src/ingestion/gee_client.py inyecta el
+# módulo `ee` en vez de importarlo a nivel de módulo, por lo que toda la
+# lógica de negocio (gee_config.py, gee_series_builder.py) se prueba sin esta
+# dependencia. Instalar solo al ejecutar la extracción real contra Earth Engine.
+geodata = [
+    "earthengine-api>=0.1.400",
+    "geemap>=0.32",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

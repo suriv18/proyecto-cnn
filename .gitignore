@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Datos versionados por DVC, no por git (sección 4.18: manifiesto de datos)
+/service-cnn/data/raw/*
+!/service-cnn/data/raw/.gitkeep
+/service-cnn/data/interim/*
+!/service-cnn/data/interim/.gitkeep
+/service-cnn/data/processed/*
+!/service-cnn/data/processed/.gitkeep
+
+# Artefactos de modelos/reportes generados (regenerables vía dvc repro)
+/service-cnn/reports/*
+!/service-cnn/reports/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Metadata interna de la herramienta de asistencia (no forma parte del proyecto)
+.claude/
