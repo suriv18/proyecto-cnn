@@ -1,28 +1,92 @@
 # Mapeo de columnas del archivo real de MIDAGRI/SIEA al esquema interno.
 #
-# PENDIENTE DE CONFIRMACIÓN: el esquema exacto (nombres de columna, formato) del
-# dataset "Información estadística agrícola" en datosabiertos.gob.pe no pudo
-# verificarse programáticamente (el portal requiere navegación manual/CKAN
-# autenticado). Antes de ejecutar la Actividad 1 (auditoría H1):
-#   1. Descargar manualmente el archivo desde:
-#      https://datosabiertos.gob.pe/dataset/midagri-informaci%C3%B3n-estad%C3%ADstica-agr%C3%ADcola
-#   2. Abrir el archivo y reemplazar los valores de la derecha (":") por los
-#      nombres de columna REALES tal como aparecen en el archivo descargado.
-#   3. Guardar una copia sin modificar en data/raw/ y registrar la descarga en
-#      data/manifest/ (fuente, versión, fecha, hash, licencia — sección 4.18).
+# CONFIRMADO (2026-09-12) contra el archivo real SISAGRI.xlsx, hoja
+# "Exportar Hoja de Trabajo" (y sus 4 hojas de continuación: Sheet1, Sheet2,
+# Sheet3, Sheet4 — ver nota de cobertura abajo), descargado desde el
+# dashboard vigente de SIEA-MIDAGRI:
+#   https://siea.midagri.gob.pe/herramientas/estadistica-agropecuarias
+#   ("Perfil Productivo de los Principales Cultivos" -> botón de exportación
+#   XLSX -> DATA_PERFIL_PRODUCTIVO_CULTIVO.zip, 230 MB -> SISAGRI.xlsx).
 #
-# Los valores de la izquierda (esquema interno) NO deben modificarse: son los
-# nombres que usa src/ingestion/midagri_loader.py internamente.
+# La URL original citada en la tesis (datosabiertos.gob.pe/dataset/midagri-
+# información-estadística-agrícola) ya NO existe: el portal fue rediseñado.
+# Esta es la fuente real vigente que reemplaza a la citada en la tesis.
+#
+# CABECERA REAL CONFIRMADA (la hoja "Exportar Hoja de Trabajo" SÍ tiene fila
+# de cabecera en la fila 1; las 4 hojas de continuación no repiten la
+# cabecera pero comparten el mismo esquema de columnas en el mismo orden —
+# son fragmentos consecutivos de un único dataset, partido únicamente por el
+# límite de 1 048 576 filas de una hoja de Excel):
+#
+#   AÑO, MES, COD_UBIGEO, DEPARTAMENTO, PROVINCIA, DISTRITO, COD_PRODUCTO,
+#   PRODUCTO, SIEMBRA, COSECHA, PRODUCCION, VERDE_ACTUAL, PRECIO_CHACRA
+#
+# NOTA TÉCNICA: un metadato `<dimension ref="A1"/>` corrupto/desactualizado
+# en el XML de 4 de las 5 hojas provoca que `openpyxl` en modo `read_only`
+# (y por tanto `pandas.read_excel` cuando delega en él para streaming) crea
+# que esas hojas están vacías. `pandas.read_excel(..., header=0)` sin modo
+# read_only SÍ lee el contenido completo correctamente — usar ese modo, no
+# `openpyxl.load_workbook(read_only=True)` directamente, para este archivo.
+#
+# COBERTURA REAL CONFIRMADA por streaming del XML crudo (evita cargar los
+# ~4.3 millones de filas en memoria): FEBRERO 2015 a MARZO 2026.
+#   - Exportar Hoja de Trabajo: 2015-02 a 2018-03 (1 048 002 filas)
+#   - Sheet1                  : 2018-03 a 2020-10 (1 048 001 filas)
+#   - Sheet2                  : 2020-10 a 2023-04 (1 048 001 filas)
+#   - Sheet3                  : 2023-04 a 2025-12 (1 048 001 filas)
+#   - Sheet4                  : 2025-12 a 2026-03 (90 782 filas)
+#
+# BRECHA DE COBERTURA respecto a la tesis (sección 1.5: campañas 2005/2006 a
+# 2023/2024, año de cosecha 2006-2024): este archivo NO cubre 2006-2014 (9 de
+# las 19 campañas contempladas). Se buscó un histórico tabular más largo en
+# los Boletines Anuales de Producción Agrícola de SIEA-MIDAGRI
+# (siea.midagri.gob.pe/publicaciones/datos-y-estadisticas-agrarias/boletines-
+# anuales/produccion-agricola): solo hay boletines PDF individuales desde
+# 2016 (no tabulares, no descargables como serie consolidada), tampoco cubren
+# 2006-2015. NO se encontró una fuente tabular oficial vigente con la
+# cobertura completa que exige la tesis. Esta es una activación real del
+# riesgo "Cobertura provincial más corta que el periodo propuesto" (Tabla 6
+# de la tesis) — requiere la respuesta prevista: acotar el periodo a la
+# cobertura común (aquí, campañas de cosecha 2015-2026) y documentar la
+# enmienda antes del entrenamiento (sección 6.1, punto 1).
+#
+# Columnas NO usadas en el diseño actual del artefacto: COD_UBIGEO,
+# DISTRITO (la unidad de análisis es provincia, sección 4.4; ver nota de
+# agregación abajo), COD_PRODUCTO, VERDE_ACTUAL (superficie en verde/aún no
+# cosechada), PRECIO_CHACRA (no se usa precio en el diseño del modelo).
+#
+# El archivo reporta MES calendario, no campaña agrícola (sección 4.4).
+# src.ingestion.midagri_headerless.load_sisagri_headerless deriva campana_id
+# (año de cosecha) mediante src.preprocessing.campaign_calendar, con la
+# convención: julio-diciembre del año t -> campaña t+1; enero-junio del año
+# t -> campaña t (año agrícola julio-junio, coherente con el ciclo de la
+# quinua: siembra set-nov, cosecha abr-jun del año siguiente, sección 4.10.2).
+#
+# PENDIENTE (a resolver en H1): confirmar si las filas a nivel DISTRITO deben
+# sumarse a nivel PROVINCIA (probable, ya que la tesis opera a nivel
+# provincia) antes de construir el conjunto analítico definitivo.
 
+sisagri_headerless:
+  anio: "AÑO"
+  mes: "MES"
+  departamento: "DEPARTAMENTO"
+  provincia: "PROVINCIA"
+  distrito: "DISTRITO"
+  cultivo: "PRODUCTO"
+  superficie_sembrada_ha: "SIEMBRA"
+  superficie_cosechada_ha: "COSECHA"
+  produccion_ton: "PRODUCCION"
+
+# Sección genérica (para el caso de que una fuente MIDAGRI futura publique
+# un archivo distinto, ya con campaña directa en vez de mes calendario) —
+# src.ingestion.midagri_loader.load_midagri_production sigue soportando ese
+# formato sin cambios. No usada actualmente.
 midagri_produccion:
-  departamento: "DEPARTAMENTO"          # placeholder — confirmar con el archivo real
-  provincia: "PROVINCIA"                # placeholder — confirmar con el archivo real
-  campana_id: "ANIO_COSECHA"            # placeholder — año de cosecha (sección 4.4)
-  cultivo: "CULTIVO"                    # placeholder — usado para filtrar "quinua"
+  departamento: "DEPARTAMENTO"
+  provincia: "PROVINCIA"
+  campana_id: "ANIO_COSECHA"
+  cultivo: "CULTIVO"
   superficie_sembrada_ha: "SUPERFICIE_SEMBRADA"
   superficie_cosechada_ha: "SUPERFICIE_COSECHADA"
   produccion_ton: "PRODUCCION"
-  # rendimiento_kg_ha es OPCIONAL: si el archivo real no lo publica, dejar
-  # este valor como null (~) y el cargador lo reconstruye automáticamente
-  # como produccion_ton * 1000 / superficie_cosechada_ha (sección 4.5.2).
-  rendimiento_kg_ha: "RENDIMIENTO"
+  rendimiento_kg_ha: ~

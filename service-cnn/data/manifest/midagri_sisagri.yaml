@@ -1,0 +1,74 @@
+# Manifiesto de datos: MIDAGRI/SIEA — Perfil Productivo de Cultivos (sección 4.18).
+#
+# Registro de la descarga real que reemplaza la fuente citada en la tesis
+# (datosabiertos.gob.pe/dataset/midagri-información-estadística-agrícola,
+# URL que ya no existe — el portal fue rediseñado).
+
+fuente:
+  nombre: "SIEA-MIDAGRI, Perfil Productivo y Competitivo de los Principales Cultivos del Sector"
+  proveedor: "Ministerio de Desarrollo Agrario y Riego (MIDAGRI), Sistema Integrado de Estadística Agraria (SIEA)"
+  url_portal: "https://siea.midagri.gob.pe/herramientas/estadistica-agropecuarias"
+  url_descarga: "https://drive.usercontent.google.com/download?id=1ajmiK9uIYlvPZwseRXh1ko3ivHKHufKm&export=download"
+  fuentes_declaradas_en_dashboard: "SISAGRI, SUNAT, CENAGRO, SISAP, Direcciones Regionales Agrarias"
+  fecha_descarga: "2026-09-12"
+  archivo_original: "DATA_PERFIL_PRODUCTIVO_CULTIVO.zip"
+  archivo_usado: "SISAGRI.xlsx"
+  tamano_zip_bytes: 241499686
+  sha256_sisagri_xlsx: "b7dec236a0d65c7aada297118cab584104863e6f21430fe60e279cf5293e3283"
+  licencia: "No declarada explícitamente en el portal; datos de una entidad pública peruana (MIDAGRI). Verificar términos de uso/redistribución antes de publicar datos derivados (sección 4.17)."
+
+esquema:
+  tiene_fila_cabecera: true
+  hoja_con_cabecera: "Exportar Hoja de Trabajo"
+  columnas_reales: ["AÑO", "MES", "COD_UBIGEO", "DEPARTAMENTO", "PROVINCIA", "DISTRITO", "COD_PRODUCTO", "PRODUCTO", "SIEMBRA", "COSECHA", "PRODUCCION", "VERDE_ACTUAL", "PRECIO_CHACRA"]
+  nota_estructura: >
+    El archivo tiene 5 hojas (Exportar Hoja de Trabajo, Sheet1, Sheet2,
+    Sheet3, Sheet4) que son FRAGMENTOS CONSECUTIVOS de un único dataset,
+    particionado únicamente por el límite de 1 048 576 filas de una hoja de
+    Excel. Solo la primera hoja repite la fila de cabecera; las siguientes 4
+    comparten el mismo esquema de columnas en el mismo orden sin repetirla.
+  nota_tecnica_lectura: >
+    Un metadato <dimension ref="A1"/> corrupto/desactualizado en el XML de
+    la mayoría de las hojas (dejado por el exportador Apache POI) hace que
+    openpyxl.load_workbook(read_only=True) — y cualquier lectura que dependa
+    de streaming basado en ese metadato — trate esas hojas como vacías (1x1).
+    pandas.read_excel(..., header=0) SIN modo read_only sí lee el contenido
+    completo correctamente. Este fue un error real cometido y corregido
+    durante la verificación de este archivo.
+  columnas_no_confirmadas_semanticamente_pero_ahora_con_nombre_real:
+    - "VERDE_ACTUAL: probablemente superficie en verde / aún no cosechada; no usada en el diseño del artefacto"
+    - "PRECIO_CHACRA: precio en chacra (Soles/kg); no usada en el diseño del artefacto"
+
+cobertura:
+  granularidad_espacial: "distrito (más fina que la unidad de análisis de la tesis, provincia — sección 4.4); pendiente confirmar en H1 si agregar distrito->provincia o si ya vienen filas a nivel provincia"
+  granularidad_temporal: "mes calendario (no campaña agrícola directa; se deriva con src.preprocessing.campaign_calendar)"
+  rango_temporal_confirmado: "2015-02 a 2026-03 (confirmado por streaming del XML crudo de las 5 hojas, sin cargar el dataset completo en memoria)"
+  filas_totales_aproximadas: 4283006
+  filas_por_hoja:
+    "Exportar Hoja de Trabajo": {filas: 1048002, rango: "2015-02 a 2018-03"}
+    "Sheet1": {filas: 1048001, rango: "2018-03 a 2020-10"}
+    "Sheet2": {filas: 1048001, rango: "2020-10 a 2023-04"}
+    "Sheet3": {filas: 1048001, rango: "2023-04 a 2025-12"}
+    "Sheet4": {filas: 90782, rango: "2025-12 a 2026-03"}
+  cultivos_incluidos: "todos los cultivos transitorios y permanentes reportados por SIEA, incluye QUINUA (22014 filas de quinua contadas solo en la primera hoja)"
+
+brecha_de_cobertura_respecto_a_la_tesis:
+  delimitacion_tesis: "campañas 2005/2006 a 2023/2024 (año de cosecha 2006-2024), 19 campañas — sección 1.5"
+  cobertura_real_disponible: "campañas de cosecha aproximadamente 2015-2026 (11 campañas), según fuente tabular vigente"
+  campanas_faltantes: "2006-2014 (9 de 19 campañas contempladas por la tesis)"
+  busqueda_de_fuente_alternativa: >
+    Se buscó en SIEA-MIDAGRI un histórico tabular más largo (Boletines
+    Anuales de Producción Agrícola,
+    siea.midagri.gob.pe/publicaciones/datos-y-estadisticas-agrarias/
+    boletines-anuales/produccion-agricola): solo hay boletines PDF
+    individuales desde 2016 (no tabulares, no descargables como serie
+    consolidada), y tampoco cubren 2006-2015. No se encontró una fuente
+    tabular oficial vigente con la cobertura completa que exige la tesis.
+  clasificacion_del_riesgo: "activación real del riesgo \"Cobertura provincial más corta que el periodo propuesto\" (Tabla 6 de la tesis)"
+  respuesta_prevista_por_la_tesis: "acotar el periodo a la cobertura común, recalcular las campañas externas y documentar la enmienda antes del entrenamiento (sección 6.1, plan de contingencia, punto 1)"
+  accion_pendiente: "formalizar la enmienda metodológica reduciendo el periodo de la tesis a la cobertura real confirmada, como parte del cierre de la Actividad 1 / Hito H1"
+
+pendiente:
+  - "Confirmar en H1 si las filas a nivel distrito deben sumarse a nivel provincia"
+  - "Formalizar la enmienda de periodo (2015-2026 en vez de 2006-2024) siguiendo el plan de contingencia de la sección 6.1"
+  - "Verificar con SENAMHI/INEI si existe otra fuente de rendimiento/producción/superficie a nivel provincial que sí cubra 2006-2014, antes de dar por definitiva la reducción del periodo"

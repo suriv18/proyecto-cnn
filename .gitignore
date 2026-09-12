@@ -28,3 +28,10 @@ Thumbs.db
 
 # Metadata interna de la herramienta de asistencia (no forma parte del proyecto)
 .claude/
+
+# Descargas de datos crudos externos, fuera de service-cnn/ (no forman parte
+# del código ni deben versionarse en git; ver service-cnn/data/manifest/ para
+# el registro de fuente/hash/versión de cada descarga, sección 4.18)
+/DATA_PERFIL_PRODUCTIVO_CULTIVO.zip
+/DATA_PERFIL_PRODUCTIVO_CULTIVO/
+/DATA_PERFIL_PRODUCTIVO.zip
