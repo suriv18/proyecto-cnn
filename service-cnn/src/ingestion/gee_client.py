@@ -85,6 +85,15 @@ class GeeClient:
 
         Raises:
             ValueError: si `fecha_inicio` es posterior a `fecha_fin`.
+
+        Nota de implementación (verificado contra la API real, proyecto
+        cnn-sentinel): el enfoque `.toBands().reduceRegions(reducer=None)`
+        falla contra la API real con "Parameter 'reducer' is required and may
+        not be null" y además produce estructura ancha (una columna por
+        fecha). El enfoque correcto reduce cada imagen por separado con
+        `ee.Reducer.mean()` explícito, le agrega la fecha como propiedad, y
+        aplana el resultado con `.flatten()` — así se obtiene directamente el
+        formato largo documentado arriba.
         """
         if fecha_inicio > fecha_fin:
             raise ValueError(
@@ -93,19 +102,27 @@ class GeeClient:
             )
 
         spec = get_collection_spec(variable)
+        ee = self._ee
 
-        coleccion_reducida = (
-            self._ee.ImageCollection(spec.collection_id)
+        coleccion = (
+            ee.ImageCollection(spec.collection_id)
             .filterDate(fecha_inicio.isoformat(), fecha_fin.isoformat())
             .select(spec.band)
-            .toBands()
-        )
-        resultado = coleccion_reducida.reduceRegions(
-            geometrias_por_provincia,
-            reducer=None,  # el reducer real (ej. ee.Reducer.mean()) se define
-            # al conectar con la API real; el doble de prueba lo ignora.
-            scale=spec.spatial_resolution_m,
         )
 
-        filas = [f["properties"] for f in resultado.getInfo()["features"]]
-        return pd.DataFrame(filas)
+        def _reducir_imagen(imagen):
+            fecha = imagen.date().format("YYYY-MM-dd")
+            reducido = imagen.reduceRegions(
+                collection=geometrias_por_provincia,
+                reducer=ee.Reducer.mean(),
+                scale=spec.spatial_resolution_m,
+            )
+            return reducido.map(lambda f: f.set("fecha", fecha))
+
+        resultado_aplanado = coleccion.map(_reducir_imagen).flatten()
+
+        filas = [f["properties"] for f in resultado_aplanado.getInfo()["features"]]
+        tabla = pd.DataFrame(filas)
+        if tabla.empty:
+            return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
+        return tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
