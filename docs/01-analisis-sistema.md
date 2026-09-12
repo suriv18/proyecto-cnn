@@ -54,7 +54,7 @@ Derivados de las Tablas 1, 2, 6, 7, 8, 12 y secciones 4.5-4.15.
 
 | ID | Requisito | Sección de origen |
 |---|---|---|
-| RF1 | Auditar y cuantificar la cobertura provincia×campaña disponible en las fuentes oficiales, produciendo el conteo escalonado N0-N5 (Tabla 5) | 4.5.2, 4.5.6, Tabla 5 |
+| RF1 | Auditar y cuantificar la cobertura provincia×campaña disponible en las fuentes oficiales, produciendo el conteo escalonado N0-N5 (Tabla 5). **Ejecutado con datos reales**: N0=1520, N1=1463, N2=1273, N3=1178 (periodo original 19 campañas) y su equivalente para el periodo enmendado 2016-2025 — ver `service-cnn/configs/provincias.csv`, `produccion_documentada.csv` (Tabla 3, 80 provincias verificadas contra el archivo real de MIDAGRI) y `reports/E1_matriz_cobertura_real.json` | 4.5.2, 4.5.6, Tabla 5 |
 | RF2 | Ingerir y armonizar 5 fuentes de datos con resoluciones espaciales/temporales heterogéneas (provincia/campaña, 0.05°/diaria, 0.1°/horaria, 250m/16 días) a una estructura común provincia-campaña-paso temporal | 4.9, Tabla 7 |
 | RF3 | Construir una máscara de superficie agrícola (capa de cobertura de suelo + MDE + fenometría NDVI) para excluir coberturas no cultivadas del cálculo de NDVI | 4.10.1 |
 | RF4 | Alinear fenológicamente las series temporales mediante jerarquía de 3 niveles (fecha modal de siembra → fenometría NDVI → fecha modal departamental de respaldo) | 4.10.2 |

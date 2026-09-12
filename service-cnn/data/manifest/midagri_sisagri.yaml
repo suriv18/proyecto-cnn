@@ -148,8 +148,98 @@ enmienda_metodologica:
 
   estado: "PROPUESTA — pendiente de aprobación del asesor antes de proceder al entrenamiento definitivo (sección 6.1: toda modificación que afecte la unidad de análisis, el periodo o el diseño confirmatorio requiere enmienda metodológica previa y trazable)."
 
+# ---------------------------------------------------------------------------
+# RESULTADO DE LA AUDITORÍA H1 — Cascada N0-N4 ejecutada con datos reales
+# Referencia: sección 4.5.6, Tabla 5. Ejecutado con scripts/compute_n4_n5.py
+# sobre las 5 hojas del archivo real (~4.3 millones de filas, 15 137
+# registros mensuales de quinua en los 8 departamentos delimitados).
+# ---------------------------------------------------------------------------
+resultado_auditoria_h1:
+  fecha_ejecucion: "2026-09-12"
+  archivos_generados:
+    - "configs/provincias.csv (80 provincias, Tabla 3-4, verificadas contra el nombre real de provincia en SISAGRI.xlsx)"
+    - "configs/produccion_documentada.csv (62 provincias con producción documentada preliminar, Tabla 3)"
+    - "data/interim/celdas_con_produccion.csv (730 celdas provincia-campaña agregadas desde los registros mensuales reales)"
+    - "reports/E1_matriz_cobertura_original_2006_2024.json"
+    - "reports/E1_matriz_cobertura_enmendado_2016_2025.json"
+
+  hallazgo_de_clasificacion_territorial: >
+    Se detectó y corrigió una inconsistencia en la clasificación territorial
+    preliminar: Gran Chimú (La Libertad) está marcada en la Tabla 3 como
+    "requiere verificación", pero a diferencia de Carabaya/Sandia (Puno) y La
+    Mar/Huanta (Ayacucho) —que SÍ se cuentan dentro de las "preliminares de
+    sierra" de su departamento y por tanto permanecen en N2— Gran Chimú NO
+    forma parte de las "6 preliminares" declaradas para La Libertad. Se
+    introdujo la categoría ClasificacionTerritorial.PENDIENTE_VERIFICACION
+    (excluida de N2, distinta de TRANSICION que sí se incluye) para reflejar
+    esta distinción. Sin esta corrección, N2 calculado era 1292 en vez de
+    1273 (la cifra oficial de la Tabla 5).
+
+  hallazgo_de_bugs_en_el_calculo_de_n4: >
+    Se detectaron y corrigieron dos errores reales en
+    src.ingestion.audit.build_coverage_cascade al ejecutarla contra el
+    archivo real (no se manifestaban con los datos sintéticos de prueba
+    previos):
+      1. N4 no filtraba celdas_con_produccion contra las provincias
+         elegibles en N3 — una celda con producción registrada en una
+         provincia ya excluida (costa, selva, pendiente_verificacion, sin
+         producción documentada) inflaba N4 por encima de N3, violando la
+         monotonicidad de la cascada (sección 4.5.6).
+      2. N4 no filtraba por el rango de campañas del periodo delimitado — el
+         archivo real contiene registros de las campañas 2015 y 2026, ya
+         excluidas por la enmienda de periodo (ver
+         calculo_de_campanas_completas arriba), que inflaban N4 si no se
+         excluían explícitamente. Se agregó el parámetro `campanas_validas`
+         a build_coverage_cascade.
+
+  cascada_periodo_original_2006_2024:
+    N0: 1520
+    N1: 1463
+    N2: 1273
+    N3: 1178
+    N4: 568
+    N5: null
+    nota: >
+      N0-N3 coinciden EXACTAMENTE con los valores de la Tabla 5 de la tesis
+      (1520, 1463, 1273, 1178), confirmando que la clasificación territorial
+      construida en configs/provincias.csv es fiel a la Tabla 3-4. N4=568 no
+      es directamente comparable con N3=1178 como "cobertura real del
+      periodo completo": representa las celdas con producción > 0
+      SOLO dentro de las campañas 2016-2024 (9 de las 19 campañas del
+      periodo original), ya que 2006-2015 no tiene fuente tabular
+      disponible (ver enmienda_metodologica).
+
+  cascada_periodo_enmendado_2016_2025:
+    N0: 800
+    N1: 770
+    N2: 670
+    N3: 620
+    N4: 604
+    N5: null
+    nota: >
+      Cobertura real del 97.4% (604 de 620 celdas elegibles) dentro del
+      periodo con fuente tabular disponible — una cobertura muy alta,
+      consistente con el hecho de que el archivo real es un registro
+      administrativo directo de MIDAGRI, no una encuesta muestral. N5 queda
+      pendiente hasta definir el criterio de completitud de predictores
+      (sección 4.7) sobre las series agroclimáticas y espectrales, aún no
+      construidas (dependen de la ingesta de CHIRPS/ERA5-Land/MODIS vía
+      Google Earth Engine).
+
+  hallazgo_adicional_pendiente_de_revision: >
+    Se observaron 76 provincias distintas con al menos un registro de
+    producción de quinua > 0 en 2016-2025, más que las 62 marcadas como "con
+    producción documentada" en la Tabla 3 de la tesis (N3). Esto sugiere que
+    algunas provincias fuera del universo N3 preliminar sí registran
+    producción real en MIDAGRI — no se investigó a fondo cuáles son ni si
+    corresponde ampliar N3, ya que la tesis fija ese universo de forma
+    preespecificada (Tabla 3) y cualquier ampliación sería una enmienda
+    adicional a evaluar con el asesor, no una corrección automática.
+
 pendiente:
   - "Confirmar en H1 si las filas a nivel distrito deben sumarse a nivel provincia"
   - "Obtener aprobación formal del asesor para la enmienda de periodo (2016-2025) antes de proceder a la Actividad 4 (integración del conjunto de datos)"
   - "Verificar con SENAMHI/INEI si existe otra fuente de rendimiento/producción/superficie a nivel provincial que sí cubra 2006-2015, antes de dar por definitiva la reducción del periodo"
   - "Definir en el ensayo piloto (H2) la ventana inicial de entrenamiento del esquema de origen móvil, considerando el límite práctico de solo 10 campañas totales"
+  - "Evaluar con el asesor si ampliar N3 a las 76 provincias con producción real observada (14 más que las 62 preespecificadas en la Tabla 3) constituye una enmienda deseable, dado que la tesis fija ese universo de forma preespecificada"
+  - "Confirmar si N4 (604/620) es representativo o si hay un patrón sistemático en las 16 celdas sin producción (¿provincias específicas ausentes en ciertos años, o distribuidas al azar?)"
