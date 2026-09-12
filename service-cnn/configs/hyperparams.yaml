@@ -1,0 +1,33 @@
+# Espacios de búsqueda de hiperparámetros por modelo (sección 4.12.3).
+#
+# PLACEHOLDER — se completa y se congela (preespecificación H2, sección 4.18)
+# antes de la evaluación definitiva, una vez determinado N5 real (auditoría
+# H1) y ejecutado el ensayo piloto. El presupuesto de trials (mismo número
+# para los 5 modelos ajustables) ya está fijado en
+# src/models/tuning.PRESUPUESTO_TRIALS_POR_MODELO.
+#
+# Formato de cada hiperparámetro: [tipo, minimo, maximo], tipo en {float, int}
+# — consumido por src.models.tuning.sugerir_hiperparametro.
+
+elastic_net:
+  alpha: [float, 0.001, 10.0]
+  l1_ratio: [float, 0.0, 1.0]
+
+random_forest:
+  n_estimators: [int, 50, 500]
+  max_depth: [int, 2, 20]
+
+xgboost:
+  n_estimators: [int, 50, 500]
+  max_depth: [int, 2, 10]
+  learning_rate: [float, 0.001, 0.3]
+
+svr:
+  C: [float, 0.01, 100.0]
+  epsilon: [float, 0.001, 1.0]
+
+cnn1d:
+  filtros_capa1: [int, 5, 15]
+  filtros_capa2: [int, 5, 15]
+  dropout: [float, 0.001, 0.01]
+  tasa_aprendizaje: [float, 0.0001, 0.01]

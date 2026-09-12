@@ -168,50 +168,33 @@ Declarar **antes** de codificar la evaluación definitiva (registro de preespeci
 - **Resultados intermedios**: predicciones, métricas y atribuciones SHAP por campaña, modelo y semilla, preservando la separación entrenamiento/prueba (4.18, punto 5).
 - **Publicación**: si una licencia impide redistribuir datos crudos, se publican scripts y metadatos suficientes para reconstruirlos desde la fuente oficial (4.18, punto 6).
 
-## 8. Esqueleto de `dvc.yaml` (DAG de orquestación)
+## 8. `dvc.yaml` real (DAG de orquestación) — implementado
 
-Cada etapa de la sección 4 se declara como un `stage` de DVC, con dependencias y salidas explícitas. Esqueleto ilustrativo (sin implementar aún; se completa en cada actividad del roadmap):
+DVC inicializado (`dvc init --subdir` dentro de `service-cnn/`, integrado con git). 5 stages reales, cada uno respaldado por un script CLI en `scripts/` que orquesta las funciones ya construidas en `src/`:
 
 ```yaml
 stages:
-  audit:
-    cmd: python -m src.ingestion.audit
-    deps: [src/ingestion/audit.py]
-    outs: [reports/E1_matriz_cobertura.csv]
-
-  ingest:
-    cmd: python -m src.ingestion.run_all
-    deps: [src/ingestion/, configs/sources.yaml]
-    outs: [data/raw/]
-
-  build_mask:
-    cmd: python -m src.preprocessing.mask
-    deps: [src/preprocessing/mask.py, data/raw/]
-    outs: [data/interim/mascara_agricola/]
-
-  align_phenology:
-    cmd: python -m src.preprocessing.phenology
-    deps: [src/preprocessing/phenology.py, data/interim/mascara_agricola/]
-    outs: [data/interim/series_alineadas/]
-
-  build_tensors:
-    cmd: python -m src.features.tensor_builder
-    deps: [src/features/tensor_builder.py, data/interim/series_alineadas/]
-    outs: [data/processed/tensores/]
-
-  train_eval:
-    cmd: python -m src.evaluation.run_experiment
-    deps: [src/models/, src/evaluation/, data/processed/tensores/, configs/hyperparams.yaml]
-    outs: [reports/resultados_por_pliegue/]
-    metrics: [reports/metrics.json]
-
-  explain:
-    cmd: python -m src.explainability.run_shap
-    deps: [src/explainability/, reports/resultados_por_pliegue/]
-    outs: [reports/E6_interpretabilidad/]
+  audit:        # scripts/run_audit.py — EJECUTABLE hoy (verificado con dvc repro)
+  ingest:       # scripts/run_ingestion.py — verifica prerrequisitos, falla explícito
+  preprocess:   # scripts/run_preprocessing.py — depende de la salida de ingest
+  train_eval:   # scripts/run_experiment.py — depende de la salida de preprocess
+  explain:      # scripts/run_shap.py — depende de la salida de train_eval
 ```
 
-Ejecución completa reproducible con `dvc repro`; cada `stage` se re-ejecuta solo si cambian sus dependencias declaradas, dando trazabilidad automática de qué resultado corresponde a qué versión de código/datos (RNF2).
+`params.yaml` declara `gee_project_id` (interpolado en el comando de `ingest` vía `${gee_project_id}`), con el placeholder `"PENDIENTE-CREAR-CUENTA-GEE"` hasta que exista la cuenta real de Google Earth Engine.
+
+**Estado de ejecución real, verificado con `dvc repro`**:
+- `audit` — **se ejecuta de punta a punta** con los placeholders vacíos de `configs/provincias.csv` y `configs/produccion_documentada.csv` (produce N0=N1=N2=N3=0, correcto dado que esos CSV están vacíos; N4/N5 quedan `PENDIENTE`). Generó `dvc.lock` real.
+- `ingest` — falla explícitamente (`exit 1`) porque `configs/column_mapping.yaml` aún tiene nombres de columna placeholder no confirmados contra el archivo real de MIDAGRI, y no hay cuenta de GEE. El mensaje de error indica exactamente qué falta.
+- `preprocess`, `train_eval`, `explain` — cada uno verifica que la salida de la etapa anterior contenga datos reales (no solo `.gitkeep`) antes de intentar ejecutar la orquestación real (aún no implementada, ya que depende de datos que no existen); fallan con `NotImplementedError` explícito señalando qué componentes de `src/` ya están listos para conectarse.
+
+Cada `stage` se re-ejecuta solo si cambian sus dependencias declaradas (código o datos), dando trazabilidad automática de qué resultado corresponde a qué versión (RNF2). `dvc dag` confirma que el grafo es una cadena lineal sin ciclos: `audit → ingest → preprocess → train_eval → explain`.
+
+**Pendiente para ejecución completa** (no es código adicional, son datos/credenciales):
+1. `configs/provincias.csv` y `configs/produccion_documentada.csv` con la clasificación territorial oficial (Tabla 3-4, sección 4.5.3).
+2. `configs/column_mapping.yaml` con los nombres de columna reales del archivo MIDAGRI/SIEA.
+3. Cuenta de Google Earth Engine + `params.yaml` con el `gee_project_id` real.
+4. La orquestación real dentro de `run_preprocessing.py`, `run_experiment.py`, `run_shap.py` (llamar en el orden correcto a las funciones ya implementadas y probadas en `src/`) — trabajo de "cableado", no de diseño nuevo.
 
 ## 9. Roadmap de implementación (alineado al cronograma)
 

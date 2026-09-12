@@ -1,0 +1,28 @@
+schema: '2.0'
+stages:
+  audit:
+    cmd: python scripts/run_audit.py --provincias configs/provincias.csv 
+      --produccion-documentada configs/produccion_documentada.csv --n-campanas 
+      19 --salida reports/E1_matriz_cobertura.json
+    deps:
+    - path: configs/produccion_documentada.csv
+      hash: md5
+      md5: 7c9b85759ef5fb7681c2ac7b9c72ac1b
+      size: 36
+    - path: configs/provincias.csv
+      hash: md5
+      md5: 790ae070bfff9c1cd601e7cd46117316
+      size: 40
+    - path: scripts/run_audit.py
+      hash: md5
+      md5: e5a3e10899416eaf7890e48884a32931
+      size: 3447
+    - path: src/ingestion/audit.py
+      hash: md5
+      md5: 4dfa3cf291129ad972b7ce87903e0319
+      size: 4300
+    outs:
+    - path: reports/E1_matriz_cobertura.json
+      hash: md5
+      md5: 6ad3ad369c8efac947d28ff2dcc92dbc
+      size: 81

@@ -1,0 +1,88 @@
+stages:
+  audit:
+    cmd: >-
+      python scripts/run_audit.py
+      --provincias configs/provincias.csv
+      --produccion-documentada configs/produccion_documentada.csv
+      --n-campanas 19
+      --salida reports/E1_matriz_cobertura.json
+    deps:
+      - scripts/run_audit.py
+      - src/ingestion/audit.py
+      - configs/provincias.csv
+      - configs/produccion_documentada.csv
+    outs:
+      - reports/E1_matriz_cobertura.json
+
+  ingest:
+    cmd: >-
+      python scripts/run_ingestion.py
+      --column-mapping configs/column_mapping.yaml
+      --gee-project-id ${gee_project_id}
+    deps:
+      - scripts/run_ingestion.py
+      - src/ingestion/midagri_loader.py
+      - src/ingestion/gee_client.py
+      - src/ingestion/gee_config.py
+      - src/ingestion/gee_series_builder.py
+      - configs/column_mapping.yaml
+    params:
+      - gee_project_id
+    outs:
+      - data/raw
+
+  preprocess:
+    cmd: >-
+      python scripts/run_preprocessing.py
+      --datos-raw data/raw
+      --salida data/processed
+    deps:
+      - scripts/run_preprocessing.py
+      - src/preprocessing/mask.py
+      - src/preprocessing/phenology.py
+      - src/features/tensor_builder.py
+      - src/features/target_transform.py
+      - data/raw
+    outs:
+      - data/processed
+
+  train_eval:
+    cmd: >-
+      python scripts/run_experiment.py
+      --datos-processed data/processed
+      --salida reports/resultados_por_pliegue
+    deps:
+      - scripts/run_experiment.py
+      - src/evaluation/splits.py
+      - src/evaluation/metrics.py
+      - src/evaluation/hypothesis_tests.py
+      - src/models/classic_models.py
+      - src/models/cnn1d.py
+      - src/models/cnn1d_trainer.py
+      - src/models/tuning.py
+      - src/models/tuning_cnn1d.py
+      - src/models/benchmarks.py
+      - src/features/flatten.py
+      - data/processed
+      - configs/hyperparams.yaml
+    outs:
+      - reports/resultados_por_pliegue
+    metrics:
+      - reports/metrics.json:
+          cache: false
+
+  explain:
+    cmd: >-
+      python scripts/run_shap.py
+      --resultados-experimento reports/resultados_por_pliegue
+      --salida reports/E6_interpretabilidad
+    deps:
+      - scripts/run_shap.py
+      - src/explainability/shap_explainer.py
+      - src/explainability/shap_aggregation.py
+      - src/explainability/stability.py
+      - src/explainability/fidelity.py
+      - src/explainability/agronomic_concordance.py
+      - reports/resultados_por_pliegue
+    outs:
+      - reports/E6_interpretabilidad

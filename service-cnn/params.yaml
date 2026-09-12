@@ -1,0 +1,8 @@
+# Parámetros del pipeline DVC (dvc.yaml).
+#
+# gee_project_id: ID del proyecto de Google Cloud vinculado a la cuenta de
+# Google Earth Engine (requerida desde 2024, ver docs/02-arquitectura-
+# tecnica.md §2). Reemplazar el placeholder cuando exista la cuenta real —
+# hasta entonces, scripts/run_ingestion.py falla explícitamente con este
+# valor (ver src/ingestion/gee_client.py, GeeClient.from_default).
+gee_project_id: "PENDIENTE-CREAR-CUENTA-GEE"
