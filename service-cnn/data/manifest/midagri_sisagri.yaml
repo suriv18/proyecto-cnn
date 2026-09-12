@@ -54,8 +54,7 @@ cobertura:
 
 brecha_de_cobertura_respecto_a_la_tesis:
   delimitacion_tesis: "campañas 2005/2006 a 2023/2024 (año de cosecha 2006-2024), 19 campañas — sección 1.5"
-  cobertura_real_disponible: "campañas de cosecha aproximadamente 2015-2026 (11 campañas), según fuente tabular vigente"
-  campanas_faltantes: "2006-2014 (9 de 19 campañas contempladas por la tesis)"
+  cobertura_real_disponible: "datos calendario 2015-02 a 2026-03; ver enmienda_metodologica abajo para el cálculo preciso de campañas COMPLETAS (con siembra y cosecha ambas dentro de los datos)"
   busqueda_de_fuente_alternativa: >
     Se buscó en SIEA-MIDAGRI un histórico tabular más largo (Boletines
     Anuales de Producción Agrícola,
@@ -66,9 +65,91 @@ brecha_de_cobertura_respecto_a_la_tesis:
     tabular oficial vigente con la cobertura completa que exige la tesis.
   clasificacion_del_riesgo: "activación real del riesgo \"Cobertura provincial más corta que el periodo propuesto\" (Tabla 6 de la tesis)"
   respuesta_prevista_por_la_tesis: "acotar el periodo a la cobertura común, recalcular las campañas externas y documentar la enmienda antes del entrenamiento (sección 6.1, plan de contingencia, punto 1)"
-  accion_pendiente: "formalizar la enmienda metodológica reduciendo el periodo de la tesis a la cobertura real confirmada, como parte del cierre de la Actividad 1 / Hito H1"
+
+# ---------------------------------------------------------------------------
+# ENMIENDA METODOLÓGICA #1 — Reducción del periodo de estudio
+# Formalizada siguiendo el plan de contingencia de la sección 6.1 de la
+# tesis ("Cobertura temporal insuficiente"), como cierre parcial de la
+# Actividad 1 / Hito H1 respecto a la fuente MIDAGRI/SIEA de rendimiento.
+# ---------------------------------------------------------------------------
+enmienda_metodologica:
+  fecha: "2026-09-12"
+  motivo: >
+    La fuente tabular vigente de MIDAGRI/SIEA (ver `fuente` arriba) no
+    reemplaza con cobertura completa a la citada originalmente en la tesis:
+    cubre datos calendario desde 2015-02 hasta 2026-03, sin serie tabular
+    alternativa disponible para 2006-2014 (ver
+    `busqueda_de_fuente_alternativa`).
+
+  calculo_de_campanas_completas: >
+    Una campaña se considera COMPLETA solo si tanto su ventana de siembra
+    (aproximadamente set-nov del año calendario t-1) como su ventana de
+    cosecha (aproximadamente abr-jun del año de cosecha, sección 4.10.2)
+    están dentro del rango de datos disponible. Aplicando esta regla a la
+    cobertura confirmada (2015-02 a 2026-03):
+      - Campaña 2015 (cosecha abr-jun 2015): EXCLUIDA — dependería de
+        siembra set-nov 2014, anterior al inicio de los datos (2015-02).
+      - Campañas 2016 a 2025: COMPLETAS — siembra y cosecha de cada una
+        caen dentro de 2015-02 a 2026-03.
+      - Campaña 2026 (cosecha abr-jun 2026): EXCLUIDA — los datos terminan
+        en 2026-03, antes del cierre de la ventana de cosecha.
+
+  periodo_original: "campañas de cosecha 2006 a 2024 (19 campañas) — sección 1.5 de la tesis"
+  periodo_enmendado: "campañas de cosecha 2016 a 2025 (10 campañas)"
+  campanas_excluidas_del_periodo_original: "2006 a 2015 (10 de 19 campañas — no existe fuente tabular oficial vigente para reconstruirlas)"
+
+  impacto_en_el_diseno_experimental:
+    reduccion_de_campanas: "de 19 a 10 campañas (-47.4%)"
+    ventana_inicial_de_entrenamiento: >
+      Con 10 campañas totales, la ventana inicial mínima para el esquema de
+      origen móvil (expanding_window_splits, sección 4.12.1) debe reducirse
+      respecto a cualquier valor pensado para 19 campañas. Con una ventana
+      inicial de 5 (valor de referencia usado en las pruebas del pipeline,
+      ver tests/evaluation/test_splits.py), solo quedan 5 campañas externas
+      de evaluación — el mínimo práctico para que el bootstrap por bloques
+      temporales (sección 4.14) y el contraste de Wilcoxon pareado (sección
+      3.3.1-3.3.2) produzcan una estimación mínimamente estable. El valor
+      final de la ventana inicial debe fijarse en el ensayo piloto (H2,
+      sección 4.11) considerando este límite, no asumirse igual al pensado
+      originalmente para 19 campañas.
+    potencia_estadistica: >
+      Un número tan reducido de campañas externas (5-8, según la ventana
+      inicial elegida) limita la potencia para detectar diferencias pequeñas
+      en los contrastes HE1a/HE1b/HE2a-c (sección 4.14: "cautela con
+      diferencias pequeñas" ya advertida en la Tabla 10 de amenazas a la
+      validez, "Pocos bloques temporales, dependencia y baja potencia").
+      Este riesgo, ya contemplado como amenaza de conclusión en la tesis, se
+      agrava con la reducción de periodo y debe reportarse explícitamente en
+      los resultados finales, no solo en el diseño.
+    validacion_leave_one_department_out: >
+      No afectada en su mecánica (opera sobre departamentos, no campañas),
+      pero cada pliegue de robustez espacial ahora se entrena con datos de
+      solo 10 campañas en vez de 19, reduciendo también la cantidad de
+      información disponible por pliegue.
+    horizonte_de_pronostico: >
+      No afectado en su definición (30 días antes de cosecha, o cierre de
+      floración); sí puede haber menos observaciones para el análisis de
+      sensibilidad por horizonte al operar sobre 10 campañas en vez de 19.
+
+  alcance_de_la_generalizacion: >
+    Las conclusiones del estudio quedan delimitadas al periodo 2016-2025.
+    Cualquier extrapolación a campañas anteriores a 2016 (incluida la severa
+    sequía de 2023 discutida en la sección 1.1 del planteamiento del
+    problema, que SÍ cae dentro del periodo enmendado) debe declararse
+    explícitamente como fuera del rango de entrenamiento cuando corresponda
+    a años fuera de 2016-2025.
+
+  decisiones_que_requieren_actualizacion_en_el_documento_de_tesis:
+    - "Sección 1.5 (Alcance y delimitación): actualizar 'Delimitación temporal' de 19 a 10 campañas (2016-2025)."
+    - "Sección 4.5 (Población de estudio) y Tabla 5 (cálculo escalonado N0-N5): recalcular N0 con 10 campañas en vez de 19 (N0 pasaría de 80×19=1520 a 80×10=800, antes de aplicar las exclusiones territoriales de N1-N3)."
+    - "Sección 4.5.7 (Bloques temporales): el número de bloques temporales potenciales pasa de 19 a 10."
+    - "Sección 4.12.1 (Esquemas de validación): la ventana inicial mínima de origen móvil debe redefinirse considerando el límite práctico señalado arriba, no un valor pensado para 19 campañas."
+    - "Capítulo 6 (Cronograma): sin impacto directo en fechas de actividades, pero la Actividad 1 (auditoría H1) debe registrar esta enmienda como su resultado formal respecto a la fuente de rendimiento."
+
+  estado: "PROPUESTA — pendiente de aprobación del asesor antes de proceder al entrenamiento definitivo (sección 6.1: toda modificación que afecte la unidad de análisis, el periodo o el diseño confirmatorio requiere enmienda metodológica previa y trazable)."
 
 pendiente:
   - "Confirmar en H1 si las filas a nivel distrito deben sumarse a nivel provincia"
-  - "Formalizar la enmienda de periodo (2015-2026 en vez de 2006-2024) siguiendo el plan de contingencia de la sección 6.1"
-  - "Verificar con SENAMHI/INEI si existe otra fuente de rendimiento/producción/superficie a nivel provincial que sí cubra 2006-2014, antes de dar por definitiva la reducción del periodo"
+  - "Obtener aprobación formal del asesor para la enmienda de periodo (2016-2025) antes de proceder a la Actividad 4 (integración del conjunto de datos)"
+  - "Verificar con SENAMHI/INEI si existe otra fuente de rendimiento/producción/superficie a nivel provincial que sí cubra 2006-2015, antes de dar por definitiva la reducción del periodo"
+  - "Definir en el ensayo piloto (H2) la ventana inicial de entrenamiento del esquema de origen móvil, considerando el límite práctico de solo 10 campañas totales"

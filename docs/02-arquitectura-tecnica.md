@@ -40,7 +40,7 @@ El dataset esperado de esta tesis, tras depuración, se ubica en el orden de **~
 
 | Fuente | Vía de acceso | Formato de salida | Notas de reproducibilidad |
 |---|---|---|---|
-| MIDAGRI/SIEA | Portal datosabiertos.gob.pe / repositorio institucional | CSV/XLSX | Registrar URL exacta, fecha de descarga y versión en el manifiesto (4.18) |
+| MIDAGRI/SIEA | Dashboard `siea.midagri.gob.pe/herramientas/estadistica-agropecuarias` (la URL de datosabiertos.gob.pe citada originalmente ya no existe) | XLSX (`SISAGRI.xlsx`, 5 hojas fragmentadas por límite de filas de Excel) | Ver `data/manifest/midagri_sisagri.yaml` para fuente, hash, esquema confirmado y **enmienda metodológica de periodo** (cobertura real 2015-2026, no 2006-2024) |
 | INEI/SIRTOD | Consulta web (`systems.inei.gob.pe/SIRTOD`) | Tabla exportable | Uso exclusivo de contraste/verificación (4.5.2), no como fuente primaria |
 | CHIRPS v2.0 | Google Earth Engine (`UCSB-CHG/CHIRPS/DAILY`) | Serie agregada por polígono provincial (exportada a tabla, sin descargar rasters completos) | Resolución 0.05°, diaria |
 | ERA5-Land | Google Earth Engine (`ECMWF/ERA5_LAND/HOURLY`) o Copernicus Climate Data Store (`cdsapi`) | NetCDF (CDS) o tabla agregada (GEE) | Resolución 0.1°, horaria/diaria; GEE evita cuota de descarga del CDS |
@@ -53,6 +53,8 @@ Google Earth Engine requiere una cuenta vinculada a un proyecto de Google Cloud 
 - `gee_config.py` — catálogo de colecciones/bandas/resolución/regla de agregación por variable (Tabla 7), sin dependencia de `ee`.
 - `gee_series_builder.py` — agregación de series por fase fenológica con la regla anti-fuga de horizonte (rechaza explícitamente observaciones posteriores al punto de corte, sección 4.10.4); NaN explícito ante fases sin datos, nunca 0 falso.
 - `gee_client.py` — capa delgada que sí ejecuta consultas reales; `ee` se inyecta en el constructor (patrón de inyección de dependencia) en vez de importarse a nivel de módulo, permitiendo probar el armado de consultas con un doble de prueba. `GeeClient.from_default()` importa `earthengine-api` de verdad y falla con mensaje claro si no está instalado.
+
+**Implementado y verificado contra el archivo real** (`src/ingestion/midagri_headerless.py`, `src/preprocessing/campaign_calendar.py`): el esquema real de MIDAGRI (`AÑO, MES, DEPARTAMENTO, PROVINCIA, DISTRITO, PRODUCTO, SIEMBRA, COSECHA, PRODUCCION, ...`) reporta mes calendario, no campaña agrícola directa. `derive_campana_from_month()` deriva el año de cosecha (julio-diciembre del año t → campaña t+1; enero-junio del año t → campaña t, coherente con el ciclo set-nov/abr-jun de la quinua). `load_sisagri_headerless()` orquesta selección de columnas + derivación de campaña + `load_midagri_production`. **Hallazgo crítico**: la fuente real solo cubre campañas completas 2016-2025 (10, no las 19 originales de la tesis) — ver `data/manifest/midagri_sisagri.yaml`, sección `enmienda_metodologica`, para el detalle completo y sus implicaciones en el diseño experimental (ventana inicial de origen móvil, potencia estadística de los contrastes).
 
 ## 3. Estructura de repositorio
 

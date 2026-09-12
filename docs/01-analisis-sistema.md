@@ -25,7 +25,7 @@ Cualquier decisión de diseño debe ser trazable a una sección de la tesis. No 
 | Dimensión | Delimitación |
 |---|---|
 | Espacial | Provincias con producción registrada de quinua en 8 departamentos altoandinos (Puno, Ayacucho, Apurímac, Arequipa, Junín, Cusco, La Libertad, Huancavelica); 67 provincias preliminares de 80 totales (Tabla 3) |
-| Temporal | Campañas agrícolas 2005/2006 a 2023/2024 (año de cosecha 2006-2024), 19 campañas |
+| Temporal | Campañas agrícolas 2005/2006 a 2023/2024 (año de cosecha 2006-2024), 19 campañas. **Enmendado** (ver `service-cnn/data/manifest/midagri_sisagri.yaml`, sección `enmienda_metodologica`, propuesta 2026-09-12, pendiente de aprobación del asesor): la fuente tabular vigente de rendimiento (MIDAGRI/SIEA) solo cubre campañas completas 2016-2025 (10 campañas) — no existe fuente oficial tabular para 2006-2015 |
 | Temática | Predicción de rendimiento en kg/ha y atribución de importancia predictiva por variable/fase fenológica. Fuera de alcance: superficie sembrada, precios, evaluación económica |
 | Metodológica | Solo fuentes públicas y de libre acceso; 5 familias de modelos + 3 benchmarks (Tabla 8); sin recolección de datos primarios en campo |
 | Horizonte de pronóstico | 30 días antes de la cosecha esperada (principal); cierre de floración (secundario) |
