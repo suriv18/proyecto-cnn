@@ -18,6 +18,7 @@ stages:
     cmd: >-
       python scripts/run_ingestion.py
       --column-mapping configs/column_mapping.yaml
+      --provincias configs/provincias.csv
       --gee-project-id ${gee_project_id}
     deps:
       - scripts/run_ingestion.py
@@ -25,7 +26,10 @@ stages:
       - src/ingestion/gee_client.py
       - src/ingestion/gee_config.py
       - src/ingestion/gee_series_builder.py
+      - src/ingestion/gee_extraction_pipeline.py
+      - src/ingestion/province_geometries.py
       - configs/column_mapping.yaml
+      - configs/provincias.csv
     params:
       - gee_project_id
     outs:

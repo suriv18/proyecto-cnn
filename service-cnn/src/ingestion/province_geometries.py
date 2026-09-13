@@ -19,6 +19,40 @@ import unicodedata
 _DATASET_GAUL_NIVEL_PROVINCIA = "FAO/GAUL/2015/level2"
 _PAIS = "Peru"
 
+# Traducción de departamento (convención MIDAGRI, configs/provincias.csv:
+# MAYÚSCULAS sin tildes) al nombre real en FAO/GAUL/2015/level2 (ADM1_NAME),
+# verificada contra la API real (proyecto cnn-sentinel). Solo los 8
+# departamentos delimitados por la tesis (sección 1.5) están en este
+# catálogo — cualquier otro se rechaza explícitamente en vez de adivinar.
+DEPARTAMENTOS_GAUL: dict[str, str] = {
+    "APURIMAC": "Apurímac",
+    "AREQUIPA": "Arequipa",
+    "AYACUCHO": "Ayacucho",
+    "CUSCO": "Cusco",
+    "HUANCAVELICA": "Huancavelica",
+    "JUNIN": "Junín",
+    "LA LIBERTAD": "La Libertad",
+    "PUNO": "Puno",
+}
+
+
+def departamentos_a_nombres_gaul(departamentos: list[str]) -> list[str]:
+    """Traduce nombres de departamento (convención MIDAGRI) a su forma GAUL.
+
+    Raises:
+        KeyError: si algún departamento no está en `DEPARTAMENTOS_GAUL` — los
+            8 departamentos de la tesis ya están cubiertos; cualquier otro
+            valor es una señal de error de configuración, no un caso a
+            adivinar silenciosamente.
+    """
+    faltantes = [d for d in departamentos if d not in DEPARTAMENTOS_GAUL]
+    if faltantes:
+        raise KeyError(
+            f"Departamento(s) sin traducción GAUL conocida: {faltantes}. "
+            f"Catálogo disponible: {sorted(DEPARTAMENTOS_GAUL)}"
+        )
+    return [DEPARTAMENTOS_GAUL[d] for d in departamentos]
+
 
 def normalize_province_name(nombre: str) -> str:
     """Normaliza un nombre de provincia para comparación robusta entre fuentes.

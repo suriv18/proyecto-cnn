@@ -145,6 +145,14 @@ class TestGeeClientInitialize:
         assert fake_ee.initialized is True
         assert ("Initialize", "mi-proyecto-gee") in fake_ee.llamadas
 
+    def test_ee_module_expone_el_modulo_inyectado(self):
+        """Otros módulos (ej. province_geometries.build_province_feature_
+        collection) necesitan el módulo `ee` real para construir geometrías
+        con la misma sesión ya inicializada por GeeClient."""
+        fake_ee = _FakeEeModule(filas_resultado=[])
+        cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
+        assert cliente.ee_module is fake_ee
+
 
 class TestGeeClientExtractSeries:
     def test_extrae_serie_diaria_por_provincia(self, geometria_provincias_fake):
@@ -184,6 +192,44 @@ class TestGeeClientExtractSeries:
         assert ("ImageCollection", spec.collection_id) in fake_ee.llamadas
         assert ("select", spec.band) in fake_ee.llamadas
         assert ("map",) in fake_ee.llamadas
+
+    def test_aplica_factor_de_escala_de_la_variable(self, geometria_provincias_fake):
+        """MOD13Q1 codifica NDVI como entero crudo; extract_daily_series debe
+        aplicar el factor_escala del spec (0.0001) antes de devolver `valor`,
+        para que el resto del pipeline reciba NDVI real en [-1, 1], no el
+        entero crudo de Earth Engine."""
+        filas_esperadas = [
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 3607.0},
+        ]
+        fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
+        cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
+
+        resultado = cliente.extract_daily_series(
+            variable="ndvi",
+            geometrias_por_provincia=geometria_provincias_fake,
+            fecha_inicio=date(2020, 9, 1),
+            fecha_fin=date(2020, 9, 1),
+        )
+
+        assert resultado["valor"].iloc[0] == pytest.approx(0.3607)
+
+    def test_aplica_offset_aditivo_de_la_variable(self, geometria_provincias_fake):
+        """ERA5-Land reporta temperatura en Kelvin; extract_daily_series debe
+        restar 273.15 (offset_aditivo del spec) para devolver Celsius."""
+        filas_esperadas = [
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 284.02},
+        ]
+        fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
+        cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
+
+        resultado = cliente.extract_daily_series(
+            variable="temperatura_maxima",
+            geometrias_por_provincia=geometria_provincias_fake,
+            fecha_inicio=date(2020, 9, 1),
+            fecha_fin=date(2020, 9, 1),
+        )
+
+        assert resultado["valor"].iloc[0] == pytest.approx(10.87)
 
     def test_usa_un_reducer_real_no_nulo(self, geometria_provincias_fake):
         """Expone el bug original: `reducer=None` fallaba contra la API real

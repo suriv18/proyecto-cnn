@@ -24,13 +24,23 @@ class AggregationRule(str, Enum):
 
 @dataclass(frozen=True)
 class GeeCollectionSpec:
-    """Especificación de una colección de Earth Engine para una variable."""
+    """Especificación de una colección de Earth Engine para una variable.
+
+    `factor_escala` y `offset_aditivo` convierten el valor crudo devuelto por
+    Earth Engine a la unidad real de la variable: `valor_real = crudo *
+    factor_escala + offset_aditivo`. Por defecto no aplican conversión (1.0 y
+    0.0) — solo NDVI (factor de escala entero→decimal) y las variables de
+    ERA5-Land (Kelvin→Celsius) los necesitan, verificado contra el catálogo
+    oficial MODIS/ECMWF.
+    """
 
     collection_id: str
     band: str
     spatial_resolution_m: int
     temporal_resolution: str
     aggregation: AggregationRule
+    factor_escala: float = 1.0
+    offset_aditivo: float = 0.0
 
 
 _SPECS: dict[str, GeeCollectionSpec] = {
@@ -42,25 +52,32 @@ _SPECS: dict[str, GeeCollectionSpec] = {
         # Tabla 7: "Suma por fase y racha máxima de días con precipitación < 1 mm"
         aggregation=AggregationRule.SUM,
     ),
+    # ECMWF/ERA5_LAND/HOURLY no expone bandas _max/_min/_sum ya agregadas
+    # (solo valores horarios instantáneos, ej. temperature_2m); se usa la
+    # variante DAILY_AGGR, que agrega nativamente a un valor por día — una
+    # imagen por fecha, consistente con extract_daily_series(). Verificado
+    # contra la API real (proyecto cnn-sentinel): ambas bandas existen ahí.
     "temperatura_maxima": GeeCollectionSpec(
-        collection_id="ECMWF/ERA5_LAND/HOURLY",
+        collection_id="ECMWF/ERA5_LAND/DAILY_AGGR",
         band="temperature_2m_max",
         spatial_resolution_m=11132,  # ~0.1°
-        temporal_resolution="horaria",
+        temporal_resolution="diaria",
         aggregation=AggregationRule.MAX,
+        offset_aditivo=-273.15,  # Kelvin -> Celsius
     ),
     "temperatura_minima": GeeCollectionSpec(
-        collection_id="ECMWF/ERA5_LAND/HOURLY",
+        collection_id="ECMWF/ERA5_LAND/DAILY_AGGR",
         band="temperature_2m_min",
         spatial_resolution_m=11132,
-        temporal_resolution="horaria",
+        temporal_resolution="diaria",
         aggregation=AggregationRule.MIN,
+        offset_aditivo=-273.15,
     ),
     "radiacion_solar": GeeCollectionSpec(
-        collection_id="ECMWF/ERA5_LAND/HOURLY",
-        band="surface_solar_radiation_downwards",
+        collection_id="ECMWF/ERA5_LAND/DAILY_AGGR",
+        band="surface_solar_radiation_downwards_sum",
         spatial_resolution_m=11132,
-        temporal_resolution="horaria",
+        temporal_resolution="diaria",
         # Tabla 7: "Acumulado o media diaria por fase"
         aggregation=AggregationRule.SUM,
     ),
@@ -72,6 +89,9 @@ _SPECS: dict[str, GeeCollectionSpec] = {
         # Tabla 7: "media y máximo por fase sobre máscara agrícola" — se modela
         # la media aquí; el máximo se calcula aparte donde se necesite (B3).
         aggregation=AggregationRule.MEAN,
+        # MOD13Q1 codifica NDVI como entero [-2000, 10000] (catálogo oficial
+        # MODIS/USGS): valor_real = crudo * 0.0001.
+        factor_escala=0.0001,
     ),
 }
 

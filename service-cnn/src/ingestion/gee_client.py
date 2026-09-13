@@ -39,6 +39,16 @@ class GeeClient:
         self._ee = ee_module
         self._project_id = project_id
 
+    @property
+    def ee_module(self) -> Any:
+        """El módulo `ee` (o doble de prueba) inyectado en el constructor.
+
+        Expuesto para que otros módulos (ej. `province_geometries.
+        build_province_feature_collection`) reutilicen la misma sesión de
+        Earth Engine ya inicializada, en vez de importar `ee` por su cuenta.
+        """
+        return self._ee
+
     @classmethod
     def from_default(cls, project_id: str) -> "GeeClient":
         """Construye un `GeeClient` importando `earthengine-api` de verdad.
@@ -78,10 +88,13 @@ class GeeClient:
 
         Returns:
             DataFrame con columnas `provincia_id`, `fecha`, `valor` — una fila
-            por observación devuelta por Earth Engine. La agregación por fase
-            fenológica se realiza después, en `gee_series_builder.py`, para
-            mantener esta capa como una traducción directa de la respuesta de
-            la API sin lógica de negocio propia.
+            por observación devuelta por Earth Engine, con `valor` ya
+            convertido a su unidad real (`factor_escala`/`offset_aditivo` del
+            spec — ej. NDVI entero->decimal, temperatura Kelvin->Celsius).
+            La agregación por fase fenológica se realiza después, en
+            `gee_series_builder.py`, para mantener esta capa como una
+            traducción directa de la respuesta de la API sin lógica de
+            negocio agronómica propia.
 
         Raises:
             ValueError: si `fecha_inicio` es posterior a `fecha_fin`.
@@ -125,4 +138,6 @@ class GeeClient:
         tabla = pd.DataFrame(filas)
         if tabla.empty:
             return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
-        return tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
+        tabla = tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
+        tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
+        return tabla
