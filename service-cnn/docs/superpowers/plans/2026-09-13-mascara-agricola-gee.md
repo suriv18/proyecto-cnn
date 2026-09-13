@@ -90,6 +90,12 @@ class _FakeSingleBandImage:
     def subtract(self, otra: "_FakeSingleBandImage") -> "_FakeSingleBandImage":
         return _FakeSingleBandImage(self._ee, f"({self.nombre} - {otra.nombre})")
 
+    def multiply(self, valor) -> "_FakeSingleBandImage":
+        return _FakeSingleBandImage(self._ee, f"({self.nombre} * {valor})")
+
+    def rename(self, nombres: list[str]) -> "_FakeSingleBandImage":
+        return self
+
 
 class _FakeImage:
     """Doble de prueba de ee.Image(id): expone .select(banda)."""
@@ -759,6 +765,9 @@ class _FakeCompositeImage:
         self._ee = ee_module
         self._filas = filas
 
+    def select(self, banda: str) -> "_FakeCompositeImage":
+        return self
+
     def addBands(self, otra: "_FakeCompositeImage") -> "_FakeCompositeImage":
         return self
 
@@ -786,6 +795,11 @@ class _FakeEeModuleConMuestreo(_FakeEeModule):
         if image_id in (_WORLDCOVER_ID_TEST, _SRTM_ID_TEST):
             return self._imagen_compuesta
         return super().Image(image_id)
+
+    class Terrain:
+        @staticmethod
+        def slope(imagen):
+            return imagen
 
 
 _WORLDCOVER_ID_TEST = "ESA/WorldCover/v200/2021"
