@@ -11,8 +11,15 @@ Este script queda como punto de integración documentado: cuando
 `data/raw/` exista, aquí se invocan en orden:
   1. `src.preprocessing.mask.apply_agricultural_mask` (con umbrales
      calibrados vía `calibrate_ndvi_amplitude_threshold` sobre entrenamiento)
-  2. `src.preprocessing.phenology.estimate_sowing_date` +
-     `build_phase_windows`, por provincia-campaña
+     — pendiente: requiere cobertura de suelo + MDE por celda, aún no
+     extraídos de Earth Engine (ver data/manifest/gee_series_climaticas_
+     espectrales.yaml, sección `pendiente`).
+  2. `src.preprocessing.phenology.estimate_sowing_date` + `build_phase_
+     windows`, por provincia-campaña — YA EJECUTABLE de punta a punta con
+     datos reales vía `scripts/run_phenology_alignment.py` (siembra mensual
+     real de MIDAGRI + serie NDVI real de data/raw/gee_series_crudo.parquet),
+     resultado en data/interim/fenologia_alineada.parquet. Aún no integrado
+     a este script porque falta (1).
 """
 from __future__ import annotations
 

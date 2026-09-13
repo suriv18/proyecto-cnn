@@ -16,12 +16,19 @@ from src.preprocessing.phenology import (
     build_phase_windows,
     estimate_sowing_date,
 )
+from src.preprocessing.campaign_calendar import derive_campana_from_month
 
 
 class TestEstimateSowingDateNivelPrimario:
     def test_usa_el_punto_medio_del_mes_de_mayor_superficie_sembrada(self):
         """Nivel primario: fecha modal de siembra con superficie sembrada
-        mensual por provincia-campaña, punto medio del mes de mayor superficie."""
+        mensual por provincia-campaña, punto medio del mes de mayor
+        superficie. Octubre (mes >= 7) pertenece al año calendario anterior
+        al año de cosecha que identifica la campaña (sección 4.4, misma
+        convención que campaign_calendar.derive_campana_from_month aplicada
+        en sentido inverso) — bug real detectado: la implementación original
+        usaba `anio = campana_id` directamente, produciendo fechas de
+        siembra con el año de cosecha en vez del año de siembra real."""
         siembra_mensual = pd.DataFrame(
             [
                 {"provincia_id": "PUN-AZA", "campana_id": 2021, "mes": 9, "superficie_ha": 50.0},
@@ -36,9 +43,28 @@ class TestEstimateSowingDateNivelPrimario:
             serie_ndvi=None,
             fecha_modal_departamental=None,
         )
-        # Octubre tiene 31 días -> punto medio es el día 16
-        assert resultado.fecha == date(2021, 10, 16)
+        # Octubre tiene 31 días -> punto medio es el día 16; año 2020 (año de
+        # siembra real, no el año de cosecha 2021 que identifica la campaña)
+        assert resultado.fecha == date(2020, 10, 16)
         assert resultado.fuente == FuenteAlineacion.PRIMARIO
+
+    def test_mes_de_la_primera_mitad_del_anio_agricola_usa_el_anio_de_la_campana(self):
+        """Un mes de siembra tardía (ene-jun, ej. campañas con siembra
+        residual de verano) pertenece al mismo año calendario que
+        `campana_id` — a diferencia de jul-dic, que pertenece al año
+        anterior (ver test de arriba)."""
+        siembra_mensual = pd.DataFrame(
+            [{"provincia_id": "PUN-AZA", "campana_id": 2021, "mes": 3, "superficie_ha": 100.0}]
+        )
+        resultado = estimate_sowing_date(
+            provincia_id="PUN-AZA",
+            campana_id=2021,
+            siembra_mensual=siembra_mensual,
+            serie_ndvi=None,
+            fecha_modal_departamental=None,
+        )
+        assert resultado.fecha.year == 2021
+        assert resultado.fecha.month == 3
 
     def test_ignora_meses_sin_datos_de_la_provincia_campana_correcta(self):
         siembra_mensual = pd.DataFrame(

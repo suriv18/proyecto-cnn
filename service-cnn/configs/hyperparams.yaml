@@ -31,3 +31,35 @@ cnn1d:
   filtros_capa2: [int, 5, 15]
   dropout: [float, 0.001, 0.01]
   tasa_aprendizaje: [float, 0.0001, 0.01]
+
+# Duración en días de cada fase BBCH de la quinua (sección 4.10.2), a partir
+# de la fecha de siembra estimada por preprocessing.phenology_pipeline.
+# build_all_phase_windows.
+#
+# Sosa-Zuniga et al. (2017) — "Phenological growth stages of quinoa
+# (Chenopodium quinoa) based on the BBCH scale" — define la NOMENCLATURA y
+# codificación de los estadios (0-9), pero NO fija duraciones en días: son
+# intrínsecamente variables por genotipo/altitud/clima. Las duraciones aquí
+# provienen de INIA Perú, "Manejo del Cultivo de Quinua en la Sierra
+# Central" (Pérez Ávila, 2005), tabla de días acumulados desde siembra (DDS),
+# agrupadas en las 5 fases agronómicas usadas por el sistema:
+#   emergencia:            0-3 DDS    (3 días)
+#   desarrollo_vegetativo: 3-80 DDS   (77 días, hasta inicio de floración)
+#   floracion:             80-97 DDS  (17 días, hasta floración plena)
+#   llenado_grano:         97-141 DDS (44 días, lechoso->pastoso)
+#   madurez:               141-190 DDS (49 días, hasta madurez comercial/cosecha)
+# Ciclo total: ~190 días (INIA Sierra Central).
+#
+# LIMITACIÓN DECLARADA (a documentar en la tesis, sección 4.10.2 o anexo de
+# calibración): fuerte variabilidad varietal reportada por el mismo manual
+# INIA — de 150-160 días (Illpa INIA) a 190-200 días (Quillahuaman INIA),
+# hasta 80 días de diferencia entre variedades precoces y tardías. Estos
+# valores son un punto de partida a calibrar/confirmar en el ensayo piloto
+# (H2, sección 4.13) contra la fenometría NDVI real observada, no una
+# duración fija definitiva.
+fenologia_bbch:
+  emergencia: 3
+  desarrollo_vegetativo: 77
+  floracion: 17
+  llenado_grano: 44
+  madurez: 49

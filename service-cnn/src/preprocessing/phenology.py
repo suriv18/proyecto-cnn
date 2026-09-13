@@ -51,6 +51,9 @@ class VentanaFase:
     fin: date
 
 
+_MES_INICIO_SEGUNDA_MITAD_AGRICOLA = 7
+
+
 def _fecha_modal_desde_siembra_mensual(
     provincia_id: str, campana_id: int, siembra_mensual: pd.DataFrame
 ) -> Optional[date]:
@@ -62,11 +65,19 @@ def _fecha_modal_desde_siembra_mensual(
         return None
 
     mes_modal = int(filtro.loc[filtro["superficie_ha"].idxmax(), "mes"])
-    anio = int(filtro.loc[filtro["superficie_ha"].idxmax(), "campana_id"])
-    # El mes modal puede pertenecer al año de siembra (anterior al año de
-    # cosecha que identifica la campaña, sección 4.4); aquí se asume que
-    # `campana_id` ya representa el año calendario del mes registrado, dado
-    # que `siembra_mensual` proviene de un registro mensual real, no inferido.
+    # El mes modal pertenece al año calendario ANTERIOR al año de cosecha
+    # que identifica la campaña cuando cae en jul-dic (siembra set-nov,
+    # sección 4.4/4.10.2), y al mismo año calendario cuando cae en ene-jun
+    # — misma convención que campaign_calendar.derive_campana_from_month,
+    # aplicada en sentido inverso. Bug real corregido: la versión anterior
+    # asumía `anio = campana_id` directamente, produciendo el año de
+    # cosecha en vez del año de siembra real para los meses jul-dic (el
+    # caso típico de siembra de quinua, set-nov).
+    anio = (
+        campana_id - 1
+        if mes_modal >= _MES_INICIO_SEGUNDA_MITAD_AGRICOLA
+        else campana_id
+    )
     ultimo_dia = calendar.monthrange(anio, mes_modal)[1]
     punto_medio = (ultimo_dia + 1) // 2
     return date(anio, mes_modal, punto_medio)
