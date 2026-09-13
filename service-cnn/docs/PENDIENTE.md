@@ -85,18 +85,29 @@ Falta antes de usar esto en producción:
   agrega ambas columnas con su propia regla (`reglas_por_columna: dict[str,
   AggregationRule]`). Ver
   `docs/superpowers/plans/2026-09-13-filtrado-calidad-max-ndvi.md`.
-  301/301 tests pasando (incluye un bug Critical encontrado y corregido en
-  el camino: `ee.Reducer.combine(sharedInputs=True)` antepone el nombre de
-  la banda al nombre del reducer en la salida real de `reduceRegions` —ej.
-  `NDVI_mean`, no `mean`— y el código inicial no lo tenía en cuenta).
-  **Pendiente**: re-ejecutar la extracción real de NDVI contra la API de
-  GEE (Actividad 3) para regenerar `data/raw/gee_series_crudo.parquet` con
-  el filtro de calidad y ambos reducers aplicados — el parquet actual sigue
-  siendo NDVI sin filtrar, solo media, hasta que se re-extraiga. `extract_
-  masked_ndvi_series` (máscara agrícola) también debe actualizarse para
-  usar el mismo filtrado/reducers cuando se conecte a producción (hoy sigue
-  usando `ee.Reducer.mean()` sin filtro — no tocado por este ciclo, que se
-  centró en `GeeClient.extract_daily_series`).
+  299/299 tests pasando (incluye 2 bugs Critical encontrados y corregidos
+  en el camino: (1) `ee.Reducer.combine(sharedInputs=True)` antepone el
+  nombre de la banda al nombre del reducer en la salida real de
+  `reduceRegions` —ej. `NDVI_mean`, no `mean`— y el código inicial no lo
+  tenía en cuenta; (2) el cambio de esquema NDVI no se había propagado a
+  `gee_extraction_pipeline.py`/`phenology_pipeline.py`, encontrado en la
+  revisión final de todo el branch y corregido en una Task 5 adicional —
+  esa corrección a su vez mezcló por error una feature no solicitada de
+  otra sesión, detectado y revertido quirúrgicamente antes de aprobar).
+  **Pendiente, y en este orden de dependencia**: (1) re-ejecutar la
+  extracción real de NDVI contra la API de GEE (Actividad 3) para
+  regenerar `data/raw/gee_series_crudo.parquet` con el filtro de calidad y
+  ambos reducers aplicados — el parquet actual sigue siendo NDVI sin
+  filtrar, solo media (columna `valor` única), bajo el esquema viejo; (2)
+  solo después de re-extraer, `phenology_pipeline` funcionará de nuevo —
+  hoy, contra el parquet actual, `_serie_ndvi_de_provincia_campana`
+  fallaría con `KeyError` al buscar `valor_mean` (columna que no existe
+  hasta la re-extracción) — es el mismo tipo de riesgo que motivó esta
+  Task 5, ahora en la dirección inversa: código nuevo contra datos
+  viejos. `extract_masked_ndvi_series` (máscara agrícola) también debe
+  actualizarse para usar el mismo filtrado/reducers cuando se conecte a
+  producción (hoy sigue usando `ee.Reducer.mean()` sin filtro — no tocado
+  por este ciclo, que se centró en `GeeClient.extract_daily_series`).
 
 Deuda menor conocida (hallazgos Minor/Important de baja severidad de la
 revisión final del branch, no bloqueantes):
