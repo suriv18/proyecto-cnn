@@ -8,6 +8,7 @@ No requiere `earthengine-api` instalado ni credenciales: recibe el módulo
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -496,16 +497,26 @@ class _FakeSampledFeatureCollection:
 
 
 class _FakeCompositeImage:
-    """Doble de prueba de la imagen de 4 bandas usada por sampleRegions."""
+    """Doble de prueba de la imagen de 4 bandas usada por sampleRegions.
+
+    Registra en `bandas_agregadas` cada objeto pasado a `.addBands()` (antes
+    de descartarlo) para que los tests puedan inspeccionar la expresión
+    simbólica de cada banda (ej. `_FakeSingleBandImage.nombre`) y así
+    verificar que el álgebra real (incluyendo `.multiply(factor_escala)`)
+    efectivamente se ejecutó, en vez de solo confiar en las filas
+    pre-cargadas que `sampleRegions` reproduce.
+    """
 
     def __init__(self, ee_module: "_FakeEeModuleConMuestreo", filas: list[dict]):
         self._ee = ee_module
         self._filas = filas
+        self.bandas_agregadas: list[Any] = []
 
     def select(self, banda: str) -> "_FakeCompositeImage":
         return self
 
-    def addBands(self, otra: "_FakeCompositeImage") -> "_FakeCompositeImage":
+    def addBands(self, otra: Any) -> "_FakeCompositeImage":
+        self.bandas_agregadas.append(otra)
         return self
 
     def rename(self, nombres: list[str]) -> "_FakeCompositeImage":
@@ -671,3 +682,41 @@ class TestSampleCellsForCalibration:
         )
 
         assert isinstance(resultado, pd.DataFrame)
+
+    def test_amplitud_ndvi_se_escala_antes_de_agregarse_a_la_imagen_compuesta(self):
+        """MOD13Q1 codifica NDVI como entero crudo; si se quitara el
+        .multiply(factor_escala) de la banda de amplitud, ningún otro test
+        de esta clase lo detectaría porque sampleRegions() reproduce las
+        filas pre-cargadas del fixture sin pasar por el álgebra real. Este
+        test inspecciona la banda tal como fue pasada a .addBands() (antes
+        de descartarse) para verificar que el álgebra real sí se ejecutó."""
+        from src.ingestion.gee_config import get_collection_spec
+        from src.ingestion.gee_mask_pipeline import sample_cells_for_calibration
+
+        fake_ee = _FakeEeModuleConMuestreo(filas_muestra=[])
+
+        sample_cells_for_calibration(
+            ee_module=fake_ee,
+            geometrias_por_provincia=object(),
+            provincia_ids=["PUN-AZA"],
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+            escala_muestreo_m=250,
+            n_por_provincia=50,
+        )
+
+        spec_ndvi = get_collection_spec("ndvi")
+        imagen_compuesta = fake_ee._imagen_compuesta
+        # cobertura/elevación comparten la misma _FakeCompositeImage (sin
+        # .nombre); solo la banda de amplitud NDVI es un _FakeSingleBandImage
+        # real, con expresión simbólica inspeccionable.
+        nombres_bandas = [
+            banda.nombre
+            for banda in imagen_compuesta.bandas_agregadas
+            if hasattr(banda, "nombre")
+        ]
+
+        banda_amplitud = next(
+            nombre for nombre in nombres_bandas if "max" in nombre and "min" in nombre
+        )
+        assert f"* {spec_ndvi.factor_escala}" in banda_amplitud
