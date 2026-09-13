@@ -217,56 +217,6 @@ class TestBuildAllPhaseWindows:
         entrada = resultado[0]
         assert entrada["ventanas"][-1].fin == date(2020, 11, 10)
 
-    def test_calcula_fecha_de_corte_automaticamente_por_provincia_campana(
-        self, siembra_mensual, serie_ndvi_cruda, duracion_dias_por_fase
-    ):
-        """Sección 4.10.4: el horizonte principal (30 días antes de cosecha)
-        se estima POR CADA provincia-campaña a partir de su propia fecha de
-        siembra — a diferencia de `fecha_corte`, que es un único valor fijo
-        para todo el lote (usado en el análisis secundario de corte fijo,
-        ej. cierre de floración)."""
-        resultado = build_all_phase_windows(
-            provincia_campanas=[("AZANGARO", 2021)],
-            siembra_mensual=siembra_mensual,
-            serie_ndvi_cruda=serie_ndvi_cruda,
-            fechas_modales_departamentales={},
-            duracion_dias_por_fase=duracion_dias_por_fase,
-            dias_antes_de_cosecha=30,
-        )
-        entrada = resultado[0]
-        # Siembra: 2020-10-16. Duración total: 15+45+20+30+20=130 días ->
-        # cosecha estimada 2021-02-22 (130 días incl. desde 10-16) - 30 = 2021-01-23.
-        assert entrada["ventanas"][-1].fin == date(2021, 1, 23)
-
-    def test_fecha_corte_explicita_tiene_prioridad_sobre_dias_antes_de_cosecha(
-        self, siembra_mensual, serie_ndvi_cruda, duracion_dias_por_fase
-    ):
-        resultado = build_all_phase_windows(
-            provincia_campanas=[("AZANGARO", 2021)],
-            siembra_mensual=siembra_mensual,
-            serie_ndvi_cruda=serie_ndvi_cruda,
-            fechas_modales_departamentales={},
-            duracion_dias_por_fase=duracion_dias_por_fase,
-            fecha_corte=date(2020, 11, 10),
-            dias_antes_de_cosecha=30,
-        )
-        entrada = resultado[0]
-        assert entrada["ventanas"][-1].fin == date(2020, 11, 10)
-
-    def test_sin_fecha_corte_ni_dias_antes_de_cosecha_no_trunca_ventanas(
-        self, siembra_mensual, serie_ndvi_cruda, duracion_dias_por_fase
-    ):
-        resultado = build_all_phase_windows(
-            provincia_campanas=[("AZANGARO", 2021)],
-            siembra_mensual=siembra_mensual,
-            serie_ndvi_cruda=serie_ndvi_cruda,
-            fechas_modales_departamentales={},
-            duracion_dias_por_fase=duracion_dias_por_fase,
-        )
-        entrada = resultado[0]
-        assert len(entrada["ventanas"]) == 5
-        assert entrada["ventanas"][-1].fase == "madurez"
-
 
 class TestLoadFenologiaBbch:
     def test_carga_las_5_fases_en_orden_desde_configs(self, tmp_path):

@@ -28,7 +28,6 @@ from src.preprocessing.campaign_calendar import derive_campana_from_month
 from src.preprocessing.phenology import (
     FuenteAlineacion,
     build_phase_windows,
-    estimate_horizon_cutoff,
     estimate_sowing_date,
 )
 
@@ -151,7 +150,6 @@ def build_all_phase_windows(
     provincia_a_departamento: Optional[dict[str, str]] = None,
     umbral_ascenso_ndvi: float = 0.3,
     fecha_corte: Optional[date] = None,
-    dias_antes_de_cosecha: Optional[int] = None,
 ) -> list[dict]:
     """Alinea fenológicamente cada provincia-campaña del lote dado.
 
@@ -181,15 +179,7 @@ def build_all_phase_windows(
             fecha modal departamental recurrir).
         umbral_ascenso_ndvi: ver `phenology.estimate_sowing_date`.
         fecha_corte: ver `phenology.build_phase_windows` (regla anti-fuga,
-            sección 4.10.4) — un único valor fijo para todo el lote (ej. el
-            análisis secundario de corte al cierre de floración). Si se
-            especifica, tiene prioridad sobre `dias_antes_de_cosecha`.
-        dias_antes_de_cosecha: si se especifica (y no hay `fecha_corte`
-            explícito), calcula el horizonte principal (sección 4.10.4)
-            POR CADA provincia-campaña a partir de su propia fecha de siembra
-            estimada y `duracion_dias_por_fase` (ver
-            `phenology.estimate_horizon_cutoff`) — a diferencia de
-            `fecha_corte`, que es el mismo valor para todo el lote.
+            sección 4.10.4).
 
     Returns:
         Lista de dicts, uno por cada `(provincia_id, campana_id)` de
@@ -249,18 +239,10 @@ def build_all_phase_windows(
             )
             continue
 
-        fecha_corte_efectiva = fecha_corte
-        if fecha_corte_efectiva is None and dias_antes_de_cosecha is not None:
-            fecha_corte_efectiva = estimate_horizon_cutoff(
-                fecha_siembra=fecha_estimada.fecha,
-                duracion_dias_por_fase=duracion_dias_por_fase,
-                dias_antes_de_cosecha=dias_antes_de_cosecha,
-            )
-
         ventanas = build_phase_windows(
             fecha_siembra=fecha_estimada.fecha,
             duracion_dias_por_fase=duracion_dias_por_fase,
-            fecha_corte=fecha_corte_efectiva,
+            fecha_corte=fecha_corte,
         )
 
         resultados.append(
