@@ -53,6 +53,25 @@ Falta antes de usar esto en producción:
   `umbrales_mascara` ya fijados, para regenerar
   `data/raw/gee_series_crudo.parquet` con NDVI enmascarado.
 
+Deuda menor conocida (hallazgos Minor/Important de baja severidad de la
+revisión final del branch, no bloqueantes):
+- [ ] `sample_cells_for_calibration` (solo calibración/auditoría, no
+  producción): 3 de sus 4 bandas exportadas (`cobertura_suelo`,
+  `altitud_m`, `pendiente_grados`) no tienen verificación algebraica real
+  en el doble de prueba de `test_gee_mask_pipeline.py` — comparten una
+  sola `_FakeCompositeImage` sin identidad simbólica propia (a diferencia
+  de `amplitud_ndvi`, que sí la tiene). Si se reordenara accidentalmente
+  qué banda recibe qué `.rename()`, ningún test lo detectaría hoy.
+- [ ] `celda_id` en `sample_cells_for_calibration` es `f"celda_{i}"`
+  (secuencial), no `f"{provincia_id}_{i}"` como decía el diseño original —
+  `sampleRegions(geometries=False)` no propaga `provincia_id` por celda, así
+  que las filas de auditoría quedan sin atribución de provincia. Evaluar si
+  vale la pena resolverlo antes de usar la función para auditoría real.
+- [ ] `n_por_provincia` en `sample_cells_for_calibration` valida el tamaño
+  total contra el límite de 5000, pero nunca se pasa como `numPixels` (o
+  equivalente) a `sampleRegions` — el nombre del parámetro promete un tope
+  por provincia que la llamada real no impone.
+
 ### 2.2 Integrar `run_preprocessing.py` (hoy es un placeholder con `NotImplementedError`)
 Una vez resuelta 2.1, este script debe orquestar en orden:
 1. `apply_agricultural_mask` (con umbrales calibrados vía `calibrate_ndvi_amplitude_threshold` sobre campañas de entrenamiento).
