@@ -17,13 +17,41 @@ Datos reales ya generados y verificados (regenerables vía los scripts, no versi
 
 ## 2. Trabajo técnico pendiente (siguiente pieza natural del pipeline)
 
-### 2.1 Máscara de superficie agrícola (bloquea `mask.py` en producción)
-`src/preprocessing/mask.py` (`apply_agricultural_mask`) ya está implementado y probado con datos sintéticos, pero necesita, **por celda** (no agregado a nivel de polígono provincial como la extracción actual):
-- Capa de cobertura de suelo (candidato: ESA WorldCover, en GEE).
-- Modelo digital de elevación / pendiente (candidato: SRTM, en GEE).
-- Amplitud NDVI (ya se puede derivar de `data/raw/gee_series_crudo.parquet`, variable `ndvi`, calculando max-min por celda/campaña).
+### 2.1 Máscara de superficie agrícola — extracción GEE ya implementada, falta calibrar y conectar a producción
 
-Esto requiere una extracción GEE nueva y distinta a `gee_extraction_pipeline.py` (que opera a nivel de polígono provincial completo, agregando con `reduceRegions`); la máscara necesita resolución de celda dentro de cada provincia — diseño aún no explorado.
+`src/ingestion/gee_mask_pipeline.py` ya implementa la extracción server-side
+por celda (diseño: `docs/superpowers/specs/2026-09-13-mascara-agricola-gee-design.md`;
+plan: `docs/superpowers/plans/2026-09-13-mascara-agricola-gee.md`):
+- `build_agricultural_mask_image`: máscara booleana (WorldCover v200 2021 +
+  SRTM/slope + amplitud NDVI por campaña, con `factor_escala` aplicado).
+- `extract_masked_ndvi_series`: NDVI agregado por provincia-campaña, ya
+  enmascarado — mismo contrato que `GeeClient.extract_daily_series`.
+- `sample_cells_for_calibration`: muestra acotada de celdas para calibrar
+  con `mask.py` (sin cambios), respetando el límite de 5000 elementos de
+  `getInfo()`.
+- `gee_extraction_pipeline.extract_all_provinces_all_variables` ya acepta
+  `umbrales_mascara: MaskThresholds | None` para enrutar `"ndvi"` — cambio
+  aditivo, `None` preserva el comportamiento anterior para todas las
+  variables.
+
+282/282 tests pasando (5 tareas del plan, cada una revisada por separado; se
+corrigió en el camino un bug real de correctitud — el factor de escala de
+NDVI no se aplicaba a la amplitud antes de compararla con el umbral, lo que
+habría hecho el criterio un no-op en producción).
+
+Falta antes de usar esto en producción:
+- [ ] Fijar los umbrales reales de `MaskThresholds` (`altitud_min_m`,
+  `altitud_max_m`, `pendiente_max_grados` por criterio agronómico;
+  `amplitud_ndvi_min` calibrado con `sample_cells_for_calibration` +
+  `calibrate_ndvi_amplitude_threshold` sobre campañas de entrenamiento) —
+  no hay valores reales todavía, solo los de ejemplo en los tests.
+- [ ] Verificar manualmente contra la API real de GEE (no cubierto por los
+  dobles de prueba): que la clase 40 de WorldCover es "Cropland" en la
+  sierra peruana, que `ee.Terrain.slope()` devuelve grados, y el volumen/
+  tiempo real de `sampleRegions`.
+- [ ] Re-ejecutar la extracción real de NDVI (Actividad 3) con
+  `umbrales_mascara` ya fijados, para regenerar
+  `data/raw/gee_series_crudo.parquet` con NDVI enmascarado.
 
 ### 2.2 Integrar `run_preprocessing.py` (hoy es un placeholder con `NotImplementedError`)
 Una vez resuelta 2.1, este script debe orquestar en orden:
