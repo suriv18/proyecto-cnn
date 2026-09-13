@@ -112,7 +112,14 @@ def extract_all_provinces_all_variables(
             celdas agrícolas, ver `gee_mask_pipeline.py`) en vez de
             `cliente.extract_daily_series`. Las demás variables no se ven
             afectadas. `None` (por defecto) preserva el comportamiento
-            actual para todas las variables, incluida "ndvi".
+            actual para todas las variables, incluida "ndvi". La máscara se
+            reconstruye una vez por CAMPAÑA (no por mes): aunque cada
+            campaña se pagina en 12 llamadas mensuales (ver
+            `dividir_en_meses`), todas comparten la misma
+            `ventana_mascara` (la ventana anual completa de
+            `campana_a_ventana_extraccion`), para que la amplitud NDVI de
+            la máscara sea consistente con la que se usó para calibrar
+            `amplitud_ndvi_min` en `sample_cells_for_calibration`.
 
     Returns:
         Si `devolver_fallos` es False: DataFrame con columnas `provincia_id`,
@@ -128,8 +135,10 @@ def extract_all_provinces_all_variables(
     motiva la paginación.
     """
     tareas: list[tuple[str, int, date, date]] = []
+    ventana_campana_por_id: dict[int, tuple[date, date]] = {}
     for campana_id in campanas:
         fecha_inicio_campana, fecha_fin_campana = campana_a_ventana_extraccion(campana_id)
+        ventana_campana_por_id[campana_id] = (fecha_inicio_campana, fecha_fin_campana)
         meses = dividir_en_meses(fecha_inicio_campana, fecha_fin_campana)
         for variable in variables:
             for fecha_inicio, fecha_fin in meses:
@@ -146,6 +155,7 @@ def extract_all_provinces_all_variables(
                     umbrales=umbrales_mascara,
                     fecha_inicio=fecha_inicio,
                     fecha_fin=fecha_fin,
+                    ventana_mascara=ventana_campana_por_id[campana_id],
                 )
             else:
                 resultado_o_excepcion = cliente.extract_daily_series(

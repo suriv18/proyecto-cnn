@@ -175,6 +175,7 @@ class _FakeNdviImageCollection:
         self._filas_por_fecha = filas_por_fecha
 
     def filterDate(self, inicio, fin):
+        self._ee.llamadas.append(("Ndvi.filterDate", inicio, fin))
         return self
 
     def select(self, banda: str):
@@ -273,8 +274,8 @@ class TestBuildAgriculturalMaskImage:
         assert (
             "Mascara.filterDate",
             "MODIS/061/MOD13Q1",
-            date(2019, 7, 1),
-            date(2020, 6, 30),
+            "2019-07-01",
+            "2020-06-30",
         ) in fake_ee.llamadas
 
     def test_combina_los_cuatro_criterios_con_and(self, umbrales):
@@ -410,6 +411,7 @@ class TestExtractMaskedNdviSeries:
             umbrales=umbrales,
             fecha_inicio=date(2019, 7, 1),
             fecha_fin=date(2019, 7, 31),
+            ventana_mascara=(date(2019, 7, 1), date(2020, 6, 30)),
         )
 
         assert isinstance(resultado, pd.DataFrame)
@@ -432,6 +434,7 @@ class TestExtractMaskedNdviSeries:
             umbrales=umbrales,
             fecha_inicio=date(2019, 7, 1),
             fecha_fin=date(2019, 7, 31),
+            ventana_mascara=(date(2019, 7, 1), date(2020, 6, 30)),
         )
 
         assert resultado["valor"].iloc[0] == pytest.approx(0.3607)
@@ -451,6 +454,7 @@ class TestExtractMaskedNdviSeries:
             umbrales=umbrales,
             fecha_inicio=date(2019, 7, 1),
             fecha_fin=date(2019, 7, 31),
+            ventana_mascara=(date(2019, 7, 1), date(2020, 6, 30)),
         )
 
         llamadas_reduce = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
@@ -474,10 +478,49 @@ class TestExtractMaskedNdviSeries:
             umbrales=umbrales,
             fecha_inicio=date(2019, 7, 1),
             fecha_fin=date(2019, 7, 31),
+            ventana_mascara=(date(2019, 7, 1), date(2020, 6, 30)),
         )
 
         llamadas_reduce = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
         assert llamadas_reduce[0][1] is not None
+
+    def test_la_mascara_usa_la_ventana_de_campana_no_la_ventana_mensual(
+        self, umbrales, cliente_fake
+    ):
+        """La ventana mensual (fecha_inicio/fecha_fin) pagina la extracción
+        NDVI real, pero la amplitud de la máscara debe calcularse sobre la
+        ventana de CAMPAÑA completa (ventana_mascara) -- si se usara la
+        ventana mensual, la máscara variaría mes a mes dentro de una misma
+        campaña y desalinearía el umbral calibrado sobre la ventana anual."""
+        from src.ingestion.gee_mask_pipeline import extract_masked_ndvi_series
+
+        fake_ee = _FakeEeModuleConMascara(filas_resultado=[])
+        cliente = cliente_fake(fake_ee)
+
+        ventana_mensual = (date(2019, 9, 1), date(2019, 9, 30))
+        ventana_campana = (date(2019, 7, 1), date(2020, 6, 30))
+
+        extract_masked_ndvi_series(
+            cliente=cliente,
+            geometrias_por_provincia=object(),
+            umbrales=umbrales,
+            fecha_inicio=ventana_mensual[0],
+            fecha_fin=ventana_mensual[1],
+            ventana_mascara=ventana_campana,
+        )
+
+        llamadas_filterdate = [
+            l for l in fake_ee.llamadas if l[0] == "Ndvi.filterDate"
+        ]
+        # dos llamadas a filterDate sobre la colección NDVI: una para la
+        # máscara (ventana de campaña) y otra para la extracción real
+        # (ventana mensual) -- deben ser distintas entre sí.
+        assert len(llamadas_filterdate) == 2
+        ventanas_usadas = {(l[1], l[2]) for l in llamadas_filterdate}
+        assert ventanas_usadas == {
+            (ventana_campana[0].isoformat(), ventana_campana[1].isoformat()),
+            (ventana_mensual[0].isoformat(), ventana_mensual[1].isoformat()),
+        }
 
 
 class _FakeSampledFeature:
@@ -720,3 +763,161 @@ class TestSampleCellsForCalibration:
             nombre for nombre in nombres_bandas if "max" in nombre and "min" in nombre
         )
         assert f"* {spec_ndvi.factor_escala}" in banda_amplitud
+
+
+def _evaluar_expresion_mascara(expresion: tuple, valores: dict[str, float]) -> bool:
+    """Evalúa el árbol de expresión booleana producido por
+    `build_agricultural_mask_image` (nodos `EQ`/`GTE`/`LTE`/`AND`) contra
+    valores concretos de celda, para comparar el resultado del camino GEE
+    con el de `apply_agricultural_mask` (pandas) sobre la misma celda.
+
+    `valores` debe traer las claves `cobertura`, `altitud`, `pendiente`,
+    `ndvi_max`, `ndvi_min` — los mismos 5 insumos que
+    `build_agricultural_mask_image` combina.
+    """
+    operador = expresion[0]
+    if operador == "AND":
+        return _evaluar_expresion_mascara(
+            expresion[1], valores
+        ) and _evaluar_expresion_mascara(expresion[2], valores)
+
+    _, nombre_simbolico, umbral = expresion
+    valor = _resolver_valor_simbolico(nombre_simbolico, valores)
+    if operador == "EQ":
+        return valor == umbral
+    if operador == "GTE":
+        return valor >= umbral
+    if operador == "LTE":
+        return valor <= umbral
+    raise ValueError(f"Operador no reconocido: {operador}")
+
+
+def _resolver_valor_simbolico(nombre_simbolico: str, valores: dict[str, float]) -> float:
+    """Traduce un nombre simbólico del doble de prueba (ej.
+    '((MODIS/061/MOD13Q1:NDVI:max - MODIS/061/MOD13Q1:NDVI:min) * 0.0001)')
+    a un valor numérico concreto, evaluando la aritmética embebida en el
+    propio string (construida por `_FakeSingleBandImage.subtract`/
+    `.multiply`) sobre los valores base de `ndvi_max`/`ndvi_min`."""
+    if nombre_simbolico == "ESA/WorldCover/v200/2021:Map":
+        return valores["cobertura"]
+    if nombre_simbolico == "USGS/SRTMGL1_003:elevation":
+        return valores["altitud"]
+    if nombre_simbolico == "slope(USGS/SRTMGL1_003:elevation)":
+        return valores["pendiente"]
+
+    expresion_python = (
+        nombre_simbolico
+        .replace("MODIS/061/MOD13Q1:NDVI:max", str(valores["ndvi_max"]))
+        .replace("MODIS/061/MOD13Q1:NDVI:min", str(valores["ndvi_min"]))
+    )
+    return eval(expresion_python)  # noqa: S307 — expresión aritmética generada internamente por los propios dobles de prueba, no input externo
+
+
+class TestConsistenciaMascaraGeeYPandas:
+    """Sección 'Fuera de alcance' del diseño (spec) exige verificar que
+    build_agricultural_mask_image (GEE) y apply_agricultural_mask (pandas)
+    son dos implementaciones consistentes de la misma regla de 4 criterios
+    -- son caminos independientes (calibración/auditoría vs. producción) y
+    nada impide que diverjan silenciosamente con el tiempo."""
+
+    @pytest.fixture
+    def umbrales_consistencia(self) -> MaskThresholds:
+        return MaskThresholds(
+            altitud_min_m=2500,
+            altitud_max_m=4200,
+            pendiente_max_grados=25.0,
+            amplitud_ndvi_min=0.15,
+        )
+
+    @pytest.mark.parametrize(
+        "celda,es_agricola_esperado",
+        [
+            pytest.param(
+                {
+                    "cobertura": 40,
+                    "altitud": 3800,
+                    "pendiente": 10.0,
+                    "ndvi_max": 6000,
+                    "ndvi_min": 2000,  # amplitud real = 0.4 >= 0.15
+                },
+                True,
+                id="celda_agricola_cumple_los_4_criterios",
+            ),
+            pytest.param(
+                {
+                    "cobertura": 10,  # bosque, no cultivo
+                    "altitud": 3800,
+                    "pendiente": 10.0,
+                    "ndvi_max": 6000,
+                    "ndvi_min": 2000,
+                },
+                False,
+                id="excluida_por_cobertura_no_agricola",
+            ),
+            pytest.param(
+                {
+                    "cobertura": 40,
+                    "altitud": 1500,  # fuera de rango (demasiado baja)
+                    "pendiente": 10.0,
+                    "ndvi_max": 6000,
+                    "ndvi_min": 2000,
+                },
+                False,
+                id="excluida_por_altitud_fuera_de_rango",
+            ),
+            pytest.param(
+                {
+                    "cobertura": 40,
+                    "altitud": 3800,
+                    "pendiente": 40.0,  # excesiva
+                    "ndvi_max": 6000,
+                    "ndvi_min": 2000,
+                },
+                False,
+                id="excluida_por_pendiente_excesiva",
+            ),
+            pytest.param(
+                {
+                    "cobertura": 40,
+                    "altitud": 3800,
+                    "pendiente": 10.0,
+                    "ndvi_max": 2500,
+                    "ndvi_min": 2000,  # amplitud real = 0.05 < 0.15
+                },
+                False,
+                id="excluida_por_amplitud_ndvi_insuficiente",
+            ),
+        ],
+    )
+    def test_gee_y_pandas_coinciden_en_la_misma_celda(
+        self, umbrales_consistencia, celda, es_agricola_esperado
+    ):
+        from src.preprocessing.mask import apply_agricultural_mask
+
+        fake_ee = _FakeEeModule()
+        mascara = build_agricultural_mask_image(
+            ee_module=fake_ee,
+            umbrales=umbrales_consistencia,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+        )
+        resultado_gee = _evaluar_expresion_mascara(mascara.expresion, celda)
+
+        celdas_df = pd.DataFrame(
+            [
+                {
+                    "celda_id": "c1",
+                    "cobertura_suelo": "cultivo" if celda["cobertura"] == 40 else "no_cultivo",
+                    "altitud_m": celda["altitud"],
+                    "pendiente_grados": celda["pendiente"],
+                    "amplitud_ndvi": (celda["ndvi_max"] - celda["ndvi_min"]) * 0.0001,
+                }
+            ]
+        )
+        resultado_pandas = apply_agricultural_mask(celdas_df, umbrales_consistencia)[
+            "es_agricola"
+        ].iloc[0]
+
+        assert resultado_gee == es_agricola_esperado
+        assert resultado_pandas == es_agricola_esperado
+        assert resultado_gee == resultado_pandas

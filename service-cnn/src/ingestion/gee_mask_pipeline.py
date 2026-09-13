@@ -69,7 +69,7 @@ def build_agricultural_mask_image(
     spec_ndvi = get_collection_spec("ndvi")
     coleccion_ndvi = (
         ee_module.ImageCollection(spec_ndvi.collection_id)
-        .filterDate(fecha_inicio, fecha_fin)
+        .filterDate(fecha_inicio.isoformat(), fecha_fin.isoformat())
         .select(spec_ndvi.band)
     )
     amplitud_cruda = coleccion_ndvi.max().subtract(coleccion_ndvi.min())
@@ -89,6 +89,7 @@ def extract_masked_ndvi_series(
     umbrales: MaskThresholds,
     fecha_inicio: date,
     fecha_fin: date,
+    ventana_mascara: tuple[date, date],
 ) -> "pd.DataFrame":
     """Extrae NDVI agregado por provincia, calculado solo sobre celdas agrícolas.
 
@@ -100,7 +101,19 @@ def extract_masked_ndvi_series(
         geometrias_por_provincia: `ee.FeatureCollection` con un feature por
             provincia (ver `province_geometries.py`).
         umbrales: `MaskThresholds` ya calibrados.
-        fecha_inicio, fecha_fin: ventana de extracción de la campaña.
+        fecha_inicio, fecha_fin: ventana de extracción de ESTA llamada (un
+            mes, ver `gee_extraction_pipeline.dividir_en_meses`) — sobre
+            esta ventana se reduce el NDVI que se agrega por provincia.
+        ventana_mascara: `(fecha_inicio, fecha_fin)` de la CAMPAÑA completa
+            (ver `gee_extraction_pipeline.campana_a_ventana_extraccion`),
+            distinta de `fecha_inicio`/`fecha_fin` — la amplitud NDVI de la
+            máscara debe calcularse sobre el ciclo agrícola completo, no
+            sobre el trozo mensual en el que se pagina esta llamada
+            (`extract_all_provinces_all_variables` invoca esta función una
+            vez por mes dentro de la misma campaña; recalcular la máscara
+            con la ventana mensual la haría variar mes a mes dentro de una
+            misma campaña y desalinearía el umbral, calibrado sobre la
+            ventana anual completa en `sample_cells_for_calibration`).
 
     Returns:
         DataFrame con columnas `provincia_id`, `fecha`, `valor` — mismo
@@ -108,7 +121,10 @@ def extract_masked_ndvi_series(
         convertido a NDVI real ([-1, 1]) vía el `factor_escala` del spec.
     """
     ee = cliente.ee_module
-    mascara = build_agricultural_mask_image(ee, umbrales, fecha_inicio, fecha_fin)
+    fecha_inicio_mascara, fecha_fin_mascara = ventana_mascara
+    mascara = build_agricultural_mask_image(
+        ee, umbrales, fecha_inicio_mascara, fecha_fin_mascara
+    )
 
     spec = get_collection_spec("ndvi")
     coleccion = (
@@ -200,7 +216,7 @@ def sample_cells_for_calibration(
     spec_ndvi = get_collection_spec("ndvi")
     coleccion_ndvi = (
         ee_module.ImageCollection(spec_ndvi.collection_id)
-        .filterDate(fecha_inicio, fecha_fin)
+        .filterDate(fecha_inicio.isoformat(), fecha_fin.isoformat())
         .select(spec_ndvi.band)
     )
     amplitud = (

@@ -254,9 +254,10 @@ class TestExtractAllProvincesAllVariables:
         llamadas_masked = []
 
         def _fake_extract_masked_ndvi_series(
-            cliente, geometrias_por_provincia, umbrales, fecha_inicio, fecha_fin
+            cliente, geometrias_por_provincia, umbrales, fecha_inicio, fecha_fin,
+            ventana_mascara,
         ):
-            llamadas_masked.append((fecha_inicio, fecha_fin))
+            llamadas_masked.append((fecha_inicio, fecha_fin, ventana_mascara))
             return pd.DataFrame(
                 {
                     "provincia_id": ["ABANCAY"],
@@ -293,6 +294,16 @@ class TestExtractAllProvincesAllVariables:
         assert cliente.extract_daily_series.call_count == 12
         assert (resultado["variable"] == "ndvi").sum() == 12
         assert (resultado["variable"] == "precipitacion").sum() == 12
+
+        # las 12 llamadas mensuales comparten la MISMA ventana_mascara (la
+        # ventana de campaña completa), aunque cada una tiene su propia
+        # ventana mensual distinta -- la máscara no debe reconstruirse con
+        # la ventana mensual (regresión: ver Task 4 del plan, hallazgo C1
+        # de la revisión final de todo el branch).
+        ventanas_mascara_usadas = {v[2] for v in llamadas_masked}
+        assert ventanas_mascara_usadas == {(date(2019, 7, 1), date(2020, 6, 30))}
+        ventanas_mensuales_usadas = {(v[0], v[1]) for v in llamadas_masked}
+        assert len(ventanas_mensuales_usadas) == 12
 
     def test_sin_umbrales_mascara_ndvi_usa_extract_daily_series_como_antes(
         self, cliente_fake, geometrias_fake
