@@ -21,6 +21,8 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+import pandas as pd
+
 from src.ingestion.gee_config import get_collection_spec
 from src.preprocessing.mask import MaskThresholds
 
@@ -79,3 +81,58 @@ def build_agricultural_mask_image(
         .And(pendiente_aceptable)
         .And(amplitud_suficiente)
     )
+
+
+def extract_masked_ndvi_series(
+    cliente: Any,
+    geometrias_por_provincia: Any,
+    umbrales: MaskThresholds,
+    fecha_inicio: date,
+    fecha_fin: date,
+) -> "pd.DataFrame":
+    """Extrae NDVI agregado por provincia, calculado solo sobre celdas agrícolas.
+
+    Args:
+        cliente: `GeeClient` ya inicializado (real o doble de prueba) — se
+            usa `cliente.ee_module` para acceder a la sesión de Earth Engine
+            ya inicializada, mismo patrón que `province_geometries.
+            build_province_feature_collection`.
+        geometrias_por_provincia: `ee.FeatureCollection` con un feature por
+            provincia (ver `province_geometries.py`).
+        umbrales: `MaskThresholds` ya calibrados.
+        fecha_inicio, fecha_fin: ventana de extracción de la campaña.
+
+    Returns:
+        DataFrame con columnas `provincia_id`, `fecha`, `valor` — mismo
+        contrato que `GeeClient.extract_daily_series`, con `valor` ya
+        convertido a NDVI real ([-1, 1]) vía el `factor_escala` del spec.
+    """
+    ee = cliente.ee_module
+    mascara = build_agricultural_mask_image(ee, umbrales, fecha_inicio, fecha_fin)
+
+    spec = get_collection_spec("ndvi")
+    coleccion = (
+        ee.ImageCollection(spec.collection_id)
+        .filterDate(fecha_inicio.isoformat(), fecha_fin.isoformat())
+        .select(spec.band)
+    )
+
+    def _reducir_imagen_enmascarada(imagen):
+        fecha = imagen.date().format("YYYY-MM-dd")
+        imagen_enmascarada = imagen.updateMask(mascara)
+        reducido = imagen_enmascarada.reduceRegions(
+            collection=geometrias_por_provincia,
+            reducer=ee.Reducer.mean(),
+            scale=spec.spatial_resolution_m,
+        )
+        return reducido.map(lambda f: f.set("fecha", fecha))
+
+    resultado_aplanado = coleccion.map(_reducir_imagen_enmascarada).flatten()
+
+    filas = [f["properties"] for f in resultado_aplanado.getInfo()["features"]]
+    tabla = pd.DataFrame(filas)
+    if tabla.empty:
+        return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
+    tabla = tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
+    tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
+    return tabla

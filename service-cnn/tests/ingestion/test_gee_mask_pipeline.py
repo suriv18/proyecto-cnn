@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 
+import pandas as pd
 import pytest
 
 from src.ingestion.gee_mask_pipeline import build_agricultural_mask_image
@@ -107,6 +108,113 @@ class _FakeEeModule:
         @staticmethod
         def slope(imagen: _FakeSingleBandImage) -> _FakeSingleBandImage:
             return _FakeSingleBandImage(imagen._ee, f"slope({imagen.nombre})")
+
+
+class _FakeFeature:
+    def __init__(self, propiedades: dict):
+        self._propiedades = dict(propiedades)
+
+    def set(self, clave: str, valor):
+        nuevas = dict(self._propiedades)
+        nuevas[clave] = valor
+        return _FakeFeature(nuevas)
+
+    def getInfo(self) -> dict:
+        return {"properties": self._propiedades}
+
+
+class _FakeFeatureCollectionResultado:
+    def __init__(self, features: list[_FakeFeature]):
+        self._features = features
+
+    def map(self, funcion):
+        return _FakeFeatureCollectionResultado([funcion(f) for f in self._features])
+
+    def flatten(self):
+        return self
+
+    def getInfo(self) -> dict:
+        return {"features": [f.getInfo() for f in self._features]}
+
+
+class _FakeNdviImage:
+    """Imagen NDVI individual dentro de la colección, enmascarable."""
+
+    def __init__(self, ee_module: "_FakeEeModuleConMascara", fecha_iso: str, filas: list[dict]):
+        self._ee = ee_module
+        self._fecha_iso = fecha_iso
+        self._filas = filas
+        self._enmascarada = False
+
+    def date(self):
+        return self
+
+    def format(self, formato: str):
+        return self._fecha_iso
+
+    def updateMask(self, mascara) -> "_FakeNdviImage":
+        self._ee.llamadas.append(("Image.updateMask", mascara))
+        nueva = _FakeNdviImage(self._ee, self._fecha_iso, self._filas)
+        nueva._enmascarada = True
+        return nueva
+
+    def reduceRegions(self, collection, reducer, scale):
+        self._ee.llamadas.append(("Image.reduceRegions", reducer, scale, self._enmascarada))
+        return _FakeFeatureCollectionResultado(
+            [_FakeFeature(fila) for fila in self._filas]
+        )
+
+
+class _FakeNdviImageCollection:
+    def __init__(self, ee_module: "_FakeEeModuleConMascara", filas_por_fecha: dict[str, list[dict]]):
+        self._ee = ee_module
+        self._filas_por_fecha = filas_por_fecha
+
+    def filterDate(self, inicio, fin):
+        return self
+
+    def select(self, banda: str):
+        return self
+
+    def map(self, funcion):
+        resultados = [
+            funcion(_FakeNdviImage(self._ee, fecha, filas))
+            for fecha, filas in self._filas_por_fecha.items()
+        ]
+        features = [f for coleccion in resultados for f in coleccion._features]
+        return _FakeFeatureCollectionResultado(features)
+
+    def max(self):
+        return _FakeSingleBandImage(self._ee, "MODIS/061/MOD13Q1:NDVI:max")
+
+    def min(self):
+        return _FakeSingleBandImage(self._ee, "MODIS/061/MOD13Q1:NDVI:min")
+
+
+class _FakeEeModuleConMascara(_FakeEeModule):
+    """Extiende el doble de prueba de la máscara para soportar también la
+    extracción NDVI real (reduceRegions + updateMask), sobre una colección
+    NDVI separada de la usada dentro de build_agricultural_mask_image."""
+
+    def __init__(self, filas_resultado: list[dict]):
+        super().__init__()
+        self._filas_por_fecha: dict[str, list[dict]] = {}
+        for fila in filas_resultado:
+            self._filas_por_fecha.setdefault(fila.get("fecha", ""), []).append(fila)
+        self._coleccion_ndvi_extraccion = _FakeNdviImageCollection(
+            self, self._filas_por_fecha
+        )
+
+    def ImageCollection(self, collection_id: str):
+        self.llamadas.append(("ImageCollection", collection_id))
+        if collection_id == "MODIS/061/MOD13Q1":
+            return self._coleccion_ndvi_extraccion
+        return super().ImageCollection(collection_id)
+
+    class Reducer:
+        @staticmethod
+        def mean():
+            return "MEAN_REDUCER"
 
 
 @pytest.fixture
@@ -272,3 +380,97 @@ class TestBuildAgriculturalMaskImage:
                 umbrales.amplitud_ndvi_min,
             ),
         )
+
+
+class TestExtractMaskedNdviSeries:
+    @pytest.fixture
+    def cliente_fake(self):
+        class _ClienteFake:
+            def __init__(self, ee_module):
+                self.ee_module = ee_module
+
+        return _ClienteFake
+
+    def test_devuelve_mismo_esquema_que_extract_daily_series(self, umbrales, cliente_fake):
+        from src.ingestion.gee_mask_pipeline import extract_masked_ndvi_series
+
+        filas_esperadas = [
+            {"provincia_id": "PUN-AZA", "fecha": "2019-07-01", "mean": 3607.0},
+        ]
+        fake_ee = _FakeEeModuleConMascara(filas_resultado=filas_esperadas)
+        cliente = cliente_fake(fake_ee)
+
+        resultado = extract_masked_ndvi_series(
+            cliente=cliente,
+            geometrias_por_provincia=object(),
+            umbrales=umbrales,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2019, 7, 31),
+        )
+
+        assert isinstance(resultado, pd.DataFrame)
+        assert list(resultado.columns) == ["provincia_id", "fecha", "valor"]
+        assert resultado["provincia_id"].iloc[0] == "PUN-AZA"
+        assert resultado["fecha"].iloc[0] == "2019-07-01"
+
+    def test_aplica_factor_de_escala_ndvi(self, umbrales, cliente_fake):
+        from src.ingestion.gee_mask_pipeline import extract_masked_ndvi_series
+
+        filas_esperadas = [
+            {"provincia_id": "PUN-AZA", "fecha": "2019-07-01", "mean": 3607.0},
+        ]
+        fake_ee = _FakeEeModuleConMascara(filas_resultado=filas_esperadas)
+        cliente = cliente_fake(fake_ee)
+
+        resultado = extract_masked_ndvi_series(
+            cliente=cliente,
+            geometrias_por_provincia=object(),
+            umbrales=umbrales,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2019, 7, 31),
+        )
+
+        assert resultado["valor"].iloc[0] == pytest.approx(0.3607)
+
+    def test_aplica_updatemask_antes_de_reduceregions(self, umbrales, cliente_fake):
+        from src.ingestion.gee_mask_pipeline import extract_masked_ndvi_series
+
+        filas_esperadas = [
+            {"provincia_id": "PUN-AZA", "fecha": "2019-07-01", "mean": 5.0},
+        ]
+        fake_ee = _FakeEeModuleConMascara(filas_resultado=filas_esperadas)
+        cliente = cliente_fake(fake_ee)
+
+        extract_masked_ndvi_series(
+            cliente=cliente,
+            geometrias_por_provincia=object(),
+            umbrales=umbrales,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2019, 7, 31),
+        )
+
+        llamadas_reduce = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
+        assert len(llamadas_reduce) == 1
+        _, reducer, scale, enmascarada = llamadas_reduce[0]
+        assert reducer == "MEAN_REDUCER"
+        assert enmascarada is True
+
+    def test_usa_reducer_no_nulo(self, umbrales, cliente_fake):
+        from src.ingestion.gee_mask_pipeline import extract_masked_ndvi_series
+
+        filas_esperadas = [
+            {"provincia_id": "PUN-AZA", "fecha": "2019-07-01", "mean": 5.0},
+        ]
+        fake_ee = _FakeEeModuleConMascara(filas_resultado=filas_esperadas)
+        cliente = cliente_fake(fake_ee)
+
+        extract_masked_ndvi_series(
+            cliente=cliente,
+            geometrias_por_provincia=object(),
+            umbrales=umbrales,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2019, 7, 31),
+        )
+
+        llamadas_reduce = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
+        assert llamadas_reduce[0][1] is not None
