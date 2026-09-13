@@ -71,19 +71,32 @@ Falta antes de usar esto en producción:
   reproducible (nombre, versión, resolución, fecha de descarga), como exige
   la tesis (sección 4.10.1) — hoy solo están en el código, no registrados
   como manifiesto.
-- [ ] **[Gap crítico, alcance MAYOR a esta sesión]** La Tabla 7 de la tesis
-  (sección 4.9 / Anexo 01) exige para NDVI: *"Filtrado de calidad; media y
-  máximo por fase sobre máscara agrícola."* Ni el código ya existente
-  (`GeeClient.extract_daily_series`, de sesiones anteriores, ya ejecutado
-  contra datos reales — `data/raw/gee_series_crudo.parquet`) ni la nueva
-  `extract_masked_ndvi_series` de esta sesión aplican filtrado de calidad
-  (banda `SummaryQA`/`DetailedQA` de MOD13Q1) ni calculan el **máximo** por
-  fase — ambos solo usan `ee.Reducer.mean()`. No se corrige en este ciclo
-  porque afecta código ya en producción y el parquet ya generado, y
-  requiere su propia decisión de diseño (¿reducer adicional? ¿reextraer
-  todo NDVI?) antes de tocarlo — pero es un requisito textual de la tesis
-  aún incumplido y debe resolverse antes de considerar la extracción NDVI
-  completa.
+- [x] **[Gap crítico, resuelto en código]** ~~La Tabla 7 de la tesis (sección
+  4.9 / Anexo 01) exige para NDVI: "Filtrado de calidad; media y máximo por
+  fase sobre máscara agrícola." Ni GeeClient.extract_daily_series ni
+  extract_masked_ndvi_series aplicaban filtrado de calidad ni calculaban el
+  máximo — ambos solo usaban ee.Reducer.mean().~~
+  Resuelto: `GeeCollectionSpec` (NDVI) declara `banda_calidad="DetailedQA"`
+  y `reducers=(MEAN, MAX)`; `GeeClient.extract_daily_series` filtra por
+  calidad (VI Quality bits 0-1 en {00,01}, sin nube adyacente bit 8, sin
+  nubes mixtas bit 10 — verificado contra el catálogo oficial de
+  `MODIS/061/MOD13Q1` y el MODIS VI User's Guide) y devuelve
+  `valor_mean`/`valor_max`; `aggregate_by_phase` (`gee_series_builder.py`)
+  agrega ambas columnas con su propia regla (`reglas_por_columna: dict[str,
+  AggregationRule]`). Ver
+  `docs/superpowers/plans/2026-09-13-filtrado-calidad-max-ndvi.md`.
+  301/301 tests pasando (incluye un bug Critical encontrado y corregido en
+  el camino: `ee.Reducer.combine(sharedInputs=True)` antepone el nombre de
+  la banda al nombre del reducer en la salida real de `reduceRegions` —ej.
+  `NDVI_mean`, no `mean`— y el código inicial no lo tenía en cuenta).
+  **Pendiente**: re-ejecutar la extracción real de NDVI contra la API de
+  GEE (Actividad 3) para regenerar `data/raw/gee_series_crudo.parquet` con
+  el filtro de calidad y ambos reducers aplicados — el parquet actual sigue
+  siendo NDVI sin filtrar, solo media, hasta que se re-extraiga. `extract_
+  masked_ndvi_series` (máscara agrícola) también debe actualizarse para
+  usar el mismo filtrado/reducers cuando se conecte a producción (hoy sigue
+  usando `ee.Reducer.mean()` sin filtro — no tocado por este ciclo, que se
+  centró en `GeeClient.extract_daily_series`).
 
 Deuda menor conocida (hallazgos Minor/Important de baja severidad de la
 revisión final del branch, no bloqueantes):
