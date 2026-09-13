@@ -51,6 +51,9 @@ class _FakeSingleBandImage:
     def multiply(self, valor) -> "_FakeSingleBandImage":
         return _FakeSingleBandImage(self._ee, f"({self.nombre} * {valor})")
 
+    def rename(self, nombres: list[str]) -> "_FakeSingleBandImage":
+        return self
+
 
 class _FakeImage:
     """Doble de prueba de ee.Image(id): expone .select(banda)."""
@@ -474,3 +477,197 @@ class TestExtractMaskedNdviSeries:
 
         llamadas_reduce = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
         assert llamadas_reduce[0][1] is not None
+
+
+class _FakeSampledFeature:
+    def __init__(self, propiedades: dict):
+        self._propiedades = dict(propiedades)
+
+    def getInfo(self) -> dict:
+        return {"properties": self._propiedades}
+
+
+class _FakeSampledFeatureCollection:
+    def __init__(self, features: list[_FakeSampledFeature]):
+        self._features = features
+
+    def getInfo(self) -> dict:
+        return {"features": [f.getInfo() for f in self._features]}
+
+
+class _FakeCompositeImage:
+    """Doble de prueba de la imagen de 4 bandas usada por sampleRegions."""
+
+    def __init__(self, ee_module: "_FakeEeModuleConMuestreo", filas: list[dict]):
+        self._ee = ee_module
+        self._filas = filas
+
+    def select(self, banda: str) -> "_FakeCompositeImage":
+        return self
+
+    def addBands(self, otra: "_FakeCompositeImage") -> "_FakeCompositeImage":
+        return self
+
+    def rename(self, nombres: list[str]) -> "_FakeCompositeImage":
+        return self
+
+    def sampleRegions(self, collection, scale, geometries=False):
+        self._ee.llamadas.append(("sampleRegions", scale))
+        return _FakeSampledFeatureCollection(
+            [_FakeSampledFeature(fila) for fila in self._filas]
+        )
+
+
+class _FakeEeModuleConMuestreo(_FakeEeModule):
+    """Extiende el doble de la máscara para simular la imagen compuesta que
+    sample_cells_for_calibration exporta vía sampleRegions."""
+
+    def __init__(self, filas_muestra: list[dict]):
+        super().__init__()
+        self._filas_muestra = filas_muestra
+        self._imagen_compuesta = _FakeCompositeImage(self, filas_muestra)
+
+    def Image(self, image_id: str):
+        self.llamadas.append(("Image", image_id))
+        if image_id in (_WORLDCOVER_ID_TEST, _SRTM_ID_TEST):
+            return self._imagen_compuesta
+        return super().Image(image_id)
+
+    class Terrain:
+        @staticmethod
+        def slope(imagen: "_FakeCompositeImage") -> "_FakeCompositeImage":
+            return imagen
+
+
+_WORLDCOVER_ID_TEST = "ESA/WorldCover/v200/2021"
+_SRTM_ID_TEST = "USGS/SRTMGL1_003"
+
+
+class TestSampleCellsForCalibration:
+    def test_devuelve_columnas_esperadas_por_apply_agricultural_mask(self):
+        from src.ingestion.gee_mask_pipeline import sample_cells_for_calibration
+
+        filas_muestra = [
+            {
+                "cobertura_suelo": 40,
+                "altitud_m": 3800.0,
+                "pendiente_grados": 10.0,
+                "amplitud_ndvi": 0.30,
+            },
+        ]
+        fake_ee = _FakeEeModuleConMuestreo(filas_muestra)
+
+        resultado = sample_cells_for_calibration(
+            ee_module=fake_ee,
+            geometrias_por_provincia=object(),
+            provincia_ids=["PUN-AZA"],
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+            escala_muestreo_m=250,
+            n_por_provincia=50,
+        )
+
+        assert list(resultado.columns) == [
+            "celda_id",
+            "cobertura_suelo",
+            "altitud_m",
+            "pendiente_grados",
+            "amplitud_ndvi",
+        ]
+
+    def test_reclasifica_clase_40_como_cultivo(self):
+        from src.ingestion.gee_mask_pipeline import sample_cells_for_calibration
+
+        filas_muestra = [
+            {
+                "cobertura_suelo": 40,
+                "altitud_m": 3800.0,
+                "pendiente_grados": 10.0,
+                "amplitud_ndvi": 0.30,
+            },
+            {
+                "cobertura_suelo": 10,  # clase distinta de 40 (ej. bosque)
+                "altitud_m": 3800.0,
+                "pendiente_grados": 10.0,
+                "amplitud_ndvi": 0.30,
+            },
+        ]
+        fake_ee = _FakeEeModuleConMuestreo(filas_muestra)
+
+        resultado = sample_cells_for_calibration(
+            ee_module=fake_ee,
+            geometrias_por_provincia=object(),
+            provincia_ids=["PUN-AZA"],
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+            escala_muestreo_m=250,
+            n_por_provincia=50,
+        )
+
+        assert list(resultado["cobertura_suelo"]) == ["cultivo", "no_cultivo"]
+
+    def test_asigna_celda_id_unico_por_fila(self):
+        from src.ingestion.gee_mask_pipeline import sample_cells_for_calibration
+
+        filas_muestra = [
+            {
+                "cobertura_suelo": 40,
+                "altitud_m": 3800.0,
+                "pendiente_grados": 10.0,
+                "amplitud_ndvi": 0.30,
+            },
+            {
+                "cobertura_suelo": 40,
+                "altitud_m": 3900.0,
+                "pendiente_grados": 12.0,
+                "amplitud_ndvi": 0.25,
+            },
+        ]
+        fake_ee = _FakeEeModuleConMuestreo(filas_muestra)
+
+        resultado = sample_cells_for_calibration(
+            ee_module=fake_ee,
+            geometrias_por_provincia=object(),
+            provincia_ids=["PUN-AZA"],
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+            escala_muestreo_m=250,
+            n_por_provincia=50,
+        )
+
+        assert resultado["celda_id"].nunique() == 2
+
+    def test_rechaza_muestra_que_excede_5000_elementos(self):
+        from src.ingestion.gee_mask_pipeline import sample_cells_for_calibration
+
+        fake_ee = _FakeEeModuleConMuestreo(filas_muestra=[])
+        provincia_ids_80 = [f"PROV-{i}" for i in range(80)]
+
+        with pytest.raises(ValueError, match="5000|5_000"):
+            sample_cells_for_calibration(
+                ee_module=fake_ee,
+                geometrias_por_provincia=object(),
+                provincia_ids=provincia_ids_80,
+                fecha_inicio=date(2019, 7, 1),
+                fecha_fin=date(2020, 6, 30),
+                escala_muestreo_m=250,
+                n_por_provincia=70,  # 80 x 70 = 5600 > 5000
+            )
+
+    def test_acepta_muestra_justo_debajo_del_limite(self):
+        from src.ingestion.gee_mask_pipeline import sample_cells_for_calibration
+
+        fake_ee = _FakeEeModuleConMuestreo(filas_muestra=[])
+        provincia_ids_80 = [f"PROV-{i}" for i in range(80)]
+
+        resultado = sample_cells_for_calibration(
+            ee_module=fake_ee,
+            geometrias_por_provincia=object(),
+            provincia_ids=provincia_ids_80,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+            escala_muestreo_m=250,
+            n_por_provincia=50,  # 80 x 50 = 4000 < 5000
+        )
+
+        assert isinstance(resultado, pd.DataFrame)

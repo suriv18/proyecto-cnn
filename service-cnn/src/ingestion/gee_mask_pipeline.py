@@ -136,3 +136,107 @@ def extract_masked_ndvi_series(
     tabla = tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
     tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
     return tabla
+
+
+def sample_cells_for_calibration(
+    ee_module: Any,
+    geometrias_por_provincia: Any,
+    provincia_ids: list[str],
+    fecha_inicio: date,
+    fecha_fin: date,
+    escala_muestreo_m: int,
+    n_por_provincia: int,
+) -> "pd.DataFrame":
+    """Exporta una muestra acotada de celdas para calibrar/auditar la máscara.
+
+    Uso: alimentar `src.preprocessing.mask.apply_agricultural_mask` (para
+    auditar cuántas celdas caen en cada motivo de exclusión) y
+    `calibrate_ndvi_amplitude_threshold` (para fijar `amplitud_ndvi_min`
+    sobre campañas de entrenamiento) — nunca para el flujo de producción,
+    que usa `extract_masked_ndvi_series` (server-side, sin traer celdas).
+
+    Args:
+        ee_module: el módulo `ee` real, ya inicializado, o un doble de
+            prueba.
+        geometrias_por_provincia: `ee.FeatureCollection` con un feature por
+            provincia.
+        provincia_ids: provincias incluidas en `geometrias_por_provincia` —
+            usado solo para validar el tamaño total de la muestra contra el
+            límite de `.getInfo()`.
+        fecha_inicio, fecha_fin: ventana de extracción de la campaña (debe
+            restringirse a campañas de ENTRENAMIENTO cuando el resultado se
+            use para calibrar `amplitud_ndvi_min` — responsabilidad del
+            llamador, misma disciplina anti-fuga que
+            `calibrate_ndvi_amplitude_threshold`).
+        escala_muestreo_m: resolución de muestreo en metros, pasada a
+            `sampleRegions`.
+        n_por_provincia: máximo de celdas a muestrear por provincia.
+
+    Returns:
+        DataFrame con columnas `celda_id`, `cobertura_suelo` (`"cultivo"` o
+        `"no_cultivo"`), `altitud_m`, `pendiente_grados`, `amplitud_ndvi` —
+        exactamente el esquema que espera `apply_agricultural_mask`.
+
+    Raises:
+        ValueError: si `n_por_provincia * len(provincia_ids)` alcanza o
+            excede 5000 — límite real de `ee.FeatureCollection.getInfo()`
+            (`Collection query aborted after accumulating over 5000
+            elements`, ya documentado en `gee_extraction_pipeline.
+            dividir_en_meses`).
+    """
+    tamano_muestra_total = n_por_provincia * len(provincia_ids)
+    if tamano_muestra_total >= 5000:
+        raise ValueError(
+            f"n_por_provincia ({n_por_provincia}) x provincias "
+            f"({len(provincia_ids)}) = {tamano_muestra_total} alcanza o "
+            "excede el límite de 5000 elementos de "
+            "ee.FeatureCollection.getInfo(). Reduzca n_por_provincia."
+        )
+
+    cobertura = ee_module.Image(_WORLDCOVER_ID).select("Map").rename(["cobertura_suelo"])
+    elevacion = ee_module.Image(_SRTM_ID).select("elevation").rename(["altitud_m"])
+    pendiente = ee_module.Terrain.slope(elevacion).rename(["pendiente_grados"])
+
+    spec_ndvi = get_collection_spec("ndvi")
+    coleccion_ndvi = (
+        ee_module.ImageCollection(spec_ndvi.collection_id)
+        .filterDate(fecha_inicio, fecha_fin)
+        .select(spec_ndvi.band)
+    )
+    amplitud = (
+        coleccion_ndvi.max()
+        .subtract(coleccion_ndvi.min())
+        .multiply(spec_ndvi.factor_escala)
+        .rename(["amplitud_ndvi"])
+    )
+
+    imagen_compuesta = (
+        cobertura.addBands(elevacion).addBands(pendiente).addBands(amplitud)
+    )
+
+    muestra = imagen_compuesta.sampleRegions(
+        collection=geometrias_por_provincia,
+        scale=escala_muestreo_m,
+        geometries=False,
+    )
+
+    filas = [f["properties"] for f in muestra.getInfo()["features"]]
+    tabla = pd.DataFrame(filas)
+    if tabla.empty:
+        return pd.DataFrame(
+            columns=[
+                "celda_id",
+                "cobertura_suelo",
+                "altitud_m",
+                "pendiente_grados",
+                "amplitud_ndvi",
+            ]
+        )
+
+    tabla["celda_id"] = [f"celda_{i}" for i in range(len(tabla))]
+    tabla["cobertura_suelo"] = tabla["cobertura_suelo"].apply(
+        lambda clase: "cultivo" if clase == _CLASE_WORLDCOVER_CROPLAND else "no_cultivo"
+    )
+    return tabla[
+        ["celda_id", "cobertura_suelo", "altitud_m", "pendiente_grados", "amplitud_ndvi"]
+    ]
