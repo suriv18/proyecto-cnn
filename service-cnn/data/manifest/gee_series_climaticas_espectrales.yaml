@@ -1,0 +1,139 @@
+# Manifiesto de datos: series climáticas/espectrales vía Google Earth Engine
+# (sección 4.9, Tabla 7; sección 4.18 — manifiesto de datos).
+#
+# Extracción real ejecutada contra la API de Earth Engine (proyecto de Google
+# Cloud "cnn-sentinel"), no simulada. Generada por scripts/run_ingestion.py,
+# que invoca src.ingestion.gee_extraction_pipeline.extract_all_provinces_all_
+# variables sobre las geometrías reales de src.ingestion.province_geometries
+# (FAO/GAUL/2015/level2, 80/80 provincias encontradas).
+
+fuente:
+  proveedor: "Google Earth Engine (proyecto Google Cloud: cnn-sentinel)"
+  fecha_extraccion: "2026-09-12"
+  colecciones:
+    precipitacion:
+      collection_id: "UCSB-CHG/CHIRPS/DAILY"
+      banda: "precipitation"
+      resolucion_espacial_m: 5566
+      resolucion_temporal: "diaria"
+      unidad_real: "mm/día"
+    temperatura_maxima:
+      collection_id: "ECMWF/ERA5_LAND/DAILY_AGGR"
+      banda: "temperature_2m_max"
+      resolucion_espacial_m: 11132
+      resolucion_temporal: "diaria"
+      unidad_real: "°C (convertido desde Kelvin, offset -273.15)"
+    temperatura_minima:
+      collection_id: "ECMWF/ERA5_LAND/DAILY_AGGR"
+      banda: "temperature_2m_min"
+      resolucion_espacial_m: 11132
+      resolucion_temporal: "diaria"
+      unidad_real: "°C (convertido desde Kelvin, offset -273.15)"
+    radiacion_solar:
+      collection_id: "ECMWF/ERA5_LAND/DAILY_AGGR"
+      banda: "surface_solar_radiation_downwards_sum"
+      resolucion_espacial_m: 11132
+      resolucion_temporal: "diaria"
+      unidad_real: "J/m² acumulado por día"
+    ndvi:
+      collection_id: "MODIS/061/MOD13Q1"
+      banda: "NDVI"
+      resolucion_espacial_m: 250
+      resolucion_temporal: "16 días (compuesto)"
+      unidad_real: "adimensional [-1, 1] (convertido desde entero crudo, factor 0.0001)"
+  geometrias:
+    dataset: "FAO/GAUL/2015/level2"
+    provincias_esperadas: 80
+    provincias_encontradas: 80
+    nota: >
+      Nombres de provincia y departamento normalizados (tildes/mayúsculas)
+      entre configs/provincias.csv (convención MIDAGRI) y GAUL — ver
+      src.ingestion.province_geometries.normalize_province_name y
+      DEPARTAMENTOS_GAUL. Verificado 80/80 sin faltantes.
+
+esquema_del_archivo_generado:
+  ruta: "data/raw/gee_series_crudo.parquet"
+  columnas: ["provincia_id", "fecha", "valor", "variable", "campana_id"]
+  sha256: "85c1a593e0b607ee2e28b652b836b86b2a84bf40fd7db0a81f7e8862fb46a415"
+  tamano_bytes: 9079328
+  filas_totales: 1148160
+  filas_por_variable:
+    precipitacion: 282640
+    temperatura_maxima: 282640
+    temperatura_minima: 282640
+    radiacion_solar: 282640
+    ndvi: 17600
+  valores_nulos: 0
+  rango_de_campanas: "2016-2025 (10 campañas, periodo enmendado — ver data/manifest/midagri_sisagri.yaml, enmienda_metodologica)"
+
+cobertura:
+  provincias_unicas: 80
+  campanas: [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+  ventana_de_extraccion_por_campana: >
+    Año calendario completo del ciclo agrícola (1 jul del año anterior a 30
+    jun del año de cosecha) — ver
+    src.ingestion.gee_extraction_pipeline.campana_a_ventana_extraccion. Es
+    una ventana AMPLIA, no las fases fenológicas finales: la alineación fina
+    a fases BBCH (sección 4.10.2) ocurre en preprocessing/phenology.py,
+    usando esta serie cruda como insumo (incluyendo NDVI, respaldo de nivel
+    2 para estimar la fecha de siembra).
+  rangos_fisicos_observados:
+    precipitacion_mm_dia: [0.0, 104.2]
+    temperatura_maxima_c: [1.1, 31.5]
+    temperatura_minima_c: [-14.4, 23.9]
+    radiacion_solar_j_m2: [3056131, 35413960]
+    ndvi: [0.0536, 0.8337]
+  nota_validacion: >
+    Rangos verificados como fisicamente coherentes con clima de sierra
+    altoandina (heladas nocturnas en temporada seca, NDVI de vegetación
+    real). No se detectaron valores nulos ni fuera de rango físico
+    plausible.
+
+bugs_reales_detectados_y_corregidos_durante_esta_extraccion:
+  - descripcion: >
+      GeeClient.extract_daily_series usaba reducer=None en reduceRegions(),
+      que pasaba los tests con doble de prueba (que ignoraba ese parámetro)
+      pero fallaba contra la API real con "Parameter 'reducer' is required
+      and may not be null."
+    fix: >
+      Se reduce cada imagen por separado con ee.Reducer.mean() explícito, se
+      le agrega la fecha como propiedad, y se aplana con .flatten() — patrón
+      verificado manualmente contra la API real antes de aplicarlo.
+  - descripcion: >
+      El enfoque anterior (.toBands()) producía estructura ANCHA (una
+      columna por fecha) en vez del formato LARGO (provincia_id, fecha,
+      valor) documentado en el docstring.
+    fix: "Reemplazado por el patrón .map() + .flatten() por imagen (ver arriba)."
+  - descripcion: >
+      gee_config.py referenciaba ECMWF/ERA5_LAND/HOURLY con bandas
+      temperature_2m_max/min y surface_solar_radiation_downwards, que no
+      existen en esa colección horaria (solo valores instantáneos).
+    fix: "Cambiado a ECMWF/ERA5_LAND/DAILY_AGGR, que sí expone esas bandas agregadas por día."
+  - descripcion: >
+      NDVI (MOD13Q1) se extraía como entero crudo sin escalar (rango
+      -2000..10000) y la temperatura ERA5-Land en Kelvin sin convertir a
+      Celsius.
+    fix: >
+      Se agregó factor_escala/offset_aditivo a GeeCollectionSpec, aplicado
+      en GeeClient.extract_daily_series (NDVI x0.0001; temperatura -273.15).
+  - descripcion: >
+      FeatureCollection.getInfo() aborta con "Collection query aborted after
+      accumulating over 5000 elements" al pedir un año diario completo x 80
+      provincias (29 200 elementos, sobre el límite real de Earth Engine).
+    fix: >
+      Se pagina cada campaña en meses calendario (dividir_en_meses, máx 80 x
+      31 = 2480 elementos por llamada).
+  - descripcion: >
+      Una extracción secuencial de 600 llamadas (10 campañas x 5 variables x
+      12 meses) tardaría más de 10 horas — cuello de botella de espera de
+      red/deserialización JSON del lado cliente, no de cómputo local puro.
+    fix: >
+      Se paraleliza con concurrent.futures.ThreadPoolExecutor
+      (max_workers=8 en la ejecución real). Tiempo real observado: ~2h34min
+      para las 600 llamadas (más lento de lo estimado por contención de
+      GIL en deserialización JSON pesada, pero sin fallos).
+
+pendiente:
+  - "Extraer capa de cobertura de suelo + MDE (altitud/pendiente) por celda para src.preprocessing.mask.apply_agricultural_mask — no cubierto por esta extracción, que es agregada a nivel de polígono provincial, no de celda."
+  - "Conectar esta serie cruda con src.preprocessing.phenology para la alineación fenológica fina a fases BBCH (Actividad 4)."
+  - "Confirmar con el asesor si la ventana de extracción amplia (año calendario del ciclo agrícola) es la interpretación correcta antes de proceder a la Actividad 4."
