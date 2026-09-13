@@ -44,11 +44,19 @@ def build_agricultural_mask_image(
             prueba con la misma interfaz mínima usada aquí.
         umbrales: `MaskThresholds` ya calibrados (mismo dataclass que usa
             `apply_agricultural_mask` en pandas).
-        fecha_inicio, fecha_fin: ventana de extracción de la campaña
-            (ver `gee_extraction_pipeline.campana_a_ventana_extraccion`) —
-            la amplitud NDVI se calcula sobre esta ventana específica, no
-            sobre un año fijo, porque el ciclo agrícola cambia campaña a
-            campaña.
+        fecha_inicio, fecha_fin: ventana de extracción de la CAMPAÑA
+            completa (ver `gee_extraction_pipeline.campana_a_ventana_extraccion`),
+            NO una ventana mensual de paginación — la amplitud NDVI se
+            calcula sobre esta ventana específica, no sobre un año fijo,
+            porque el ciclo agrícola cambia campaña a campaña. Esta función
+            no valida ni puede validar cuál ventana recibió: es
+            responsabilidad exclusiva del llamador. Ver
+            `extract_masked_ndvi_series`'s parámetro `ventana_mascara` para
+            el patrón correcto — esa función pagina la extracción NDVI real
+            por mes (`fecha_inicio`/`fecha_fin` propios, distintos) pero
+            siempre reconstruye la máscara con la ventana de campaña
+            completa, para que la amplitud NDVI de la máscara no varíe mes
+            a mes dentro de una misma campaña.
 
     Returns:
         Una `ee.Image` de una banda booleana: `True` solo en las celdas que

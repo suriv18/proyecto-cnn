@@ -34,10 +34,25 @@ plan: `docs/superpowers/plans/2026-09-13-mascara-agricola-gee.md`):
   aditivo, `None` preserva el comportamiento anterior para todas las
   variables.
 
-282/282 tests pasando (5 tareas del plan, cada una revisada por separado; se
+288/288 tests pasando (5 tareas del plan, cada una revisada por separado; se
 corrigió en el camino un bug real de correctitud — el factor de escala de
 NDVI no se aplicaba a la amplitud antes de compararla con el umbral, lo que
-habría hecho el criterio un no-op en producción).
+habría hecho el criterio un no-op en producción — más una revisión final de
+todo el branch que encontró y corrigió 2 bugs Critical adicionales: la
+máscara se recalculaba con la ventana MENSUAL de paginación en vez de la
+ventana de CAMPAÑA completa, y `filterDate` recibía objetos `date` crudos en
+vez de `.isoformat()`).
+
+**Auditoría de cumplimiento contra la tesis (sección 4.10.1 y Tabla 7,
+`docs/Proyecto_Tesis_Maestria_UNMSM_WMSR.docx`)**: la tesis NO fija nombres
+de producto ni umbrales numéricos para la máscara — el texto dice
+literalmente que "el nombre, versión, resolución y fecha de cada capa, así
+como los umbrales de altitud, pendiente y amplitud, se fijarán y
+registrarán antes de la evaluación definitiva". ESA WorldCover v200 2021 y
+SRTM 30m (elegidos en esta sesión) son decisiones válidas dentro de ese
+margen, pero **falta formalizarlas en un manifiesto reproducible** (mismo
+patrón que `data/manifest/gee_series_climaticas_espectrales.yaml` ya usa
+para las otras variables) — hoy solo existen en el código.
 
 Falta antes de usar esto en producción:
 - [ ] Fijar los umbrales reales de `MaskThresholds` (`altitud_min_m`,
@@ -52,6 +67,23 @@ Falta antes de usar esto en producción:
 - [ ] Re-ejecutar la extracción real de NDVI (Actividad 3) con
   `umbrales_mascara` ya fijados, para regenerar
   `data/raw/gee_series_crudo.parquet` con NDVI enmascarado.
+- [ ] **Formalizar ESA WorldCover v200 2021 y SRTM 30m en un manifiesto**
+  reproducible (nombre, versión, resolución, fecha de descarga), como exige
+  la tesis (sección 4.10.1) — hoy solo están en el código, no registrados
+  como manifiesto.
+- [ ] **[Gap crítico, alcance MAYOR a esta sesión]** La Tabla 7 de la tesis
+  (sección 4.9 / Anexo 01) exige para NDVI: *"Filtrado de calidad; media y
+  máximo por fase sobre máscara agrícola."* Ni el código ya existente
+  (`GeeClient.extract_daily_series`, de sesiones anteriores, ya ejecutado
+  contra datos reales — `data/raw/gee_series_crudo.parquet`) ni la nueva
+  `extract_masked_ndvi_series` de esta sesión aplican filtrado de calidad
+  (banda `SummaryQA`/`DetailedQA` de MOD13Q1) ni calculan el **máximo** por
+  fase — ambos solo usan `ee.Reducer.mean()`. No se corrige en este ciclo
+  porque afecta código ya en producción y el parquet ya generado, y
+  requiere su propia decisión de diseño (¿reducer adicional? ¿reextraer
+  todo NDVI?) antes de tocarlo — pero es un requisito textual de la tesis
+  aún incumplido y debe resolverse antes de considerar la extracción NDVI
+  completa.
 
 Deuda menor conocida (hallazgos Minor/Important de baja severidad de la
 revisión final del branch, no bloqueantes):
