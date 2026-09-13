@@ -70,3 +70,24 @@ class TestGetCollectionSpec:
         spec = get_collection_spec("precipitacion")
         with pytest.raises(Exception):
             spec.collection_id = "otra-cosa"  # type: ignore[misc]
+
+    def test_modis_ndvi_tiene_banda_de_calidad_y_reducers_multiples(self):
+        """Tabla 7: 'Filtrado de calidad; media y máximo por fase sobre
+        máscara agrícola' — NDVI necesita filtrar por DetailedQA (MOD13Q1)
+        y calcular dos reducers (media y máximo), no solo uno."""
+        spec = get_collection_spec("ndvi")
+        assert spec.banda_calidad == "DetailedQA"
+        assert spec.reducers == (AggregationRule.MEAN, AggregationRule.MAX)
+
+    def test_chirps_precipitacion_no_tiene_banda_de_calidad_ni_reducers_multiples(self):
+        """Retrocompatibilidad: las variables sin banda de calidad propia
+        (CHIRPS, ERA5-Land) no deben ganar comportamiento nuevo."""
+        spec = get_collection_spec("precipitacion")
+        assert spec.banda_calidad is None
+        assert spec.reducers == ()
+
+    def test_era5_land_variables_no_tienen_banda_de_calidad(self):
+        for variable in ("temperatura_maxima", "temperatura_minima", "radiacion_solar"):
+            spec = get_collection_spec(variable)
+            assert spec.banda_calidad is None
+            assert spec.reducers == ()

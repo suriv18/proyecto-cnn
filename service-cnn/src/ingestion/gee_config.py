@@ -32,6 +32,14 @@ class GeeCollectionSpec:
     0.0) — solo NDVI (factor de escala entero→decimal) y las variables de
     ERA5-Land (Kelvin→Celsius) los necesitan, verificado contra el catálogo
     oficial MODIS/ECMWF.
+
+    `banda_calidad` y `reducers` cubren el caso NDVI (Tabla 7: "Filtrado de
+    calidad; media y máximo por fase sobre máscara agrícola"): si
+    `banda_calidad` no es `None`, `extract_daily_series` filtra por esa banda
+    antes de reducir; si `reducers` no está vacío, se calculan TODOS esos
+    reducers (en vez de uno solo, `aggregation`), devolviendo una columna por
+    reducer. Ambos son `None`/vacío por defecto — las variables sin banda de
+    calidad propia (CHIRPS, ERA5-Land) no cambian de comportamiento.
     """
 
     collection_id: str
@@ -41,6 +49,8 @@ class GeeCollectionSpec:
     aggregation: AggregationRule
     factor_escala: float = 1.0
     offset_aditivo: float = 0.0
+    banda_calidad: str | None = None
+    reducers: tuple[AggregationRule, ...] = ()
 
 
 _SPECS: dict[str, GeeCollectionSpec] = {
@@ -86,12 +96,20 @@ _SPECS: dict[str, GeeCollectionSpec] = {
         band="NDVI",
         spatial_resolution_m=250,
         temporal_resolution="16 dias",
-        # Tabla 7: "media y máximo por fase sobre máscara agrícola" — se modela
-        # la media aquí; el máximo se calcula aparte donde se necesite (B3).
+        # Tabla 7: "media y máximo por fase sobre máscara agrícola" — ambos
+        # reducers se calculan (ver banda_calidad/reducers abajo); aggregation
+        # se conserva como el reducer "principal" para compatibilidad con
+        # llamadores que aún no distinguen entre columnas.
         aggregation=AggregationRule.MEAN,
         # MOD13Q1 codifica NDVI como entero [-2000, 10000] (catálogo oficial
         # MODIS/USGS): valor_real = crudo * 0.0001.
         factor_escala=0.0001,
+        # DetailedQA (16 bits, catálogo oficial MODIS/061/MOD13Q1 + MODIS VI
+        # User's Guide): bits 0-1 = VI Quality (00=buena, 01=revisar otras
+        # QA, 10=nublado, 11=no producido); bit 8 = nube adyacente; bit 10 =
+        # nubes mixtas posibles. Se filtra en extract_daily_series.
+        banda_calidad="DetailedQA",
+        reducers=(AggregationRule.MEAN, AggregationRule.MAX),
     ),
 }
 
