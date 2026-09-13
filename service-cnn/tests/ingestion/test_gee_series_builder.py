@@ -61,7 +61,7 @@ class TestAggregateByPhase:
         self, serie_diaria_precipitacion, fases_fenologicas
     ):
         resultado = aggregate_by_phase(
-            serie_diaria_precipitacion, fases_fenologicas, AggregationRule.SUM
+            serie_diaria_precipitacion, fases_fenologicas, {"valor": AggregationRule.SUM}
         )
         fila_emergencia = resultado[resultado["fase"] == "emergencia"].iloc[0]
         # Septiembre tiene 30 días * 5mm = 150mm
@@ -71,7 +71,7 @@ class TestAggregateByPhase:
         self, serie_diaria_precipitacion, fases_fenologicas
     ):
         resultado = aggregate_by_phase(
-            serie_diaria_precipitacion, fases_fenologicas, AggregationRule.SUM
+            serie_diaria_precipitacion, fases_fenologicas, {"valor": AggregationRule.SUM}
         )
         fila_desarrollo = resultado[
             resultado["fase"] == "desarrollo_vegetativo"
@@ -90,7 +90,7 @@ class TestAggregateByPhase:
             }
         )
         resultado = aggregate_by_phase(
-            serie, fases_fenologicas[:1], AggregationRule.MEAN
+            serie, fases_fenologicas[:1], {"valor": AggregationRule.MEAN}
         )
         # media de 1..30 = 15.5
         assert resultado.iloc[0]["valor_agregado"] == pytest.approx(15.5)
@@ -99,7 +99,7 @@ class TestAggregateByPhase:
         self, serie_diaria_precipitacion, fases_fenologicas
     ):
         resultado = aggregate_by_phase(
-            serie_diaria_precipitacion, fases_fenologicas, AggregationRule.SUM
+            serie_diaria_precipitacion, fases_fenologicas, {"valor": AggregationRule.SUM}
         )
         assert set(["provincia_id", "campana_id", "fase", "valor_agregado"]).issubset(
             resultado.columns
@@ -125,7 +125,7 @@ class TestAggregateByPhase:
             ]
         )
         resultado = aggregate_by_phase(
-            serie_diaria_precipitacion, fase_sin_datos, AggregationRule.SUM
+            serie_diaria_precipitacion, fase_sin_datos, {"valor": AggregationRule.SUM}
         )
         assert pd.isna(resultado.iloc[0]["valor_agregado"])
 
@@ -149,7 +149,7 @@ class TestAggregateByPhase:
             aggregate_by_phase(
                 serie_con_fuga,
                 fases_fenologicas,
-                AggregationRule.SUM,
+                {"valor": AggregationRule.SUM},
                 fecha_corte=date(2020, 11, 30),
             )
 
@@ -160,7 +160,43 @@ class TestAggregateByPhase:
         resultado = aggregate_by_phase(
             serie_diaria_precipitacion,
             fases_fenologicas,
-            AggregationRule.SUM,
+            {"valor": AggregationRule.SUM},
             fecha_corte=date(2020, 11, 30),
         )
         assert len(resultado) == 2
+
+    def test_multiples_columnas_con_reglas_propias(self, fases_fenologicas):
+        """NDVI (Tabla 7): 'media y máximo por fase' -- valor_mean se agrega
+        con MEAN, valor_max se agrega con MAX, en una sola pasada."""
+        fechas = pd.date_range("2020-09-01", "2020-09-30", freq="D")
+        serie = pd.DataFrame(
+            {
+                "provincia_id": "PUN-AZA",
+                "campana_id": 2021,
+                "fecha": fechas,
+                "valor_mean": list(range(1, len(fechas) + 1)),  # 1..30
+                "valor_max": [100.0] * len(fechas),
+            }
+        )
+        resultado = aggregate_by_phase(
+            serie,
+            fases_fenologicas[:1],
+            {"valor_mean": AggregationRule.MEAN, "valor_max": AggregationRule.MAX},
+        )
+        fila = resultado.iloc[0]
+        assert fila["valor_agregado_mean"] == pytest.approx(15.5)
+        assert fila["valor_agregado_max"] == pytest.approx(100.0)
+
+    def test_columna_unica_con_clave_valor_preserva_nombre_actual(
+        self, serie_diaria_precipitacion, fases_fenologicas
+    ):
+        """Retrocompatibilidad: con una sola columna de clave 'valor', el
+        resultado sigue teniendo 'valor_agregado' a secas, no
+        'valor_agregado_valor' -- ningún llamador actual debe reescribirse."""
+        resultado = aggregate_by_phase(
+            serie_diaria_precipitacion,
+            fases_fenologicas,
+            {"valor": AggregationRule.SUM},
+        )
+        assert "valor_agregado" in resultado.columns
+        assert "valor_agregado_valor" not in resultado.columns
