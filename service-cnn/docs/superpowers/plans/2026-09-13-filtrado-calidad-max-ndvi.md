@@ -829,3 +829,192 @@ Claude-Session: https://claude.ai/code/session_016mkokyMQFzBE7QpPxKea4U
 EOF
 )"
 ```
+
+---
+
+## Task 5: Propagar el nuevo esquema NDVI a los consumidores aguas abajo
+
+**Contexto (añadido tras la revisión final de todo el branch, hallazgo Critical):** Tasks 1-4 cambiaron el contrato de salida de `GeeClient.extract_daily_series` para NDVI (de una columna `valor` a `valor_mean`/`valor_max`), pero **ningún consumidor aguas abajo se actualizó**:
+
+1. `gee_extraction_pipeline.extract_all_provinces_all_variables` concatena resultados de todas las variables con `pd.concat` — esto en sí YA funciona correctamente hoy (pandas rellena con NaN las columnas ausentes en un concat con esquemas distintos, verificado manualmente), pero (a) su docstring/`columnas` hardcodeado en el caso vacío sigue asumiendo una sola columna `valor` para todas las variables, y (b) **el mock de su test** (`test_gee_extraction_pipeline.py`, fixture `cliente_fake`) devuelve el mismo DataFrame con columna `valor` sin importar la `variable` pedida — incluida `"ndvi"` — por lo que ningún test detectó que el esquema real de NDVI ahora es distinto.
+2. `phenology_pipeline._serie_ndvi_de_provincia_campana` lee `filtro["valor"]` sobre el parquet crudo — tras re-extraer con el nuevo código, esa columna no existiría para las filas de NDVI (columna `KeyError`), rompiendo el estimador de fecha de siembra de nivel 2 (`estimate_sowing_date` → `_inicio_estacion_desde_ndvi`, que necesita la serie NDVI continua día a día/16-días — confirmado que es la MEDIA la que corresponde aquí, no el máximo: `_inicio_estacion_desde_ndvi` busca la primera fecha donde el NDVI cruza un umbral ascendente, un uso de serie temporal continua, distinto del máximo de campaña que alimenta el benchmark B3).
+3. `tensor_builder.py` (`build_observation_tensor`) espera `valor_agregado` — pero este módulo **no está conectado a datos reales todavía** (confirmado: sin llamador real, ver `docs/PENDIENTE.md` sección 2.3, "Falta conectarlo con datos reales"). Queda **fuera de alcance** de esta tarea — se actualizará cuando 2.3 se implemente, no antes.
+
+**Files:**
+- Modify: `service-cnn/src/ingestion/gee_extraction_pipeline.py`
+- Modify: `service-cnn/tests/ingestion/test_gee_extraction_pipeline.py`
+- Modify: `service-cnn/src/preprocessing/phenology_pipeline.py`
+- Modify: `service-cnn/tests/preprocessing/test_phenology_pipeline.py` (si existe un test que ejercite `_serie_ndvi_de_provincia_campana` contra un fixture con columna `valor` — actualizar sus fixtures al nuevo esquema; si no existe, no crear uno nuevo fuera de alcance).
+- Modify: `service-cnn/docs/gee_mask_pipeline.py`'s docstring (línea con "mismo contrato que `GeeClient.extract_daily_series`" — hallazgo Minor de la misma revisión, corregido aquí de paso por ser una sola línea).
+- Modify: `service-cnn/docs/PENDIENTE.md` (corregir la sección 2.3 que aún documenta el esquema viejo, hallazgo Important de la misma revisión).
+
+**Interfaces:**
+- Consumes: el esquema real que `GeeClient.extract_daily_series` ya produce (Task 2): `provincia_id, fecha, valor` para variables de un reducer; `provincia_id, fecha, valor_mean, valor_max` para NDVI.
+- Produces: sin cambio de firma pública en `extract_all_provinces_all_variables` ni en `_serie_ndvi_de_provincia_campana` — solo corrige su comportamiento interno y las columnas devueltas para reflejar el esquema real.
+
+- [ ] **Step 1: Corregir el mock del test de `extract_all_provinces_all_variables` para reflejar el contrato real por variable (rojo primero)**
+
+En `service-cnn/tests/ingestion/test_gee_extraction_pipeline.py`, el fixture `cliente_fake` (líneas ~74-84) hoy devuelve el MISMO DataFrame (`columna valor`) para cualquier `variable`. Reemplazar por un `side_effect` que devuelva un esquema distinto según la variable pedida — reflejando exactamente lo que `GeeClient.extract_daily_series` real devuelve hoy:
+
+```python
+    @pytest.fixture
+    def cliente_fake(self):
+        cliente = MagicMock()
+
+        def _side_effect(variable, geometrias_por_provincia, fecha_inicio, fecha_fin):
+            if variable == "ndvi":
+                return pd.DataFrame(
+                    {
+                        "provincia_id": ["ABANCAY", "ABANCAY"],
+                        "fecha": ["2019-07-01", "2019-07-02"],
+                        "valor_mean": [1.0, 2.0],
+                        "valor_max": [1.5, 2.5],
+                    }
+                )
+            return pd.DataFrame(
+                {
+                    "provincia_id": ["ABANCAY", "ABANCAY"],
+                    "fecha": ["2019-07-01", "2019-07-02"],
+                    "valor": [1.0, 2.0],
+                }
+            )
+
+        cliente.extract_daily_series.side_effect = _side_effect
+        return cliente
+```
+
+Este cambio de fixture por sí solo probablemente NO rompe ningún test existente (el concat con `pd.concat` ya maneja columnas heterogéneas hoy, verificado manualmente: `pd.concat([{"valor":1}, {"valor_mean":2,"valor_max":3}])` produce columnas `valor, valor_mean, valor_max` con NaN donde falta) — pero es la corrección que hace que el test suite deje de estar "consistentemente equivocado junto con la producción" (el mismo patrón de trampa ya encontrado una vez en Task 2). Añadir un test nuevo que verifique explícitamente el esquema ancho para NDVI:
+
+```python
+    def test_ndvi_conserva_columnas_valor_mean_y_valor_max_en_el_resultado(
+        self, cliente_fake, geometrias_fake
+    ):
+        """El contrato real de GeeClient.extract_daily_series para NDVI
+        (Tabla 7: filtrado de calidad + media y máximo) no debe perderse ni
+        colisionar al concatenar con las demás variables (esquema de una
+        sola columna 'valor')."""
+        resultado = extract_all_provinces_all_variables(
+            cliente=cliente_fake,
+            geometrias_por_provincia=geometrias_fake,
+            variables=["precipitacion", "ndvi"],
+            campanas=[2020],
+        )
+
+        filas_ndvi = resultado[resultado["variable"] == "ndvi"]
+        filas_precip = resultado[resultado["variable"] == "precipitacion"]
+
+        assert "valor_mean" in filas_ndvi.columns
+        assert "valor_max" in filas_ndvi.columns
+        assert filas_ndvi["valor_mean"].notna().all()
+        assert filas_ndvi["valor_max"].notna().all()
+        # las filas de NDVI no deben tener valor propio (columna compartida
+        # con las variables de un solo reducer, pero NaN para NDVI)
+        assert filas_ndvi["valor"].isna().all()
+        # y viceversa: precipitación no debe tener valor_mean/valor_max
+        assert filas_precip["valor"].notna().all()
+        assert filas_precip["valor_mean"].isna().all()
+```
+
+- [ ] **Step 2: Ejecutar los tests para verificar el estado (puede que ya pasen, dado que `pd.concat` ya maneja esto)**
+
+Run: `cd service-cnn && python -m pytest tests/ingestion/test_gee_extraction_pipeline.py -v`
+Expected: si `test_ndvi_conserva_columnas_valor_mean_y_valor_max_en_el_resultado` PASA de inmediato (sin cambios de producción), es porque `pd.concat` ya lo maneja correctamente — confirmarlo explícitamente, no asumirlo. Si falla, diagnosticar antes de tocar producción (no debería requerir cambios de producción en `gee_extraction_pipeline.py` para este test específico, solo en el manejo del caso `tablas` vacío del Step 3).
+
+- [ ] **Step 3: Corregir el caso de resultado vacío y el docstring**
+
+En `service-cnn/src/ingestion/gee_extraction_pipeline.py`, la línea `columnas = ["provincia_id", "fecha", "valor", "variable", "campana_id"]` (usada solo cuando `tablas` está vacío) asume el esquema de un solo reducer para TODAS las variables — esto es incorrecto si se pide únicamente `"ndvi"` y no hay resultados. No hay forma de saber de antemano qué columnas tendría el resultado sin llamar al cliente (que no se llamó, por eso está vacío) — documentar esta limitación explícitamente en vez de fingir que se sabe:
+
+```python
+    columnas_base = ["provincia_id", "fecha", "variable", "campana_id"]
+    if not tablas:
+        # Sin ninguna tarea ejecutada exitosamente no hay forma de saber
+        # qué columna(s) de valor tendría el resultado (depende de
+        # cuántos reducers tiene cada variable pedida) -- se devuelve solo
+        # el esquema base, sin inventar "valor" como si aplicara a todas.
+        resultado_final = pd.DataFrame(columns=columnas_base)
+    else:
+        resultado_final = pd.concat(tablas, ignore_index=True)
+```
+
+Actualizar también el docstring de `Returns` (líneas ~124-127) para reflejar que la(s) columna(s) de valor dependen de la variable (`valor` para las de un reducer, `valor_mean`/`valor_max` para NDVI), no asumir `valor` como universal.
+
+- [ ] **Step 4: Ejecutar los tests para verificar que pasan**
+
+Run: `cd service-cnn && python -m pytest tests/ingestion/test_gee_extraction_pipeline.py -v`
+Expected: PASS — todos los tests (los ya existentes + el nuevo).
+
+- [ ] **Step 5: Corregir `phenology_pipeline._serie_ndvi_de_provincia_campana`**
+
+En `service-cnn/src/preprocessing/phenology_pipeline.py`, cambiar `filtro["valor"]` por `filtro["valor_mean"]` (confirmado arriba: el estimador de fecha de siembra por umbral ascendente necesita la serie continua de intensidad vegetativa — media, no máximo de campaña):
+
+```python
+    return pd.DataFrame(
+        {
+            "fecha": pd.to_datetime(filtro["fecha"]).dt.date,
+            "ndvi": filtro["valor_mean"],
+        }
+    )
+```
+
+Añadir una nota breve en el docstring de `_serie_ndvi_de_provincia_campana` (o como comentario en la línea) explicando por qué `valor_mean` y no `valor_max`: la detección de inicio de estación por cruce de umbral necesita la serie temporal continua, no un agregado de campaña completa.
+
+Buscar primero si existe un test que ejercite esta función con un fixture de columna `valor` (revisar `service-cnn/tests/preprocessing/test_phenology_pipeline.py`) y actualizar su fixture a `valor_mean` si lo hay — sin inventar un test nuevo si no lo hay ya, ya que esta función no es el foco de este plan, solo necesita dejar de estar rota.
+
+- [ ] **Step 6: Ejecutar los tests de phenology_pipeline y toda la suite**
+
+Run: `cd service-cnn && python -m pytest tests/preprocessing/test_phenology_pipeline.py -v`
+Expected: PASS.
+
+Run: `cd service-cnn && python -m pytest tests/ -q --ignore=tests/features/test_dataset_builder.py`
+Expected: PASS — todos los tests, conteo total a confirmar en la salida real.
+
+- [ ] **Step 7: Corregir las 2 afirmaciones de "mismo contrato" ahora falsas**
+
+En `service-cnn/src/ingestion/gee_mask_pipeline.py`, localizar el docstring de `extract_masked_ndvi_series` que dice "mismo contrato que `GeeClient.extract_daily_series`" (ya no es cierto: esa función sigue devolviendo `valor` único, mientras que `extract_daily_series` para NDVI ahora devuelve `valor_mean`/`valor_max`) y corregirlo:
+
+```python
+    Returns:
+        DataFrame con columnas `provincia_id`, `fecha`, `valor` — columna
+        única con NDVI real ([-1, 1]) ya escalado. NOTA: a diferencia de
+        `GeeClient.extract_daily_series` (que desde el filtrado de calidad
+        y reducers múltiples de NDVI devuelve `valor_mean`/`valor_max`),
+        esta función todavía usa un único `ee.Reducer.mean()` sin filtro de
+        calidad — no actualizada por ese cambio (ver
+        `docs/PENDIENTE.md`, pendiente de conectar la máscara agrícola al
+        mismo criterio de calidad/reducers).
+```
+
+En `service-cnn/docs/PENDIENTE.md`, sección 2.3 (tensor V×T), corregir la línea que documenta el esquema del parquet crudo (`provincia_id, campana_id, fecha, valor`) para aclarar que aplica a las 4 variables de un reducer, y que NDVI usa `valor_mean`/`valor_max` — evitar que ambas secciones del documento se contradigan.
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd service-cnn
+git add src/ingestion/gee_extraction_pipeline.py tests/ingestion/test_gee_extraction_pipeline.py src/preprocessing/phenology_pipeline.py tests/preprocessing/test_phenology_pipeline.py src/ingestion/gee_mask_pipeline.py docs/PENDIENTE.md
+git commit -m "$(cat <<'EOF'
+Propagar el esquema valor_mean/valor_max de NDVI a los consumidores aguas abajo
+
+Hallazgo Critical de la revision final de todo el branch: el cambio de
+esquema de extract_daily_series para NDVI (Tasks 1-4) nunca se
+propago -- el mock del test de extract_all_provinces_all_variables
+devolvia el mismo esquema para todas las variables (ocultando que
+pd.concat ya maneja bien el caso real), phenology_pipeline seguia
+leyendo filtro["valor"] (KeyError tras re-extraer NDVI), y dos
+docstrings afirmaban falsamente que extract_masked_ndvi_series tiene
+"el mismo contrato" que extract_daily_series.
+
+Corregido: mock de test_gee_extraction_pipeline.py ahora refleja el
+contrato real por variable; caso de resultado vacio ya no asume
+"valor" universal; phenology_pipeline usa valor_mean (serie continua
+para el estimador de fecha de siembra por umbral ascendente, no
+valor_max que es agregado de campana); docstrings y PENDIENTE.md
+corregidos para no contradecirse.
+
+tensor_builder.py (Task 2.3, aun sin conectar a datos reales) queda
+fuera de alcance -- se actualizara cuando esa tarea se implemente.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_016mkokyMQFzBE7QpPxKea4U
+EOF
+)"
+```
