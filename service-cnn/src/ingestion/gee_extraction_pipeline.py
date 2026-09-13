@@ -122,9 +122,17 @@ def extract_all_provinces_all_variables(
             `amplitud_ndvi_min` en `sample_cells_for_calibration`.
 
     Returns:
-        Si `devolver_fallos` es False: DataFrame con columnas `provincia_id`,
-        `fecha`, `valor`, `variable`, `campana_id` — concatenación de todas
-        las combinaciones variable×campaña.
+        Si `devolver_fallos` es False: DataFrame con columnas base
+        `provincia_id`, `fecha`, `variable`, `campana_id`, más la(s)
+        columna(s) de valor que dependen de la variable: `valor` para las
+        variables de un solo reducer (precipitación, ERA5-Land), `valor_mean`
+        y `valor_max` para NDVI (filtrado de calidad + media y máximo, Tabla
+        7) — concatenación de todas las combinaciones variable×campaña; con
+        `pd.concat` las filas de una variable quedan con NaN en las columnas
+        de valor que no le corresponden (ej. `valor_mean`/`valor_max` en NaN
+        para las filas que no son NDVI). Si `tablas` queda vacío (ninguna
+        tarea exitosa), se devuelve solo el esquema base, sin columna(s) de
+        valor: no hay forma de saber de antemano cuáles aplicarían.
         Si `devolver_fallos` es True: tupla `(DataFrame, fallos)`, donde
         `fallos` es una lista de dicts `{variable, campana_id, fecha_inicio,
         fecha_fin, error}` por cada mes que lanzó una excepción.
@@ -194,10 +202,15 @@ def extract_all_provinces_all_variables(
             tabla["campana_id"] = campana_id
             tablas.append(tabla)
 
-    columnas = ["provincia_id", "fecha", "valor", "variable", "campana_id"]
-    resultado_final = (
-        pd.concat(tablas, ignore_index=True) if tablas else pd.DataFrame(columns=columnas)
-    )
+    columnas_base = ["provincia_id", "fecha", "variable", "campana_id"]
+    if not tablas:
+        # Sin ninguna tarea ejecutada exitosamente no hay forma de saber
+        # qué columna(s) de valor tendría el resultado (depende de
+        # cuántos reducers tiene cada variable pedida) -- se devuelve solo
+        # el esquema base, sin inventar "valor" como si aplicara a todas.
+        resultado_final = pd.DataFrame(columns=columnas_base)
+    else:
+        resultado_final = pd.concat(tablas, ignore_index=True)
 
     if devolver_fallos:
         return resultado_final, fallos

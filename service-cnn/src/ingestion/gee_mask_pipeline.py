@@ -124,9 +124,14 @@ def extract_masked_ndvi_series(
             ventana anual completa en `sample_cells_for_calibration`).
 
     Returns:
-        DataFrame con columnas `provincia_id`, `fecha`, `valor` — mismo
-        contrato que `GeeClient.extract_daily_series`, con `valor` ya
-        convertido a NDVI real ([-1, 1]) vía el `factor_escala` del spec.
+        DataFrame con columnas `provincia_id`, `fecha`, `valor` — columna
+        única con NDVI real ([-1, 1]) ya escalado. NOTA: a diferencia de
+        `GeeClient.extract_daily_series` (que desde el filtrado de calidad
+        y reducers múltiples de NDVI devuelve `valor_mean`/`valor_max`),
+        esta función todavía usa un único `ee.Reducer.mean()` sin filtro de
+        calidad — no actualizada por ese cambio (ver
+        `docs/PENDIENTE.md`, pendiente de conectar la máscara agrícola al
+        mismo criterio de calidad/reducers).
     """
     ee = cliente.ee_module
     fecha_inicio_mascara, fecha_fin_mascara = ventana_mascara

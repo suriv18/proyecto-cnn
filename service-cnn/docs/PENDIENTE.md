@@ -126,7 +126,7 @@ Una vez resuelta 2.1, este script debe orquestar en orden:
 ### 2.3 Construcción del tensor V×T (features/tensor_builder.py)
 Ya implementado y probado con datos sintéticos (`build_observation_tensor`, `build_variable_dictionary`). Falta conectarlo con datos reales:
 - Input: `data/raw/gee_series_crudo.parquet` (series) + `data/interim/fenologia_alineada.parquet` (ventanas de fase) → agregación por fase con `src/ingestion/gee_series_builder.aggregate_by_phase` (ya implementado, no verificado aún con datos reales de punta a punta).
-- Nota: `aggregate_by_phase` espera columnas `provincia_id, campana_id, fecha, valor` por serie — el parquet crudo ya tiene ese formato (con columna extra `variable` a filtrar antes de pasar).
+- Nota: `aggregate_by_phase` espera columnas `provincia_id, campana_id, fecha, valor` por serie — el parquet crudo tiene ese formato para las 4 variables de un solo reducer (precipitación, ERA5-Land), pero NDVI tiene `valor_mean`/`valor_max` en vez de `valor` (filtrado de calidad + media y máximo, Tabla 7 — ver sección 2.1); hay que filtrar por `variable` antes de pasar cada serie, y para NDVI decidir/adaptar qué columna(s) alimentan `aggregate_by_phase` (probablemente ambas, con una regla de agregación propia por columna, como ya hace `gee_series_builder.aggregate_by_phase` vía `reglas_por_columna`).
 - Definir explícitamente qué covariables estáticas (altitud) y dinámicas (% superficie sembrada con quinua) se añaden al tensor, y de dónde salen (altitud: pendiente del MDE de 2.1; % superficie: ya disponible en `midagri_siembra_mensual`/`midagri_aggregation`).
 
 ### 2.4 Tratamiento de la variable objetivo

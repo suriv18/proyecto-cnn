@@ -74,13 +74,26 @@ class TestExtractAllProvincesAllVariables:
     @pytest.fixture
     def cliente_fake(self):
         cliente = MagicMock()
-        cliente.extract_daily_series.return_value = pd.DataFrame(
-            {
-                "provincia_id": ["ABANCAY", "ABANCAY"],
-                "fecha": ["2019-07-01", "2019-07-02"],
-                "valor": [1.0, 2.0],
-            }
-        )
+
+        def _side_effect(variable, geometrias_por_provincia, fecha_inicio, fecha_fin):
+            if variable == "ndvi":
+                return pd.DataFrame(
+                    {
+                        "provincia_id": ["ABANCAY", "ABANCAY"],
+                        "fecha": ["2019-07-01", "2019-07-02"],
+                        "valor_mean": [1.0, 2.0],
+                        "valor_max": [1.5, 2.5],
+                    }
+                )
+            return pd.DataFrame(
+                {
+                    "provincia_id": ["ABANCAY", "ABANCAY"],
+                    "fecha": ["2019-07-01", "2019-07-02"],
+                    "valor": [1.0, 2.0],
+                }
+            )
+
+        cliente.extract_daily_series.side_effect = _side_effect
         return cliente
 
     @pytest.fixture
@@ -234,6 +247,34 @@ class TestExtractAllProvincesAllVariables:
             max_workers=1,
         )
         assert len(resultado) == 24
+
+    def test_ndvi_conserva_columnas_valor_mean_y_valor_max_en_el_resultado(
+        self, cliente_fake, geometrias_fake
+    ):
+        """El contrato real de GeeClient.extract_daily_series para NDVI
+        (Tabla 7: filtrado de calidad + media y máximo) no debe perderse ni
+        colisionar al concatenar con las demás variables (esquema de una
+        sola columna 'valor')."""
+        resultado = extract_all_provinces_all_variables(
+            cliente=cliente_fake,
+            geometrias_por_provincia=geometrias_fake,
+            variables=["precipitacion", "ndvi"],
+            campanas=[2020],
+        )
+
+        filas_ndvi = resultado[resultado["variable"] == "ndvi"]
+        filas_precip = resultado[resultado["variable"] == "precipitacion"]
+
+        assert "valor_mean" in filas_ndvi.columns
+        assert "valor_max" in filas_ndvi.columns
+        assert filas_ndvi["valor_mean"].notna().all()
+        assert filas_ndvi["valor_max"].notna().all()
+        # las filas de NDVI no deben tener valor propio (columna compartida
+        # con las variables de un solo reducer, pero NaN para NDVI)
+        assert filas_ndvi["valor"].isna().all()
+        # y viceversa: precipitación no debe tener valor_mean/valor_max
+        assert filas_precip["valor"].notna().all()
+        assert filas_precip["valor_mean"].isna().all()
 
     def test_usa_extract_masked_ndvi_series_para_ndvi_si_se_pasan_umbrales(
         self, geometrias_fake, monkeypatch
