@@ -26,6 +26,9 @@ from typing import Any, Optional
 
 import pandas as pd
 
+from src.ingestion.gee_mask_pipeline import extract_masked_ndvi_series
+from src.preprocessing.mask import MaskThresholds
+
 
 def dividir_en_meses(fecha_inicio: date, fecha_fin: date) -> list[tuple[date, date]]:
     """Divide un rango de fechas en trozos de un mes calendario cada uno.
@@ -78,6 +81,7 @@ def extract_all_provinces_all_variables(
     campanas: list[int],
     devolver_fallos: bool = False,
     max_workers: int = 1,
+    umbrales_mascara: Optional[MaskThresholds] = None,
 ) -> pd.DataFrame | tuple[pd.DataFrame, list[dict]]:
     """Extrae todas las variables para todas las campañas, en una sola tabla.
 
@@ -103,6 +107,12 @@ def extract_all_provinces_all_variables(
             que un `ThreadPoolExecutor` reduce el tiempo total casi
             linealmente. 1 (por defecto) preserva el comportamiento
             estrictamente secuencial.
+        umbrales_mascara: si se proporciona, la variable "ndvi" se extrae
+            vía `extract_masked_ndvi_series` (NDVI agregado solo sobre
+            celdas agrícolas, ver `gee_mask_pipeline.py`) en vez de
+            `cliente.extract_daily_series`. Las demás variables no se ven
+            afectadas. `None` (por defecto) preserva el comportamiento
+            actual para todas las variables, incluida "ndvi".
 
     Returns:
         Si `devolver_fallos` es False: DataFrame con columnas `provincia_id`,
@@ -129,12 +139,21 @@ def extract_all_provinces_all_variables(
         variable, campana_id, fecha_inicio, fecha_fin = tarea
         resultado_o_excepcion: Any
         try:
-            resultado_o_excepcion = cliente.extract_daily_series(
-                variable=variable,
-                geometrias_por_provincia=geometrias_por_provincia,
-                fecha_inicio=fecha_inicio,
-                fecha_fin=fecha_fin,
-            )
+            if variable == "ndvi" and umbrales_mascara is not None:
+                resultado_o_excepcion = extract_masked_ndvi_series(
+                    cliente=cliente,
+                    geometrias_por_provincia=geometrias_por_provincia,
+                    umbrales=umbrales_mascara,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
+                )
+            else:
+                resultado_o_excepcion = cliente.extract_daily_series(
+                    variable=variable,
+                    geometrias_por_provincia=geometrias_por_provincia,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
+                )
         except Exception as exc:  # noqa: BLE001 — se reporta, no se enmascara
             resultado_o_excepcion = exc
         return tarea, resultado_o_excepcion

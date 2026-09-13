@@ -234,3 +234,77 @@ class TestExtractAllProvincesAllVariables:
             max_workers=1,
         )
         assert len(resultado) == 24
+
+    def test_usa_extract_masked_ndvi_series_para_ndvi_si_se_pasan_umbrales(
+        self, geometrias_fake, monkeypatch
+    ):
+        """Cuando se pasan umbrales_mascara, la variable 'ndvi' debe pasar
+        por extract_masked_ndvi_series (NDVI agregado sobre celdas
+        agrícolas) en vez de cliente.extract_daily_series -- las demás
+        variables no cambian de camino."""
+        from src.preprocessing.mask import MaskThresholds
+
+        umbrales = MaskThresholds(
+            altitud_min_m=2500,
+            altitud_max_m=4200,
+            pendiente_max_grados=25.0,
+            amplitud_ndvi_min=0.15,
+        )
+
+        llamadas_masked = []
+
+        def _fake_extract_masked_ndvi_series(
+            cliente, geometrias_por_provincia, umbrales, fecha_inicio, fecha_fin
+        ):
+            llamadas_masked.append((fecha_inicio, fecha_fin))
+            return pd.DataFrame(
+                {
+                    "provincia_id": ["ABANCAY"],
+                    "fecha": ["2019-07-01"],
+                    "valor": [0.5],
+                }
+            )
+
+        monkeypatch.setattr(
+            "src.ingestion.gee_extraction_pipeline.extract_masked_ndvi_series",
+            _fake_extract_masked_ndvi_series,
+        )
+
+        cliente = MagicMock()
+        cliente.extract_daily_series.return_value = pd.DataFrame(
+            {
+                "provincia_id": ["ABANCAY"],
+                "fecha": ["2019-07-01"],
+                "valor": [1.0],
+            }
+        )
+
+        resultado = extract_all_provinces_all_variables(
+            cliente=cliente,
+            geometrias_por_provincia=geometrias_fake,
+            variables=["precipitacion", "ndvi"],
+            campanas=[2020],
+            umbrales_mascara=umbrales,
+        )
+
+        # 12 meses de ndvi via extract_masked_ndvi_series
+        assert len(llamadas_masked) == 12
+        # precipitacion (12 meses) sigue via extract_daily_series
+        assert cliente.extract_daily_series.call_count == 12
+        assert (resultado["variable"] == "ndvi").sum() == 12
+        assert (resultado["variable"] == "precipitacion").sum() == 12
+
+    def test_sin_umbrales_mascara_ndvi_usa_extract_daily_series_como_antes(
+        self, cliente_fake, geometrias_fake
+    ):
+        """Compatibilidad hacia atrás: sin umbrales_mascara (default None),
+        el comportamiento no cambia respecto al código ya existente."""
+        resultado = extract_all_provinces_all_variables(
+            cliente=cliente_fake,
+            geometrias_por_provincia=geometrias_fake,
+            variables=["ndvi"],
+            campanas=[2020],
+        )
+
+        assert cliente_fake.extract_daily_series.call_count == 12
+        assert len(resultado) == 24
