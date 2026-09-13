@@ -18,7 +18,7 @@ from typing import Any
 
 import pandas as pd
 
-from src.ingestion.gee_config import get_collection_spec
+from src.ingestion.gee_config import AggregationRule, get_collection_spec
 
 
 class GeeClient:
@@ -87,10 +87,22 @@ class GeeClient:
             fecha_inicio, fecha_fin: ventana temporal a extraer (inclusive).
 
         Returns:
-            DataFrame con columnas `provincia_id`, `fecha`, `valor` — una fila
-            por observación devuelta por Earth Engine, con `valor` ya
-            convertido a su unidad real (`factor_escala`/`offset_aditivo` del
-            spec — ej. NDVI entero->decimal, temperatura Kelvin->Celsius).
+            DataFrame con columnas `provincia_id`, `fecha`, y ya sea `valor`
+            (si `spec.reducers` está vacío — comportamiento actual) o una
+            columna `valor_<nombre_reducer>` por cada reducer en
+            `spec.reducers` (ej. `valor_mean`, `valor_max` para NDVI, Tabla
+            7: "Filtrado de calidad; media y máximo por fase sobre máscara
+            agrícola"). `valor`/`valor_*` ya convertidos a su unidad real
+            (`factor_escala`/`offset_aditivo` del spec — ej. NDVI
+            entero->decimal, temperatura Kelvin->Celsius).
+
+            Si `spec.banda_calidad` no es `None`, cada imagen se enmascara
+            antes de reducir: solo se conservan píxeles con VI Quality
+            (bits 0-1 de la banda) en {buena calidad, revisar otras QA}, sin
+            nube adyacente (bit 8) ni nubes mixtas (bit 10) — verificado
+            contra el catálogo oficial de `MODIS/061/MOD13Q1` y el MODIS VI
+            User's Guide.
+
             La agregación por fase fenológica se realiza después, en
             `gee_series_builder.py`, para mantener esta capa como una
             traducción directa de la respuesta de la API sin lógica de
@@ -117,17 +129,26 @@ class GeeClient:
         spec = get_collection_spec(variable)
         ee = self._ee
 
+        bandas = [spec.band, spec.banda_calidad] if spec.banda_calidad else [spec.band]
         coleccion = (
             ee.ImageCollection(spec.collection_id)
             .filterDate(fecha_inicio.isoformat(), fecha_fin.isoformat())
-            .select(spec.band)
+            .select(bandas)
         )
+
+        reducers = spec.reducers if spec.reducers else (spec.aggregation,)
+        reducer_ee = _combinar_reducers(ee, reducers)
 
         def _reducir_imagen(imagen):
             fecha = imagen.date().format("YYYY-MM-dd")
-            reducido = imagen.reduceRegions(
+            imagen_datos = imagen.select(spec.band)
+            if spec.banda_calidad:
+                qa = imagen.select(spec.banda_calidad)
+                buena_calidad = _mascara_calidad_ndvi(ee, qa)
+                imagen_datos = imagen_datos.updateMask(buena_calidad)
+            reducido = imagen_datos.reduceRegions(
                 collection=geometrias_por_provincia,
-                reducer=ee.Reducer.mean(),
+                reducer=reducer_ee,
                 scale=spec.spatial_resolution_m,
             )
             return reducido.map(lambda f: f.set("fecha", fecha))
@@ -136,8 +157,65 @@ class GeeClient:
 
         filas = [f["properties"] for f in resultado_aplanado.getInfo()["features"]]
         tabla = pd.DataFrame(filas)
+
+        if len(reducers) == 1:
+            if tabla.empty:
+                return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
+            nombre_reducer = reducers[0].value
+            tabla = tabla.rename(columns={nombre_reducer: "valor"})[
+                ["provincia_id", "fecha", "valor"]
+            ]
+            tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
+            return tabla
+
+        columnas_salida = ["provincia_id", "fecha"]
         if tabla.empty:
-            return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
-        tabla = tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
-        tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
-        return tabla
+            return pd.DataFrame(
+                columns=columnas_salida + [f"valor_{r.value}" for r in reducers]
+            )
+        for regla in reducers:
+            columna_salida = f"valor_{regla.value}"
+            tabla[columna_salida] = (
+                tabla[regla.value] * spec.factor_escala + spec.offset_aditivo
+            )
+            columnas_salida.append(columna_salida)
+        return tabla[columnas_salida]
+
+
+def _combinar_reducers(ee_module: Any, reducers: tuple) -> Any:
+    """Combina uno o más `AggregationRule` en un único `ee.Reducer`.
+
+    Con un solo reducer, lo construye directamente (`ee.Reducer.mean()`,
+    etc.). Con varios (hoy solo NDVI: MEAN y MAX), los combina con
+    `.combine()` para que `reduceRegions` los calcule en una sola pasada
+    sobre la misma imagen ya enmascarada, en vez de leerla dos veces.
+    """
+    _CONSTRUCTOR = {
+        AggregationRule.SUM: ee_module.Reducer.sum,
+        AggregationRule.MEAN: ee_module.Reducer.mean,
+        AggregationRule.MAX: ee_module.Reducer.max,
+        AggregationRule.MIN: ee_module.Reducer.min,
+    }
+    reducer_actual = _CONSTRUCTOR[reducers[0]]()
+    for siguiente in reducers[1:]:
+        reducer_actual = reducer_actual.combine(
+            reducer2=_CONSTRUCTOR[siguiente](), sharedInputs=True
+        )
+    return reducer_actual
+
+
+def _mascara_calidad_ndvi(ee_module: Any, banda_qa: Any) -> Any:
+    """Máscara booleana de calidad para MOD13Q1 `DetailedQA`.
+
+    Verificado contra el catálogo oficial de Earth Engine
+    (MODIS/061/MOD13Q1) y el MODIS VI User's Guide:
+    - Bits 0-1 (VI Quality/MODLAND_QA): 00=buena calidad, 01=revisar otras
+      QA, 10=probablemente nublado, 11=no producido. Se aceptan 00 y 01
+      (equivalente a `vi_quality <= 1`).
+    - Bit 8 (nube adyacente detectada): se acepta solo 0.
+    - Bit 10 (nubes mixtas posibles): se acepta solo 0.
+    """
+    vi_quality = banda_qa.rightShift(0).bitwiseAnd(0b11)
+    nube_adyacente = banda_qa.rightShift(8).bitwiseAnd(0b1)
+    nubes_mixtas = banda_qa.rightShift(10).bitwiseAnd(0b1)
+    return vi_quality.lte(1).And(nube_adyacente.eq(0)).And(nubes_mixtas.eq(0))
