@@ -314,12 +314,17 @@ class TestGeeClientExtractSeries:
         # con calidad aceptada y ambas columnas de reducer para no chocar
         # con el enmascarado/multi-reducer añadidos en esta tarea (este test
         # solo verifica factor_escala, no el filtrado/esquema de columnas).
+        # Claves con el prefijo de banda ("NDVI_mean"/"NDVI_max"): con
+        # múltiples reducers combinados via .combine(sharedInputs=True),
+        # reduceRegions antepone el nombre de la banda de entrada al
+        # nombre del reducer (verificado contra la guía oficial de Earth
+        # Engine, Reducer Overview) — no basta "mean"/"max" a secas.
         filas_esperadas = [
             {
                 "provincia_id": "PUN-AZA",
                 "fecha": "2020-09-01",
-                "mean": 3607.0,
-                "max": 3607.0,
+                "NDVI_mean": 3607.0,
+                "NDVI_max": 3607.0,
                 "qa": 0b00,
             },
         ]
@@ -484,12 +489,17 @@ class TestGeeClientReducersMultiples:
     def test_ndvi_devuelve_columnas_valor_mean_y_valor_max(
         self, geometria_provincias_fake
     ):
+        # Con reducers combinados via .combine(sharedInputs=True), Earth
+        # Engine antepone el nombre de la banda ("NDVI") al nombre del
+        # reducer en cada propiedad de salida -- verificado contra la guía
+        # oficial de Earth Engine (Reducer Overview). "mean"/"max" a secas
+        # no reflejarían el comportamiento real de la API.
         filas_esperadas = [
             {
                 "provincia_id": "PUN-AZA",
                 "fecha": "2020-09-01",
-                "mean": 5000.0,
-                "max": 6000.0,
+                "NDVI_mean": 5000.0,
+                "NDVI_max": 6000.0,
                 "qa": 0b00,  # VI Quality=buena, sin nube adyacente ni mixta -> pasa el filtro
             },
         ]

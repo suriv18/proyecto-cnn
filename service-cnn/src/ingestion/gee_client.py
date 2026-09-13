@@ -174,9 +174,19 @@ class GeeClient:
                 columns=columnas_salida + [f"valor_{r.value}" for r in reducers]
             )
         for regla in reducers:
+            # ee.Reducer.combine(sharedInputs=True) antepone el nombre de la
+            # banda de entrada al nombre del reducer en cada propiedad de
+            # salida (ej. "NDVI_mean", "NDVI_max") — verificado contra la
+            # guía oficial de Earth Engine (Reducer Overview: "the names of
+            # the reducers have been appended to the names of the inputs").
+            # Esto solo aplica al caso combinado (más de un reducer); con
+            # un solo reducer (rama de arriba) reduceRegions expone el
+            # nombre del reducer sin prefijo, ya verificado en
+            # gee_mask_pipeline.py.
+            columna_origen = f"{spec.band}_{regla.value}"
             columna_salida = f"valor_{regla.value}"
             tabla[columna_salida] = (
-                tabla[regla.value] * spec.factor_escala + spec.offset_aditivo
+                tabla[columna_origen] * spec.factor_escala + spec.offset_aditivo
             )
             columnas_salida.append(columna_salida)
         return tabla[columnas_salida]
@@ -189,6 +199,14 @@ def _combinar_reducers(ee_module: Any, reducers: tuple) -> Any:
     etc.). Con varios (hoy solo NDVI: MEAN y MAX), los combina con
     `.combine()` para que `reduceRegions` los calcule en una sola pasada
     sobre la misma imagen ya enmascarada, en vez de leerla dos veces.
+
+    Efecto en el nombre de las propiedades de salida (verificado contra la
+    guía oficial de Earth Engine, "Reducer Overview"): con `sharedInputs=
+    True`, cada propiedad de `reduceRegions` queda nombrada
+    `<banda>_<reducer>` (ej. `NDVI_mean`, `NDVI_max`), no solo `<reducer>` a
+    secas — el llamador (`extract_daily_series`) debe leer
+    `f"{spec.band}_{regla.value}"`, no `regla.value`, al desempaquetar el
+    resultado combinado.
     """
     _CONSTRUCTOR = {
         AggregationRule.SUM: ee_module.Reducer.sum,
