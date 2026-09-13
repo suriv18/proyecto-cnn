@@ -17,7 +17,7 @@
 - `sample_cells_for_calibration` debe validar `n_por_provincia * len(provincia_ids) < 5000` y lanzar `ValueError` explícito si se excede — límite real de `ee.FeatureCollection.getInfo()` ya documentado en `gee_extraction_pipeline.py`.
 - Cobertura de suelo: `ESA/WorldCover/v200/2021`, banda `Map`, clase `40` = agrícola/cropland.
 - MDE/pendiente: `USGS/SRTMGL1_003`, banda `elevation`; pendiente vía `ee.Terrain.slope()`.
-- NDVI: `MODIS/061/MOD13Q1`, banda `NDVI`, `factor_escala=0.0001` (ya en `gee_config.get_collection_spec("ndvi")` — reutilizar, no hardcodear de nuevo).
+- NDVI: `MODIS/061/MOD13Q1`, banda `NDVI`, `factor_escala=0.0001` (ya en `gee_config.get_collection_spec("ndvi")` — reutilizar, no hardcodear de nuevo). El `factor_escala` debe **aplicarse siempre** a la amplitud NDVI cruda (`max() - min()`) antes de compararla o exportarla — MOD13Q1 codifica NDVI como entero `[-2000, 10000]`, y `amplitud_ndvi_min`/`apply_agricultural_mask` asumen NDVI ya en unidad real. Toda ruta que calcule amplitud NDVI (`build_agricultural_mask_image`, `sample_cells_for_calibration`) debe incluir `.multiply(spec_ndvi.factor_escala)` — omitirlo es un bug de correctitud detectado durante la revisión de Task 1, no una decisión de diseño.
 - Amplitud NDVI (máx-mín) se calcula sobre la ventana de extracción de cada campaña, no un año fijo.
 - Referencia de diseño completa: `service-cnn/docs/superpowers/specs/2026-09-13-mascara-agricola-gee-design.md`.
 
@@ -362,7 +362,8 @@ def build_agricultural_mask_image(
         .filterDate(fecha_inicio, fecha_fin)
         .select(spec_ndvi.band)
     )
-    amplitud = coleccion_ndvi.max().subtract(coleccion_ndvi.min())
+    amplitud_cruda = coleccion_ndvi.max().subtract(coleccion_ndvi.min())
+    amplitud = amplitud_cruda.multiply(spec_ndvi.factor_escala)
     amplitud_suficiente = amplitud.gte(umbrales.amplitud_ndvi_min)
 
     return (
@@ -999,6 +1000,7 @@ def sample_cells_for_calibration(
     amplitud = (
         coleccion_ndvi.max()
         .subtract(coleccion_ndvi.min())
+        .multiply(spec_ndvi.factor_escala)
         .rename(["amplitud_ndvi"])
     )
 

@@ -70,7 +70,8 @@ def build_agricultural_mask_image(
         .filterDate(fecha_inicio, fecha_fin)
         .select(spec_ndvi.band)
     )
-    amplitud = coleccion_ndvi.max().subtract(coleccion_ndvi.min())
+    amplitud_cruda = coleccion_ndvi.max().subtract(coleccion_ndvi.min())
+    amplitud = amplitud_cruda.multiply(spec_ndvi.factor_escala)
     amplitud_suficiente = amplitud.gte(umbrales.amplitud_ndvi_min)
 
     return (

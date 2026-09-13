@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from datetime import date
 
-import pandas as pd
 import pytest
 
 from src.ingestion.gee_mask_pipeline import build_agricultural_mask_image
@@ -47,6 +46,9 @@ class _FakeSingleBandImage:
 
     def subtract(self, otra: "_FakeSingleBandImage") -> "_FakeSingleBandImage":
         return _FakeSingleBandImage(self._ee, f"({self.nombre} - {otra.nombre})")
+
+    def multiply(self, valor) -> "_FakeSingleBandImage":
+        return _FakeSingleBandImage(self._ee, f"({self.nombre} * {valor})")
 
 
 class _FakeImage:
@@ -231,5 +233,42 @@ class TestBuildAgriculturalMaskImage:
                 "LTE",
                 "slope(USGS/SRTMGL1_003:elevation)",
                 umbrales.pendiente_max_grados,
+            ),
+        )
+
+    def test_amplitud_ndvi_se_escala_antes_de_comparar_con_el_umbral(self, umbrales):
+        """MOD13Q1 codifica NDVI como entero crudo ([-2000, 10000]); comparar
+        la amplitud cruda directamente contra un umbral en unidad real (ej.
+        0.15) haría que el criterio nunca excluyera nada. La amplitud debe
+        escalarse con factor_escala (0.0001) antes de la comparación."""
+        from src.ingestion.gee_config import get_collection_spec
+
+        fake_ee = _FakeEeModule()
+
+        resultado = build_agricultural_mask_image(
+            ee_module=fake_ee,
+            umbrales=umbrales,
+            fecha_inicio=date(2019, 7, 1),
+            fecha_fin=date(2020, 6, 30),
+        )
+
+        spec_ndvi = get_collection_spec("ndvi")
+
+        def contiene(expr, buscado) -> bool:
+            if isinstance(expr, tuple):
+                if expr == buscado:
+                    return True
+                return any(
+                    contiene(sub, buscado) for sub in expr if isinstance(sub, tuple)
+                )
+            return False
+
+        assert contiene(
+            resultado.expresion,
+            (
+                "GTE",
+                f"((MODIS/061/MOD13Q1:NDVI:max - MODIS/061/MOD13Q1:NDVI:min)"
+                f" * {spec_ndvi.factor_escala})",
+                umbrales.amplitud_ndvi_min,
             ),
         )
