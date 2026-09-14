@@ -65,10 +65,15 @@ de datos (ESA WorldCover v200 2021, SRTM SRTMGL1 v003) y umbrales:
 - `amplitud_ndvi_min`: sigue sin valor — la tesis exige que se calibre
   estadísticamente (no por literatura), ver pendiente abajo.
 
-No hay ningún código de producción que instancie `MaskThresholds` todavía
-(`run_preprocessing.py` sigue siendo un placeholder) — el manifiesto es el
-registro formal exigido por la tesis; conectar estos valores al código real
-es parte de 2.2.
+`src.ingestion.mask_manifest.load_mask_thresholds` ya conecta el manifiesto
+con código real: construye `MaskThresholds` leyendo
+`data/manifest/mascara_agricola.yaml`, lanzando
+`AmplitudNdviNoCalibradaError` si `amplitud_ndvi_min` sigue sin calibrar
+(hoy el caso) y advirtiendo (sin bloquear, `UserWarning`) que
+`altitud_min_m`/`altitud_max_m`/`pendiente_max_grados` siguen `PROVISIONAL`
+sin aprobación del asesor. `run_preprocessing.py` sigue siendo un
+placeholder — conectar este cargador a la orquestación real (no solo a la
+lectura del manifiesto) sigue siendo parte de 2.2.
 
 Falta antes de usar esto en producción:
 - [ ] Ejecutar `sample_cells_for_calibration` +
