@@ -52,50 +52,61 @@ fuentes_de_datos:
       con el resto del pipeline de extracción NDVI (Tabla 7).
 
 umbrales:
+  # Valores planos, consumidos directamente por
+  # src.ingestion.mask_manifest.load_mask_thresholds para construir
+  # MaskThresholds (src.preprocessing.mask) — ver el detalle de cada uno
+  # (fuente, estado) en la subsección `detalle` inmediatamente abajo.
   altitud_min_m: 2500
   altitud_max_m: 4000
-  fuente: >
-    PROINPA/FAO, informe técnico presentado al Congreso de la República del
-    Perú (2011), "La quinua: Cultivo milenario para contribuir a la
-    seguridad alimentaria mundial", sección 4.2 "El cultivo y la capacidad
-    de adaptación al cambio climático" — describe 5 grupos ecotípicos de
-    quinua por rango altitudinal (Lescano 1989; Tapia 1990), de los cuales 2
-    son relevantes para los 8 departamentos del estudio:
-      - "Quinuas de valles interandinos": 2500-3500 msnm (aplica a Apurímac,
-        Ayacucho, Huancavelica, Cusco, Junín, La Libertad).
-      - "Quinuas de altiplano": 3600-3800 msnm (aplica a Puno).
-    Adicionalmente, Espíndola (1986), citado en el mismo informe: "Los
-    límites altitudinales del Altiplano son de 3000 a 4000 metros sobre el
-    nivel del mar" — usado para fijar el límite superior (4000 msnm) que
-    cubre con margen el rango de altiplano.
-    URL: https://www2.congreso.gob.pe/sicr/cendocbib/con4_uibd.nsf/EA85F3E4F4B5AFD405257E85005CEFD4/$FILE/LaQuinua_CultivoMilenarioPag_1_33.pdf
-  estado: "PROVISIONAL — pendiente de aprobación del asesor"
-
   pendiente_max_porcentaje: 25
   pendiente_max_grados: 14.04  # arctan(0.25), redondeado a 2 decimales
-  fuente: >
-    Decreto Supremo N° 005-2022-MIDAGRI, "Reglamento de Clasificación de
-    Tierras por su Capacidad de Uso Mayor" (RCTCUM), Anexo III, Clave 5
-    ("Estepa - Montano Tropical / Subtropical" — la zona de vida Holdridge
-    típica de la sierra alta peruana donde se cultiva quinua en secano):
-    grupo A "Cultivo en Limpio (secano)" admite pendiente hasta 25% en su
-    tramo más permisivo documentado (8-25%). El reglamento expresa pendiente
-    en PORCENTAJE, no en grados — convertido matemáticamente
-    (arctan(0.25) = 14.04°) para uso directo en MaskThresholds.pendiente_
-    max_grados.
-    Publicado en El Peruano, 24 de abril de 2022.
-    URL: https://dar.org.pe/wp-content/uploads/2022/04/2060758-1-1.pdf
-  estado: "PROVISIONAL — pendiente de aprobación del asesor"
-
   amplitud_ndvi_min: null
-  fuente: >
-    NO se fija por literatura — la tesis (sección 4.10.1) exige que este
-    umbral se calibre estadísticamente con
-    src.ingestion.gee_mask_pipeline.sample_cells_for_calibration +
-    src.preprocessing.mask.calibrate_ndvi_amplitude_threshold sobre
-    campañas de ENTRENAMIENTO (regla anti-fuga, sección 4.12.2) — a
-    diferencia de altitud/pendiente, que son criterios agronómicos externos.
-  estado: "PENDIENTE — requiere ejecutar la calibración contra datos reales de entrenamiento"
+
+  detalle:
+    altitud:
+      fuente: >
+        PROINPA/FAO, informe técnico presentado al Congreso de la
+        República del Perú (2011), "La quinua: Cultivo milenario para
+        contribuir a la seguridad alimentaria mundial", sección 4.2 "El
+        cultivo y la capacidad de adaptación al cambio climático" —
+        describe 5 grupos ecotípicos de quinua por rango altitudinal
+        (Lescano 1989; Tapia 1990), de los cuales 2 son relevantes para
+        los 8 departamentos del estudio:
+          - "Quinuas de valles interandinos": 2500-3500 msnm (aplica a
+            Apurímac, Ayacucho, Huancavelica, Cusco, Junín, La Libertad).
+          - "Quinuas de altiplano": 3600-3800 msnm (aplica a Puno).
+        Adicionalmente, Espíndola (1986), citado en el mismo informe: "Los
+        límites altitudinales del Altiplano son de 3000 a 4000 metros
+        sobre el nivel del mar" — usado para fijar el límite superior
+        (4000 msnm) que cubre con margen el rango de altiplano.
+        URL: https://www2.congreso.gob.pe/sicr/cendocbib/con4_uibd.nsf/EA85F3E4F4B5AFD405257E85005CEFD4/$FILE/LaQuinua_CultivoMilenarioPag_1_33.pdf
+      estado: "PROVISIONAL — pendiente de aprobación del asesor"
+
+    pendiente:
+      fuente: >
+        Decreto Supremo N° 005-2022-MIDAGRI, "Reglamento de Clasificación
+        de Tierras por su Capacidad de Uso Mayor" (RCTCUM), Anexo III,
+        Clave 5 ("Estepa - Montano Tropical / Subtropical" — la zona de
+        vida Holdridge típica de la sierra alta peruana donde se cultiva
+        quinua en secano): grupo A "Cultivo en Limpio (secano)" admite
+        pendiente hasta 25% en su tramo más permisivo documentado (8-25%).
+        El reglamento expresa pendiente en PORCENTAJE, no en grados —
+        convertido matemáticamente (arctan(0.25) = 14.04°) para uso
+        directo en MaskThresholds.pendiente_max_grados.
+        Publicado en El Peruano, 24 de abril de 2022.
+        URL: https://dar.org.pe/wp-content/uploads/2022/04/2060758-1-1.pdf
+      estado: "PROVISIONAL — pendiente de aprobación del asesor"
+
+    amplitud_ndvi:
+      fuente: >
+        NO se fija por literatura — la tesis (sección 4.10.1) exige que
+        este umbral se calibre estadísticamente con
+        src.ingestion.gee_mask_pipeline.sample_cells_for_calibration +
+        src.preprocessing.mask.calibrate_ndvi_amplitude_threshold sobre
+        campañas de ENTRENAMIENTO (regla anti-fuga, sección 4.12.2) — a
+        diferencia de altitud/pendiente, que son criterios agronómicos
+        externos.
+      estado: "PENDIENTE — requiere ejecutar la calibración contra datos reales de entrenamiento"
 
 pendiente:
   - "Verificar clase 40 de ESA WorldCover como 'Cropland' contra el catálogo oficial (no cubierto por dobles de prueba)."
