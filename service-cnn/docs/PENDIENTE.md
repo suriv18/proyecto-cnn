@@ -48,18 +48,36 @@ vez de `.isoformat()`).
 de producto ni umbrales numéricos para la máscara — el texto dice
 literalmente que "el nombre, versión, resolución y fecha de cada capa, así
 como los umbrales de altitud, pendiente y amplitud, se fijarán y
-registrarán antes de la evaluación definitiva". ESA WorldCover v200 2021 y
-SRTM 30m (elegidos en esta sesión) son decisiones válidas dentro de ese
-margen, pero **falta formalizarlas en un manifiesto reproducible** (mismo
-patrón que `data/manifest/gee_series_climaticas_espectrales.yaml` ya usa
-para las otras variables) — hoy solo existen en el código.
+registrarán antes de la evaluación definitiva".
+
+**[x] Resuelto**: `data/manifest/mascara_agricola.yaml` ya formaliza fuentes
+de datos (ESA WorldCover v200 2021, SRTM SRTMGL1 v003) y umbrales:
+- `altitud_min_m=2500`, `altitud_max_m=4000` — fuente: PROINPA/FAO vía
+  Congreso de la República del Perú (2011), citando Lescano (1989)/Tapia
+  (1990) (ecotipos "valles interandinos" 2500-3500 msnm y "altiplano"
+  3600-3800 msnm) y Espíndola (1986) (límite superior del Altiplano,
+  3000-4000 msnm). **PROVISIONAL — pendiente de aprobación del asesor.**
+- `pendiente_max_grados=14.04` (equivalente a 25%) — fuente: D.S.
+  N° 005-2022-MIDAGRI (RCTCUM), Anexo III Clave 5 (zona de vida
+  Estepa-Montano, grupo "Cultivo en Limpio secano"), texto extraído y
+  verificado directamente del PDF oficial (no de un resumen de búsqueda).
+  **PROVISIONAL — pendiente de aprobación del asesor.**
+- `amplitud_ndvi_min`: sigue sin valor — la tesis exige que se calibre
+  estadísticamente (no por literatura), ver pendiente abajo.
+
+No hay ningún código de producción que instancie `MaskThresholds` todavía
+(`run_preprocessing.py` sigue siendo un placeholder) — el manifiesto es el
+registro formal exigido por la tesis; conectar estos valores al código real
+es parte de 2.2.
 
 Falta antes de usar esto en producción:
-- [ ] Fijar los umbrales reales de `MaskThresholds` (`altitud_min_m`,
-  `altitud_max_m`, `pendiente_max_grados` por criterio agronómico;
-  `amplitud_ndvi_min` calibrado con `sample_cells_for_calibration` +
-  `calibrate_ndvi_amplitude_threshold` sobre campañas de entrenamiento) —
-  no hay valores reales todavía, solo los de ejemplo en los tests.
+- [ ] Ejecutar `sample_cells_for_calibration` +
+  `calibrate_ndvi_amplitude_threshold` sobre campañas de entrenamiento
+  reales para fijar `amplitud_ndvi_min` (único umbral que la tesis exige
+  calibrar estadísticamente, no por literatura).
+- [ ] Aprobación formal del asesor para `altitud_min_m`/`altitud_max_m`/
+  `pendiente_max_grados` — hoy PROVISIONALES en el manifiesto, con fuente
+  citada pero sin validar con el asesor.
 - [ ] Verificar manualmente contra la API real de GEE (no cubierto por los
   dobles de prueba): que la clase 40 de WorldCover es "Cropland" en la
   sierra peruana, que `ee.Terrain.slope()` devuelve grados, y el volumen/
@@ -67,10 +85,6 @@ Falta antes de usar esto en producción:
 - [ ] Re-ejecutar la extracción real de NDVI (Actividad 3) con
   `umbrales_mascara` ya fijados, para regenerar
   `data/raw/gee_series_crudo.parquet` con NDVI enmascarado.
-- [ ] **Formalizar ESA WorldCover v200 2021 y SRTM 30m en un manifiesto**
-  reproducible (nombre, versión, resolución, fecha de descarga), como exige
-  la tesis (sección 4.10.1) — hoy solo están en el código, no registrados
-  como manifiesto.
 - [x] **[Gap crítico, resuelto en código]** ~~La Tabla 7 de la tesis (sección
   4.9 / Anexo 01) exige para NDVI: "Filtrado de calidad; media y máximo por
   fase sobre máscara agrícola." Ni GeeClient.extract_daily_series ni
