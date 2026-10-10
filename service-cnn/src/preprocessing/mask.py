@@ -101,3 +101,71 @@ def calibrate_ndvi_amplitude_threshold(
         serie_ndvi_entrenamiento["ndvi_max"] - serie_ndvi_entrenamiento["ndvi_min"]
     )
     return float(amplitudes.quantile(percentil / 100.0))
+
+
+def summarize_amplitude_calibration(
+    tabla: pd.DataFrame,
+    percentiles: list[float],
+    altitud_min_m: float,
+    altitud_max_m: float,
+    pendiente_max_grados: float,
+    campanas_entrenamiento: list[int],
+) -> dict:
+    """Resume la calibración de `amplitud_ndvi_min` para varios percentiles.
+
+    El umbral se calibra solo con celdas de cultivo que ya cumplen altitud y
+    pendiente: la amplitud no distingue cultivo de otras coberturas (eso lo
+    hace la clase de cobertura), solo descarta celdas "cultivo" sin
+    estacionalidad. Para cada percentil se informa además qué porcentaje de
+    las celdas elegibles de cada departamento quedaría excluido, para detectar
+    un sesgo regional antes de fijar el umbral.
+
+    Args:
+        tabla: columnas `departamento`, `campana_id`, `cobertura_suelo`,
+            `altitud_m`, `pendiente_grados`, `ndvi_max`, `ndvi_min`.
+        percentiles: percentiles (0-100) a evaluar.
+        altitud_min_m, altitud_max_m, pendiente_max_grados: umbrales ya
+            fijados de la máscara.
+        campanas_entrenamiento: campañas permitidas.
+
+    Raises:
+        ValueError: si `tabla` contiene campañas fuera del entrenamiento
+            (regla anti-fuga, sección 4.12.2).
+    """
+    fuera = set(tabla["campana_id"].unique()) - set(campanas_entrenamiento)
+    if fuera:
+        raise ValueError(
+            f"La tabla contiene campañas fuera del conjunto de entrenamiento: "
+            f"{sorted(fuera)}. La calibración solo puede usar entrenamiento "
+            "(sección 4.12.2)."
+        )
+
+    cultivo = tabla[tabla["cobertura_suelo"].isin(_COBERTURAS_AGRICOLAS)]
+    elegibles = cultivo[
+        cultivo["altitud_m"].between(altitud_min_m, altitud_max_m)
+        & (cultivo["pendiente_grados"] <= pendiente_max_grados)
+    ].copy()
+    elegibles["amplitud"] = elegibles["ndvi_max"] - elegibles["ndvi_min"]
+
+    umbrales: dict[str, dict] = {}
+    for percentil in percentiles:
+        umbral = calibrate_ndvi_amplitude_threshold(elegibles, percentil)
+        excluida = elegibles["amplitud"] < umbral
+        por_departamento = (
+            excluida.groupby(elegibles["departamento"]).mean() * 100.0
+        ).to_dict()
+        clave = f"{percentil:g}"
+        umbrales[clave] = {
+            "umbral": umbral,
+            "excluidas_pct_total": float(excluida.mean() * 100.0),
+            "excluidas_pct_por_departamento": {
+                str(k): float(v) for k, v in por_departamento.items()
+            },
+        }
+
+    return {
+        "n_celdas_cultivo": int(len(cultivo)),
+        "n_elegibles": int(len(elegibles)),
+        "campanas_entrenamiento": [int(c) for c in campanas_entrenamiento],
+        "umbrales": umbrales,
+    }

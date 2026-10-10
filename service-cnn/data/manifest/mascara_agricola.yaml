@@ -23,10 +23,11 @@ fuentes_de_datos:
       asumiendo que la cobertura de suelo cambia lento en zonas de sierra
       altoandina en esta escala temporal — aproximación aceptada, no
       verificada campaña a campaña.
-    verificacion_pendiente: >
-      Confirmar contra el catálogo oficial ESA WorldCover que la clase 40
-      corresponde efectivamente a "Cropland" en la sierra peruana (no
-      verificado contra la API real, sección "pendiente" abajo).
+    verificacion: >
+      VERIFICADO 2026-10-09 contra la API real: la leyenda oficial de la
+      imagen (Map_class_values/Map_class_names) asigna 40 = "Cropland". Un
+      muestreo en 8 provincias muestra además que el 99.3 % de las celdas
+      de cultivo cae dentro de 2500-4000 msnm.
 
   modelo_digital_de_elevacion:
     proveedor: "USGS SRTM"
@@ -35,10 +36,11 @@ fuentes_de_datos:
     banda: "elevation"
     resolucion_espacial_m: 30
     pendiente_derivada_via: "ee.Terrain.slope() sobre la banda elevation"
-    verificacion_pendiente: >
-      Confirmar que ee.Terrain.slope() devuelve grados (no radianes) contra
-      la documentación oficial de Earth Engine — no verificado contra la API
-      real (los dobles de prueba no pueden validar esto).
+    verificacion: >
+      VERIFICADO 2026-10-09 contra la API real: ee.Terrain.slope() devuelve
+      grados (máximo 58.4° y media 14.9° en el valle de Cusco; siempre <= 90).
+      Con el umbral de 14.04°, el 91.2 % de las celdas de cultivo muestreadas
+      lo cumple (el 8.8 % restante queda excluido por pendiente).
 
   amplitud_ndvi:
     proveedor: "MODIS MOD13Q1 V061 (mismo que Tabla 7)"
@@ -60,7 +62,7 @@ umbrales:
   altitud_max_m: 4000
   pendiente_max_porcentaje: 25
   pendiente_max_grados: 14.04  # arctan(0.25), redondeado a 2 decimales
-  amplitud_ndvi_min: null
+  amplitud_ndvi_min: 0.323  # percentil 5 de la amplitud del cultivo elegible, campañas 2016-2020
 
   detalle:
     altitud:
@@ -99,18 +101,30 @@ umbrales:
 
     amplitud_ndvi:
       fuente: >
-        NO se fija por literatura — la tesis (sección 4.10.1) exige que
-        este umbral se calibre estadísticamente con
-        src.ingestion.gee_mask_pipeline.sample_cells_for_calibration +
-        src.preprocessing.mask.calibrate_ndvi_amplitude_threshold sobre
-        campañas de ENTRENAMIENTO (regla anti-fuga, sección 4.12.2) — a
-        diferencia de altitud/pendiente, que son criterios agronómicos
-        externos.
-      estado: "PENDIENTE — requiere ejecutar la calibración contra datos reales de entrenamiento"
+        Calibrado estadísticamente (la tesis, sección 4.10.1, exige que este
+        umbral NO se fije por literatura) con scripts/calibrate_mask_amplitude.py
+        sobre las campañas de ENTRENAMIENTO 2016-2020 (con origen móvil forman
+        parte del entrenamiento de cualquier pliego con ventana inicial >= 5;
+        regla anti-fuga, sección 4.12.2). Muestra: 60 celdas de cultivo
+        (WorldCover clase 40, 250 m, seed 42) por provincia en las 80
+        provincias, 22 615 celdas-campaña, 15 145 elegibles tras altitud y
+        pendiente. Amplitud = max - min del NDVI MODIS en la ventana de
+        campaña, sin filtro de calidad (igual que la máscara de producción).
+        Detalle: reports/calibracion_mascara_amplitud.json.
+        Percentiles evaluados (umbral / % de celdas elegibles excluidas):
+          p1 = 0.251 / 1 %; p5 = 0.323 / 5 %; p10 = 0.361 / 10 %; p25 = 0.419 / 25 %.
+        Se registra el percentil 5 como propuesta. ADVERTENCIA de sesgo
+        regional: la amplitud es menor en zonas áridas/altiplánicas, por lo que
+        el mismo umbral excluye más celdas en Arequipa (p5: 20 %) y Puno (p5:
+        9 %, principal productor) que en Apurímac (1 %) o Cusco (2 %); con p1
+        el sesgo casi desaparece (Arequipa 7 %, Puno 1 %) pero el filtro es
+        casi nulo. La elección del percentil es un compromiso a decidir con el
+        asesor; el efecto debe cubrirse en el análisis de sensibilidad por
+        umbral (4.10.1).
+      estado: "PROVISIONAL — percentil 5 propuesto (2026-10-09); pendiente de aprobación del asesor"
 
 pendiente:
-  - "Verificar clase 40 de ESA WorldCover como 'Cropland' contra el catálogo oficial (no cubierto por dobles de prueba)."
-  - "Verificar que ee.Terrain.slope() devuelve grados, no radianes (no cubierto por dobles de prueba)."
   - "Aprobación formal del asesor para altitud_min_m/altitud_max_m/pendiente_max_grados — provisionales hasta entonces."
-  - "Ejecutar sample_cells_for_calibration + calibrate_ndvi_amplitude_threshold sobre campañas de entrenamiento reales para fijar amplitud_ndvi_min."
+  - "Aprobación del asesor del percentil de amplitud_ndvi_min (hoy p5 = 0.323, provisional) considerando el sesgo regional (Arequipa, Puno)."
+  - "FAO/GAUL/2015/level2 (geometrías provinciales) está marcado como obsoleto por Earth Engine (superado por FAO/GAUL/2025/level2): migrar o fijar el asset antes de que se retire."
   - "Re-ejecutar la extracción real de NDVI (GeeClient.extract_daily_series, filtrado de calidad + media/máximo) y de la máscara agrícola (extract_masked_ndvi_series, aún sin el mismo filtrado — ver docs/PENDIENTE.md) contra la API real de GEE, una vez los umbrales estén aprobados."

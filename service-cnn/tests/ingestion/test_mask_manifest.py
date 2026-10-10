@@ -163,14 +163,15 @@ class TestLoadMaskThresholds:
         assert len(recwarn) == 0
 
     def test_carga_correctamente_el_manifiesto_real_del_proyecto(self):
-        """Verifica que el manifiesto real (ya comiteado en el repo) es
-        cargable con esta función — no solo los fixtures sintéticos de
-        arriba. Hoy el manifiesto real tiene amplitud_ndvi_min: null y
-        altitud/pendiente marcados PROVISIONAL, así que se espera
-        AmplitudNdviNoCalibradaError (no una carga exitosa) — este test
-        solo confirma que no hay un error de INTEGRACIÓN (ruta rota,
-        estructura YAML no parseable, KeyError por campo faltante) antes
-        de llegar a ese punto esperado."""
+        """El manifiesto real (ya versionado en el repo) es cargable: ruta,
+        estructura YAML y campos íntegros, no solo los fixtures sintéticos.
+        Desde la calibración del 2026-10-09 `amplitud_ndvi_min` tiene valor
+        (percentil 5, provisional), y los tres umbrales siguen PROVISIONALES
+        hasta la aprobación del asesor, por lo que la carga avisa de cada uno."""
         ruta_real = Path("data/manifest/mascara_agricola.yaml")
-        with pytest.raises(AmplitudNdviNoCalibradaError):
-            load_mask_thresholds(ruta_real)
+        with pytest.warns(UserWarning, match="PROVISIONAL") as avisos:
+            umbrales = load_mask_thresholds(ruta_real)
+
+        assert umbrales.amplitud_ndvi_min == pytest.approx(0.323)
+        assert umbrales.altitud_min_m < umbrales.altitud_max_m
+        assert len(avisos) == 3  # altitud, pendiente y amplitud_ndvi
