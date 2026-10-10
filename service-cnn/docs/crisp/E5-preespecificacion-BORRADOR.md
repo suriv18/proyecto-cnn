@@ -4,7 +4,7 @@
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **76 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **77 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
@@ -12,7 +12,7 @@ Contiene **76 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|
 | `por_decidir_asesor` | 8 |
 | `por_decidir_piloto` | 10 |
-| `propuesto` | 16 |
+| `propuesto` | 17 |
 
 ### Requieren al asesor
 
@@ -55,6 +55,7 @@ Contiene **76 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 - `modelos.estandarizacion_del_objetivo` — z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha · _los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000)_
 - `interpretabilidad.conjunto_de_referencia` — muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija · _4.15; solo entrenamiento_
 - `interpretabilidad.tratamiento_de_predictores_correlacionados` — sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto · _2.3.2 (Aas et al., 2021), 4.15_
+- `interpretabilidad.kernel_explainer_regularizacion` — l1_reg = 0 (sin regularización L1) · _piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95_
 - `interpretabilidad.oclusion.valor_de_referencia` — media del conjunto de referencia por variable · _4.15_
 
 ## Registro completo
@@ -158,6 +159,7 @@ Contiene **76 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `conjunto_de_referencia` | muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija | `propuesto` | 4.15; solo entrenamiento |
 | `tolerancia_de_precision_local` | _sin definir_ | `por_decidir_piloto` | se calibra en el piloto como fracción de la desviación estándar de la salida |
 | `tratamiento_de_predictores_correlacionados` | sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto | `propuesto` | 2.3.2 (Aas et al., 2021), 4.15 |
+| `kernel_explainer_regularizacion` | l1_reg = 0 (sin regularización L1) | `propuesto` | piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95 |
 | `agregacion` | por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad | `fijado_por_tesis` | 4.15 |
 | `oclusion.valor_de_referencia` | media del conjunto de referencia por variable | `propuesto` | 4.15 |
 | `oclusion.ventana_de_control` | fase de igual duración y menor contribución | `fijado_por_tesis` | 3.3.4 |

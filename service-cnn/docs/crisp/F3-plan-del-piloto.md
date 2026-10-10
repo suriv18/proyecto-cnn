@@ -97,8 +97,8 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 | T2 | Constructor de pliegos desde `data/processed` (origen móvil, preprocesamiento ajustado solo con el entrenamiento, imputación residual) — **hecha** (`src/evaluation/fold_builder.py`: pliegos externos e internos, `load_pilot_dataset` que descarta las campañas no permitidas al leer; 21 pruebas) | M | T1 |
 | T3 | Cerrar G1 y G2 en `train_cnn1d` (partición temporal, restaurar mejor época) — **hecha** (`grupos_temporales`, `restaurar_mejor_epoca`; 8 pruebas) | M | — |
 | T4 | Ejecutor por pliego: ajuste de los 5 modelos con presupuesto equiparado, validación interna de origen móvil y semillas — **hecha** (`src/evaluation/experiment_runner.py`: adaptadores de los 5 modelos, `tune_model`, `benchmark_predictions` B1–B3, `run_fold`, `rmse_per_campaign`; 26 pruebas) | L | T2, T3 |
-| T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` | M | T4 |
-| T6 | Paso de SHAP con verificación de precisión local y contingencia a KernelExplainer | M | T4 |
+| T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` — **hecha** (`src/evaluation/he1_evaluation.py`; además se corrigió el contraste de apoyo de HE1a, que comparaba con cero en vez de con el margen; 10 pruebas) | M | T4 |
+| T6 | Paso de SHAP con verificación de precisión local y contingencia a KernelExplainer — **hecha** (`src/explainability/shap_step.py`: fondo reproducible solo de entrenamiento, `explain_with_contingency`, `KernelExplainer` con `l1_reg=0`; 11 pruebas) | M | T4 |
 | T7 | `scripts/run_pilot.py` (P0–P11) y plantilla del informe del piloto | M | T1–T6 |
 | T8 | Prueba de fuga por permutación (P1) como prueba automática | S | T4 |
 
@@ -143,3 +143,8 @@ Corrida de desarrollo sobre datos reales **solo de 2016–2019** (la menor venta
 | B3 (regresión con NDVI máximo) | 466 | 466 |
 
 Lectura prudente: (i) **en nivel todos los modelos son peores que la línea base**, porque ninguno recibe la identidad de la provincia y el 90 % de la varianza es entre provincias; (ii) **en anomalía los modelos quedan prácticamente en B2** (199–213), coherente con las correlaciones débiles dentro de la provincia del E3 (|r| ≤ 0,28); la regla de P4 elegiría la anomalía; (iii) B1 y B2 coinciden por la regla de historia mínima (P5 rediseñado); (iv) con un solo pliego **no** puede concluirse nada sobre HE1; estos números solo dimensionan la dificultad: superar a B2 exigirá una señal interanual que hoy es modesta.
+
+**Adelanto de P8 (SHAP; mismo pliego técnico, 30 observaciones de la campaña 2019, fondo de 100 obs. de entrenamiento; no vinculante).**
+- `DeepExplainer` cumple la **precisión local** con error ≈ 0 (la tolerancia propuesta, 5 % de la desviación de la salida, es 0,016): la contingencia a `KernelExplainer` no se activa y D7 apunta a `deep_explainer`. Tarda 0,4 s frente a 4 s del Kernel.
+- Con el **mismo fondo**, `KernelExplainer` por defecto daba atribuciones 2,2 veces menores (correlación con Deep 0,87) por la regularización L1 automática de `shap`; con `l1_reg=0` la proporción baja a 1,24 y la correlación sube a **0,95**. Por eso la contingencia se implementó con `l1_reg=0` (registrado en E5).
+- La contribución por fase es **casi plana** (0,10–0,15 con Deep) con máximo en floración; el acuerdo por fase entre explicadores es ρ = 0,60–0,70 sobre solo 5 fases. Es prudente esperar que la estabilidad entre campañas (W de Kendall ≥ 0,70) sea exigente; un solo pliego no permite concluir.

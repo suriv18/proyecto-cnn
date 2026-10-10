@@ -110,6 +110,7 @@ interpretabilidad:
   conjunto_de_referencia: {valor: "muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija", estado: propuesto, fuente: "4.15; solo entrenamiento"}
   tolerancia_de_precision_local: {valor: null, estado: por_decidir_piloto, fuente: "se calibra en el piloto como fracción de la desviación estándar de la salida"}
   tratamiento_de_predictores_correlacionados: {valor: "sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto", estado: propuesto, fuente: "2.3.2 (Aas et al., 2021), 4.15"}
+  kernel_explainer_regularizacion: {valor: "l1_reg = 0 (sin regularización L1)", estado: propuesto, fuente: "piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95"}
   agregacion: {valor: "por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad", estado: fijado_por_tesis, fuente: "4.15"}
   oclusion:
     valor_de_referencia: {valor: "media del conjunto de referencia por variable", estado: propuesto, fuente: "4.15"}

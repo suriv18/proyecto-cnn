@@ -114,7 +114,7 @@ def evaluate_non_inferiority(
     Returns:
         `NonInferiorityResult` con el límite superior del IC 95% de la
         mediana de q_f, si la no inferioridad se sostiene (límite < margen),
-        el p-valor de Wilcoxon pareado unilateral de apoyo, y los estadísticos
+        el p-valor de Wilcoxon unilateral de apoyo (de q_f frente al margen δ), y los estadísticos
         complementarios de Hodges-Lehmann y correlación biserial de rangos.
 
     Raises:
@@ -126,7 +126,10 @@ def evaluate_non_inferiority(
 
     limite_superior = _limite_superior_bootstrap_mediana(q_f, n_bootstrap, semilla)
 
-    _, p_valor = stats.wilcoxon(rmse_cnn, rmse_xgboost, alternative="less")
+    # Contraste de apoyo sobre H0: mediana(q_f) >= δ (3.3.1): q_f se compara con el
+    # MARGEN, no con cero. Comparar rmse_cnn con rmse_xgboost contrastaría
+    # superioridad y daría p = 1 para una CNN claramente dentro del margen.
+    _, p_valor = stats.wilcoxon(q_f - margen, alternative="less")
 
     return NonInferiorityResult(
         limite_superior_ic95=limite_superior,

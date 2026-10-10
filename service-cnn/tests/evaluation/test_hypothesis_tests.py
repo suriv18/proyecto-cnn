@@ -104,6 +104,28 @@ class TestNonInferiority:
         assert resultado_a.limite_superior_ic95 == resultado_b.limite_superior_ic95
 
 
+class TestWilcoxonDeApoyoDeHE1a:
+    """El contraste de apoyo de HE1a es sobre H0: mediana(q_f) >= δ (sección 3.3.1),
+    es decir, se compara q_f con el MARGEN y no con cero. Una CNN un 3 % peor que
+    XGBoost en todas las campañas es no inferior para δ = 0,05."""
+
+    XGB = np.array([100.0, 110.0, 120.0, 130.0, 140.0, 150.0])
+
+    def test_una_cnn_ligeramente_peor_pero_dentro_del_margen_es_significativa(self):
+        cnn = self.XGB * np.array([1.02, 1.03, 1.04, 1.025, 1.035, 1.03])  # q_f entre 0,02 y 0,04
+
+        r = evaluate_non_inferiority(cnn, self.XGB, margen=0.05, n_bootstrap=500, semilla=0)
+
+        assert r.wilcoxon_p_valor < 0.05
+
+    def test_una_cnn_peor_que_el_margen_no_es_significativa(self):
+        cnn = self.XGB * np.array([1.07, 1.08, 1.09, 1.075, 1.085, 1.08])  # q_f entre 0,07 y 0,09
+
+        r = evaluate_non_inferiority(cnn, self.XGB, margen=0.05, n_bootstrap=500, semilla=0)
+
+        assert r.wilcoxon_p_valor > 0.5
+
+
 class TestSuperiority:
     def test_superioridad_se_sostiene_cuando_cnn_es_claramente_mejor_que_b2(self):
         rng = np.random.default_rng(0)

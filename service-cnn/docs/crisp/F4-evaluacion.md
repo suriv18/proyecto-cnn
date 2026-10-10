@@ -11,7 +11,7 @@
 | ID | Requisito / métrica | Estado | Evidencia |
 |---|---|---|---|
 | Q-F4-1 | RMSE, MAE, rRMSE, R² fuera de muestra por campaña, departamento, horizonte y modelo, sobre rendimiento reconstruido (kg/ha) | Parcial | `src/evaluation/metrics.py` |
-| Q-F4-2 | HE1a: límite superior unilateral IC 95 % de mediana(q_f) < 0,05 (no inferioridad vs XGBoost) | Parcial | `src/evaluation/hypothesis_tests.py` (bootstrap por bloques, Wilcoxon, Hodges-Lehmann) |
+| Q-F4-2 | HE1a: límite superior unilateral IC 95 % de mediana(q_f) < 0,05 (no inferioridad vs XGBoost) | Parcial | `src/evaluation/hypothesis_tests.py` (bootstrap por bloques, Wilcoxon, Hodges-Lehmann); **corregido (2026-10-10)** el Wilcoxon de apoyo, que contrastaba superioridad (p = 1,0 para una CNN dentro del margen) en vez de q_f frente a δ; `he1_evaluation.evaluate_he1` combina HE1a y HE1b y informa el menor p posible |
 | Q-F4-3 | HE1b: límite superior de mediana(Δ_f) < 0 frente a B2 | Parcial | idem |
 | Q-F4-4 | HE2a estabilidad: W de Kendall ≥ 0,70 y Jaccard ≥ 0,50 | Parcial | `src/explainability/stability.py` |
 | Q-F4-5 | HE2b fidelidad por oclusión (D_f > 0, con Holm) | Parcial | `src/explainability/fidelity.py` |
@@ -24,7 +24,7 @@
 
 | ID | Riesgo | Estado |
 |---|---|---|
-| R-F4-1 | Pocos bloques temporales → baja potencia | **Cuantificado (2026-10-10)**: con N5 = 601 y una ventana inicial de 5 campañas (2016–2020) quedan **5 campañas externas** (2021–2025), con 302–543 observaciones de entrenamiento antes de cada una. Con n = 5, el menor valor p posible del Wilcoxon unilateral es 1/32 ≈ 0,031 (solo se alcanza si las 5 campañas favorecen al mismo modelo) y el IC por bloques será muy ancho. Con ventana inicial de 4 serían 6 campañas externas y 49–109 observaciones de entrenamiento al inicio. **Decisión del asesor/piloto (H2)**: ventana inicial, y reportar la decisión de HE1a/HE1b con magnitud de efecto y no solo con el valor p |
+| R-F4-1 | Pocos bloques temporales → baja potencia | **Cuantificado (2026-10-10)**: con N5 = 601 y una ventana inicial de 5 campañas (2016–2020) quedan **5 campañas externas** (2021–2025), con 302–543 observaciones de entrenamiento antes de cada una. Con n = 5, el menor valor p posible del Wilcoxon unilateral es 1/32 ≈ 0,031 (solo se alcanza si las 5 campañas favorecen al mismo modelo) y el IC por bloques será muy ancho. Con ventana inicial de 4 serían 6 campañas externas y 49–109 observaciones de entrenamiento al inicio. **Decisión del asesor/piloto (H2)**: ventana inicial, y reportar la decisión de HE1a/HE1b con magnitud de efecto y no solo con el valor p. **Verificado con `evaluate_superiority` (2026-10-10): con 5 campañas externas HE1b solo se sostiene si las 5 favorecen a la CNN (con 4 de 5, el límite superior del IC95 sigue en positivo); con 6 campañas, 6 de 6.** Con una regla tan estricta, un empate o una sola campaña desfavorable basta para no respaldar HE1 |
 | R-F4-2 | HE1 y HE2 son conjuntivas: un fracaso en un componente invalida la hipótesis | Aceptado; reportar con honestidad |
 | R-F4-3 | Multiplicidad (Holm solo para HE2; comparaciones entre algoritmos exploratorias) | Mitigado por diseño |
 | R-F4-4 | SHAP interpretado como causalidad | Mitigado con terminología "contribución predictiva" |

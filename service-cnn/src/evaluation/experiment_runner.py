@@ -95,7 +95,13 @@ class AdaptadorCNN:
     nombre: str = "cnn1d"
     estocastico: bool = True
 
-    def ajustar_predecir(self, hp: dict, fold: FoldData, semilla: int, representacion: str) -> np.ndarray:
+    def entrenar(self, hp: dict, fold: FoldData, semilla: int, representacion: str) -> tuple[QuinuaYieldCNN1D, float, float]:
+        """Entrena la CNN-1D y devuelve (modelo en modo eval, media y desviación del objetivo).
+
+        La salida del modelo está en la escala estandarizada del objetivo; para pasarla a
+        kg/ha se multiplica por la desviación, se suma la media y, si se modeló la anomalía,
+        se suma la línea base (`reconstruct_prediction`). Se expone para el paso de SHAP.
+        """
         y_z, media, desviacion = _estandarizar(_objetivo(fold, representacion))
         arquitectura = {k: v for k, v in hp.items() if k in _HIPERPARAMETROS_ARQUITECTURA}
         entrenamiento = {k: v for k, v in hp.items() if k in _HIPERPARAMETROS_ENTRENAMIENTO}
@@ -114,8 +120,12 @@ class AdaptadorCNN:
             grupos_temporales=torch.tensor(fold.campana_train, dtype=torch.long),
         )
         resultado.modelo.eval()
+        return resultado.modelo, media, desviacion
+
+    def ajustar_predecir(self, hp: dict, fold: FoldData, semilla: int, representacion: str) -> np.ndarray:
+        modelo, media, desviacion = self.entrenar(hp, fold, semilla, representacion)
         with torch.no_grad():
-            pred_z = resultado.modelo(
+            pred_z = modelo(
                 torch.tensor(fold.X_test, dtype=torch.float32), torch.tensor(fold.Z_test, dtype=torch.float32)
             ).squeeze(1).numpy()
         return reconstruct_prediction(pred_z * desviacion + media, fold, representacion)
