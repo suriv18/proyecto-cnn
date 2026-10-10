@@ -63,7 +63,7 @@ Las reglas se **fijan antes de ejecutar** y se copian al informe del piloto. Nin
 | ID | Experimento | Qué mide | Regla de decisión (preespecificada) |
 |---|---|---|---|
 | P0 | **Puerta de entrada** | Verifica la guarda T1, registra el hash de `data/processed` y que el gate F2 esté cerrado | Si falla, no se ejecuta nada más |
-| P1 | **Prueba de fuga** | Entrena cada modelo con el rendimiento de entrenamiento **permutado** y evalúa en la campaña de prueba | Pasa si el R² fuera de muestra ≤ 0,05 en los cinco modelos; si algún modelo supera ese valor hay fuga y se corrige antes de seguir |
+| P1 | **Prueba de fuga** | Entrena cada modelo con el rendimiento de entrenamiento **permutado** y evalúa en la campaña de prueba | **Rediseñada (2026-10-10):** pasa si la **mediana** del R² fuera de muestra de ≥ 10 permutaciones es ≤ 0,05 en los cinco modelos (se informa también el máximo). El máximo entre permutaciones daba falsas alarmas por azar: con 8 observaciones de prueba el R² sin información oscila entre −2,4 y +0,48 y con 62 llegó a +0,06 en una permutación. Control positivo: un «modelo» que ve la verdad de la prueba debe ser señalado. No detecta fugas entre entradas coherentes con las etiquetas de entrenamiento (limitación declarada) |
 | P2 | **Referencias** | RMSE de B1, B2 y B3 por pliego (kg/ha) | Solo descriptivo: da la escala del error |
 | P3 | **Costo** | Tiempo por *trial* de cada modelo (5 trials en P-B); proyección del confirmatorio | Si la proyección supera el presupuesto de cómputo disponible, se reducen las épocas máximas o el costo por trial; **nunca** el número de trials (se perdería la igualdad entre modelos) |
 | P4 | **Representación (D1)** | RMSE en kg/ha reconstruido, nivel frente a anomalía, promediado en los pliegos P-A y P-B y en los cinco modelos | Se elige la representación con menor RMSE medio; si la diferencia relativa es < 2 %, se elige **nivel** (más simple) |
@@ -100,7 +100,7 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 | T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` — **hecha** (`src/evaluation/he1_evaluation.py`; además se corrigió el contraste de apoyo de HE1a, que comparaba con cero en vez de con el margen; 10 pruebas) | M | T4 |
 | T6 | Paso de SHAP con verificación de precisión local y contingencia a KernelExplainer — **hecha** (`src/explainability/shap_step.py`: fondo reproducible solo de entrenamiento, `explain_with_contingency`, `KernelExplainer` con `l1_reg=0`; 11 pruebas) | M | T4 |
 | T7 | `scripts/run_pilot.py` (P0–P11) y plantilla del informe del piloto | M | T1–T6 |
-| T8 | Prueba de fuga por permutación (P1) como prueba automática | S | T4 |
+| T8 | Prueba de fuga por permutación (P1) como prueba automática — **hecha** (`src/evaluation/leak_test.py`: `permuted_training_fold`, `run_permutation_test` con mediana y control positivo; 8 pruebas, verificadas contra el código anterior) | S | T4 |
 
 ## 7. Criterios de salida (hito H2)
 
