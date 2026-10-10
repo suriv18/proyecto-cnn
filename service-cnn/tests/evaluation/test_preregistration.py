@@ -17,6 +17,7 @@ from src.evaluation.preregistration import (
     load_preregistration,
     pending_decisions,
     render_markdown,
+    iter_parameters,
 )
 
 RUTA = "configs/preespecificacion.yaml"
@@ -91,8 +92,14 @@ class TestDecisionesPendientes:
     def test_lista_lo_que_requiere_al_asesor(self, prereg):
         pendientes = pending_decisions(prereg)
 
-        assert "datos.periodo_de_campanas" in pendientes["por_decidir_asesor"]
+        assert "datos.provincias_de_transicion" in pendientes["por_decidir_asesor"]
         assert "validacion.ventana_inicial_de_entrenamiento_campanas" in pendientes["por_decidir_asesor"]
+
+    def test_el_periodo_ya_no_requiere_al_asesor_porque_lo_confirmo_el_autor(self, prereg):
+        pendientes = pending_decisions(prereg)
+
+        assert "datos.periodo_de_campanas" not in pendientes["por_decidir_asesor"]
+        assert dict(iter_parameters(prereg))["datos.periodo_de_campanas"]["valor"] == "2016-2025"
 
     def test_lista_lo_que_decide_el_piloto(self, prereg):
         pendientes = pending_decisions(prereg)
@@ -135,5 +142,5 @@ class TestRenderizado:
 
         assert "BORRADOR" in texto
         assert "Decisiones pendientes" in texto
-        assert "datos.periodo_de_campanas" in texto
+        assert "datos.provincias_de_transicion" in texto
         assert "fijado_por_tesis" in texto
