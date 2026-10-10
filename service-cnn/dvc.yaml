@@ -28,8 +28,12 @@ stages:
       - src/ingestion/gee_series_builder.py
       - src/ingestion/gee_extraction_pipeline.py
       - src/ingestion/province_geometries.py
+      - src/ingestion/gee_mask_pipeline.py
+      - src/ingestion/mask_manifest.py
+      - src/preprocessing/mask.py
       - configs/column_mapping.yaml
       - configs/provincias.csv
+      - data/manifest/mascara_agricola.yaml
     params:
       - gee_project_id
     outs:

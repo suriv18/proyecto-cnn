@@ -156,40 +156,55 @@ class GeeClient:
         resultado_aplanado = coleccion.map(_reducir_imagen).flatten()
 
         filas = [f["properties"] for f in resultado_aplanado.getInfo()["features"]]
-        tabla = pd.DataFrame(filas)
+        return tabla_de_reducers_a_columnas_de_valor(pd.DataFrame(filas), spec, reducers)
 
-        if len(reducers) == 1:
-            if tabla.empty:
-                return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
-            nombre_reducer = reducers[0].value
-            tabla = tabla.rename(columns={nombre_reducer: "valor"})[
-                ["provincia_id", "fecha", "valor"]
-            ]
-            tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
-            return tabla
 
-        columnas_salida = ["provincia_id", "fecha"]
+def tabla_de_reducers_a_columnas_de_valor(
+    tabla: pd.DataFrame, spec: Any, reducers: tuple
+) -> pd.DataFrame:
+    """Convierte la salida cruda de `reduceRegions` en columnas de valor reales.
+
+    Con un solo reducer devuelve `provincia_id`, `fecha`, `valor`; con varios
+    (NDVI: media y máximo, Tabla 7) una columna `valor_<reducer>` por cada
+    uno. Aplica `factor_escala`/`offset_aditivo` del spec. Compartida por
+    `GeeClient.extract_daily_series` y `gee_mask_pipeline.extract_masked_ndvi_series`
+    para que ambas devuelvan exactamente el mismo esquema.
+    """
+    if len(reducers) == 1:
         if tabla.empty:
-            return pd.DataFrame(
-                columns=columnas_salida + [f"valor_{r.value}" for r in reducers]
-            )
-        for regla in reducers:
-            # ee.Reducer.combine(sharedInputs=True) antepone el nombre de la
-            # banda de entrada al nombre del reducer en cada propiedad de
-            # salida (ej. "NDVI_mean", "NDVI_max") — verificado contra la
-            # guía oficial de Earth Engine (Reducer Overview: "the names of
-            # the reducers have been appended to the names of the inputs").
-            # Esto solo aplica al caso combinado (más de un reducer); con
-            # un solo reducer (rama de arriba) reduceRegions expone el
-            # nombre del reducer sin prefijo, ya verificado en
-            # gee_mask_pipeline.py.
-            columna_origen = f"{spec.band}_{regla.value}"
-            columna_salida = f"valor_{regla.value}"
-            tabla[columna_salida] = (
-                tabla[columna_origen] * spec.factor_escala + spec.offset_aditivo
-            )
-            columnas_salida.append(columna_salida)
-        return tabla[columnas_salida]
+            return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
+        nombre_reducer = reducers[0].value
+        tabla = tabla.rename(columns={nombre_reducer: "valor"})[
+            ["provincia_id", "fecha", "valor"]
+        ]
+        tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
+        return tabla
+
+    columnas_salida = ["provincia_id", "fecha"]
+    if tabla.empty:
+        return pd.DataFrame(
+            columns=columnas_salida + [f"valor_{r.value}" for r in reducers]
+        )
+    for regla in reducers:
+        # Nombre de la propiedad de salida de reduceRegions con reducers
+        # combinados. VERIFICADO contra la API real (2026-10-09, proyecto
+        # cnn-sentinel): sobre una imagen de UNA banda (el caso de
+        # `extract_daily_series` y de la máscara agrícola) las propiedades se
+        # llaman `mean`/`max` a secas. El prefijo de banda (`NDVI_mean`) que
+        # describe la guía de Earth Engine solo aparece con imágenes de varias
+        # bandas; se conserva como alternativa por si cambia la forma de la
+        # imagen reducida.
+        columna_origen = (
+            regla.value
+            if regla.value in tabla.columns
+            else f"{spec.band}_{regla.value}"
+        )
+        columna_salida = f"valor_{regla.value}"
+        tabla[columna_salida] = (
+            tabla[columna_origen] * spec.factor_escala + spec.offset_aditivo
+        )
+        columnas_salida.append(columna_salida)
+    return tabla[columnas_salida]
 
 
 def _combinar_reducers(ee_module: Any, reducers: tuple) -> Any:

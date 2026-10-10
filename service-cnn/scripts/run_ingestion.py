@@ -31,6 +31,10 @@ import pandas as pd  # noqa: E402
 from src.ingestion.gee_extraction_pipeline import (  # noqa: E402
     extract_all_provinces_all_variables,
 )
+from src.ingestion.mask_manifest import (  # noqa: E402
+    AmplitudNdviNoCalibradaError,
+    load_mask_thresholds,
+)
 from src.ingestion.midagri_loader import load_column_mapping  # noqa: E402
 from src.ingestion.province_geometries import (  # noqa: E402
     build_province_feature_collection,
@@ -136,10 +140,30 @@ def main() -> None:
             "80 provincias, verificado en producción), no cómputo local."
         ),
     )
+    parser.add_argument(
+        "--manifiesto-mascara",
+        type=Path,
+        default=Path("data/manifest/mascara_agricola.yaml"),
+        help="Manifiesto con los umbrales de la máscara agrícola (4.10.1).",
+    )
+    parser.add_argument(
+        "--sin-mascara",
+        action="store_true",
+        help=(
+            "Extrae el NDVI sobre todo el polígono provincial, sin máscara "
+            "agrícola. Solo exploratorio: la Tabla 7 exige NDVI sobre la máscara."
+        ),
+    )
     args = parser.parse_args()
 
+    umbrales_mascara = None
     try:
         _verificar_mapeo_midagri(args.column_mapping)
+        if not args.sin_mascara:
+            try:
+                umbrales_mascara = load_mask_thresholds(args.manifiesto_mascara)
+            except AmplitudNdviNoCalibradaError as exc:
+                raise IngestionNotReadyError(str(exc)) from exc
         cliente = _construir_cliente_gee(args.gee_project_id)
     except IngestionNotReadyError as exc:
         print(f"INGESTA NO LISTA: {exc}", file=sys.stderr)
@@ -177,6 +201,7 @@ def main() -> None:
         campanas=campanas,
         devolver_fallos=True,
         max_workers=args.max_workers,
+        umbrales_mascara=umbrales_mascara,
     )
 
     args.salida.mkdir(parents=True, exist_ok=True)

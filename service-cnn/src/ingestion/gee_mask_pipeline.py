@@ -23,6 +23,11 @@ from typing import Any
 
 import pandas as pd
 
+from src.ingestion.gee_client import (
+    _combinar_reducers,
+    _mascara_calidad_ndvi,
+    tabla_de_reducers_a_columnas_de_valor,
+)
 from src.ingestion.gee_config import get_collection_spec
 from src.preprocessing.mask import MaskThresholds
 
@@ -124,14 +129,12 @@ def extract_masked_ndvi_series(
             ventana anual completa en `sample_cells_for_calibration`).
 
     Returns:
-        DataFrame con columnas `provincia_id`, `fecha`, `valor` — columna
-        única con NDVI real ([-1, 1]) ya escalado. NOTA: a diferencia de
-        `GeeClient.extract_daily_series` (que desde el filtrado de calidad
-        y reducers múltiples de NDVI devuelve `valor_mean`/`valor_max`),
-        esta función todavía usa un único `ee.Reducer.mean()` sin filtro de
-        calidad — no actualizada por ese cambio (ver
-        `docs/PENDIENTE.md`, pendiente de conectar la máscara agrícola al
-        mismo criterio de calidad/reducers).
+        DataFrame con columnas `provincia_id`, `fecha`, `valor_mean`,
+        `valor_max` — el mismo esquema que `GeeClient.extract_daily_series`
+        para NDVI (Tabla 7: "Filtrado de calidad; media y máximo por fase
+        sobre máscara agrícola"), con NDVI real ([-1, 1]) ya escalado. Cada
+        imagen se filtra con la banda de calidad `DetailedQA` (VI Quality,
+        nube adyacente y nubes mixtas) además de la máscara agrícola.
     """
     ee = cliente.ee_module
     fecha_inicio_mascara, fecha_fin_mascara = ventana_mascara
@@ -143,15 +146,20 @@ def extract_masked_ndvi_series(
     coleccion = (
         ee.ImageCollection(spec.collection_id)
         .filterDate(fecha_inicio.isoformat(), fecha_fin.isoformat())
-        .select(spec.band)
+        .select([spec.band, spec.banda_calidad])
     )
+    reducers = spec.reducers
+    reducer_ee = _combinar_reducers(ee, reducers)
 
     def _reducir_imagen_enmascarada(imagen):
         fecha = imagen.date().format("YYYY-MM-dd")
-        imagen_enmascarada = imagen.updateMask(mascara)
+        buena_calidad = _mascara_calidad_ndvi(ee, imagen.select(spec.banda_calidad))
+        imagen_enmascarada = (
+            imagen.select(spec.band).updateMask(buena_calidad).updateMask(mascara)
+        )
         reducido = imagen_enmascarada.reduceRegions(
             collection=geometrias_por_provincia,
-            reducer=ee.Reducer.mean(),
+            reducer=reducer_ee,
             scale=spec.spatial_resolution_m,
         )
         return reducido.map(lambda f: f.set("fecha", fecha))
@@ -159,12 +167,7 @@ def extract_masked_ndvi_series(
     resultado_aplanado = coleccion.map(_reducir_imagen_enmascarada).flatten()
 
     filas = [f["properties"] for f in resultado_aplanado.getInfo()["features"]]
-    tabla = pd.DataFrame(filas)
-    if tabla.empty:
-        return pd.DataFrame(columns=["provincia_id", "fecha", "valor"])
-    tabla = tabla.rename(columns={"mean": "valor"})[["provincia_id", "fecha", "valor"]]
-    tabla["valor"] = tabla["valor"] * spec.factor_escala + spec.offset_aditivo
-    return tabla
+    return tabla_de_reducers_a_columnas_de_valor(pd.DataFrame(filas), spec, reducers)
 
 
 def sample_cells_for_calibration(

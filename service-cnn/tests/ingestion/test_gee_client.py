@@ -485,6 +485,36 @@ class TestGeeClientFiltradoCalidadNdvi:
         assert bit10.eq(0).valor is False
 
 
+class TestGeeClientNombresRealesDeReducersCombinados:
+    """Verificado contra la API real (2026-10-09, proyecto cnn-sentinel): sobre
+    una imagen de UNA sola banda, `reduceRegions` con reducers combinados
+    devuelve las propiedades `mean` y `max` a secas, sin el prefijo de banda.
+    El prefijo `NDVI_` solo aparece con imágenes de varias bandas."""
+
+    def test_ndvi_con_propiedades_mean_y_max_sin_prefijo(self, geometria_provincias_fake):
+        filas_esperadas = [
+            {
+                "provincia_id": "PUN-AZA",
+                "fecha": "2020-09-01",
+                "mean": 5000.0,
+                "max": 6000.0,
+                "qa": 0b00,
+            },
+        ]
+        fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
+        cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
+
+        resultado = cliente.extract_daily_series(
+            variable="ndvi",
+            geometrias_por_provincia=geometria_provincias_fake,
+            fecha_inicio=date(2020, 9, 1),
+            fecha_fin=date(2020, 9, 1),
+        )
+
+        assert resultado["valor_mean"].iloc[0] == pytest.approx(0.5)
+        assert resultado["valor_max"].iloc[0] == pytest.approx(0.6)
+
+
 class TestGeeClientReducersMultiples:
     def test_ndvi_devuelve_columnas_valor_mean_y_valor_max(
         self, geometria_provincias_fake
