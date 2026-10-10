@@ -28,15 +28,15 @@ hipotesis:
   nivel_de_significancia: {valor: 0.05, estado: fijado_por_tesis, fuente: "3.3"}
   margen_no_inferioridad_relativo: {valor: 0.05, estado: fijado_por_tesis, fuente: "3.3.1 (δ)"}
   comparador_confirmatorio: {valor: xgboost, estado: fijado_por_tesis, fuente: "Tabla 8"}
-  benchmark_de_superioridad: {valor: B2, estado: fijado_por_tesis, fuente: "3.3.2"}
+  benchmark_de_superioridad: {valor: "B* = la mejor entre B2 (línea base provincial) y B4 (persistencia), elegida con la validación interna antes de las campañas externas", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.1 y 3.3.2; antes: B2"}
   unidad_del_contraste: {valor: "campaña externa", estado: fijado_por_tesis, fuente: "3.3"}
-  estadistico_he1a: {valor: "mediana de q_f = RMSE(CNN-1D)/RMSE(XGBoost) - 1; H0: mediana >= 0.05", estado: fijado_por_tesis, fuente: "3.3.1"}
-  estadistico_he1b: {valor: "mediana de Δ_f = RMSE(CNN-1D) - RMSE(B2); H0: mediana >= 0", estado: fijado_por_tesis, fuente: "3.3.2"}
-  intervalo_de_confianza: {valor: "límite superior unilateral al 95 % por bootstrap de bloques de campaña", estado: fijado_por_tesis, fuente: "4.14"}
+  estadistico_he1a: {valor: "q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.1; antes solo frente a XGBoost"}
+  estadistico_he1b: {valor: "exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.2; antes: Δ_f frente a B2, confirmatorio"}
+  intervalo_de_confianza: {valor: "regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos"}
   n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta"}
   semilla_bootstrap: {valor: 2026, estado: propuesto, fuente: "reproducibilidad"}
-  contraste_de_apoyo: {valor: "Wilcoxon pareado unilateral, Hodges-Lehmann y correlación biserial de rangos", estado: fijado_por_tesis, fuente: "3.3.1 y 4.14"}
-  he1_se_respalda_si: {valor: "se cumplen HE1a y HE1b", estado: fijado_por_tesis, fuente: "3.3.2"}
+  contraste_de_apoyo: {valor: "Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.1 y 4.14"}
+  he1_se_respalda_si: {valor: "se cumple HE1a (HE1b es exploratoria)", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.2"}
   he2:
     estabilidad_w_kendall_minimo: {valor: 0.70, estado: fijado_por_tesis, fuente: "3.3.3"}
     estabilidad_jaccard_minimo: {valor: 0.50, estado: fijado_por_tesis, fuente: "3.3.3"}
@@ -44,11 +44,11 @@ hipotesis:
     fases_criticas_horizonte_principal: {valor: [floracion, llenado_grano], estado: fijado_por_tesis, fuente: "3.3.5 (Vásquez et al., 2024)"}
     fases_criticas_horizonte_temprano: {valor: [floracion], estado: fijado_por_tesis, fuente: "3.3.5"}
     correccion_por_multiplicidad: {valor: holm, estado: fijado_por_tesis, fuente: "3.3.5"}
-    familia_de_contrastes: {valor: [estabilidad, fidelidad, concordancia], estado: fijado_por_tesis, fuente: "3.3.5"}
+    familia_de_contrastes: {valor: [estabilidad, fidelidad], estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.5; la concordancia es el criterio primario y queda fuera de la familia corregida"}
     valor_p_estabilidad: {valor: "permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales)", estado: propuesto, fuente: "src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud"}
     valor_p_fidelidad: {valor: "aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra", estado: propuesto, fuente: "src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); por_decidir_asesor si se mantiene el control único"}
     valor_p_concordancia: {valor: "binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano)", estado: propuesto, fuente: "src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167"}
-    he2_se_respalda_si: {valor: "se cumplen estabilidad, fidelidad y concordancia a la vez", estado: fijado_por_tesis, fuente: "3.3.5"}
+    he2_se_respalda_si: {valor: "se cumple la concordancia agronómica (primaria); estabilidad y fidelidad son secundarias", estado: propuesto, fuente: "Tesis v3 (propuesta, pendiente del asesor): 3.3.5"}
   hipotesis_general_conjuntiva: {valor: true, estado: fijado_por_tesis, fuente: "3.1"}
 
 datos:
