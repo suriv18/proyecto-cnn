@@ -107,6 +107,17 @@ def main() -> None:
     parser.add_argument("--column-mapping", type=Path, default=Path("configs/column_mapping.yaml"))
     parser.add_argument("--hyperparams", type=Path, default=Path("configs/hyperparams.yaml"))
     parser.add_argument("--salida", type=Path, default=Path("data/interim/fenologia_alineada.parquet"))
+    parser.add_argument(
+        "--dias-antes-de-cosecha",
+        type=int,
+        default=None,
+        help=(
+            "Si se especifica, trunca las ventanas de fase al horizonte "
+            "principal (sección 4.10.4): N días antes de la fecha de "
+            "cosecha estimada de cada provincia-campaña. Sin este flag, "
+            "las ventanas no se truncan (comportamiento anterior)."
+        ),
+    )
     args = parser.parse_args()
 
     provincias = pd.read_csv(args.provincias)
@@ -144,6 +155,7 @@ def main() -> None:
         fechas_modales_departamentales=fechas_modales_departamentales,
         duracion_dias_por_fase=duracion_dias_por_fase,
         provincia_a_departamento=provincia_a_departamento,
+        dias_antes_de_cosecha=args.dias_antes_de_cosecha,
     )
 
     filas_planas = []

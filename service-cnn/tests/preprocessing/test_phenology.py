@@ -14,6 +14,7 @@ import pytest
 from src.preprocessing.phenology import (
     FuenteAlineacion,
     build_phase_windows,
+    estimate_horizon_cutoff,
     estimate_sowing_date,
 )
 from src.preprocessing.campaign_calendar import derive_campana_from_month
@@ -277,3 +278,60 @@ class TestBuildPhaseWindows:
         fases_presentes = [v.fase for v in ventanas]
         assert "floracion" not in fases_presentes
         assert "llenado_grano" not in fases_presentes
+
+
+class TestEstimateHorizonCutoff:
+    """Sección 4.10.4: el horizonte principal se fija 30 días antes de la
+    fecha esperada de cosecha, estimada a partir de la fecha de siembra y la
+    duración fenológica total calibrada con campañas de entrenamiento."""
+
+    def test_cosecha_es_la_fecha_de_siembra_mas_la_duracion_total_de_fases(self):
+        """Con margen 0, el corte coincide exactamente con el fin de la
+        última fase (fecha de cosecha estimada)."""
+        cutoff = estimate_horizon_cutoff(
+            fecha_siembra=date(2021, 10, 1),
+            duracion_dias_por_fase={
+                "emergencia": 15,
+                "desarrollo_vegetativo": 45,
+            },
+            dias_antes_de_cosecha=0,
+        )
+        # 15 + 45 = 60 días desde 10/01 (inclusive) -> fin en 11/29.
+        assert cutoff == date(2021, 11, 29)
+
+    def test_resta_el_margen_de_dias_antes_de_cosecha(self):
+        cutoff = estimate_horizon_cutoff(
+            fecha_siembra=date(2021, 10, 1),
+            duracion_dias_por_fase={
+                "emergencia": 15,
+                "desarrollo_vegetativo": 45,
+            },
+            dias_antes_de_cosecha=30,
+        )
+        assert cutoff == date(2021, 10, 30)
+
+    def test_usa_treinta_dias_como_margen_por_defecto(self):
+        """Sección 4.10.4: horizonte principal = 30 días antes de cosecha."""
+        con_default = estimate_horizon_cutoff(
+            fecha_siembra=date(2021, 10, 1),
+            duracion_dias_por_fase={"emergencia": 60},
+        )
+        explicito = estimate_horizon_cutoff(
+            fecha_siembra=date(2021, 10, 1),
+            duracion_dias_por_fase={"emergencia": 60},
+            dias_antes_de_cosecha=30,
+        )
+        assert con_default == explicito
+
+    def test_usa_la_duracion_de_todas_las_fases_declaradas_no_solo_la_primera(self):
+        cutoff_una_fase = estimate_horizon_cutoff(
+            fecha_siembra=date(2021, 10, 1),
+            duracion_dias_por_fase={"emergencia": 15},
+            dias_antes_de_cosecha=0,
+        )
+        cutoff_dos_fases = estimate_horizon_cutoff(
+            fecha_siembra=date(2021, 10, 1),
+            duracion_dias_por_fase={"emergencia": 15, "desarrollo_vegetativo": 45},
+            dias_antes_de_cosecha=0,
+        )
+        assert cutoff_dos_fases > cutoff_una_fase

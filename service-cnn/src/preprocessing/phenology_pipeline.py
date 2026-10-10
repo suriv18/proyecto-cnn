@@ -19,7 +19,7 @@ from __future__ import annotations
 import calendar
 from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 import pandas as pd
 import yaml
@@ -28,6 +28,7 @@ from src.preprocessing.campaign_calendar import derive_campana_from_month
 from src.preprocessing.phenology import (
     FuenteAlineacion,
     build_phase_windows,
+    estimate_horizon_cutoff,
     estimate_sowing_date,
 )
 
@@ -122,7 +123,39 @@ def estimate_departmental_modal_dates_exploratory(
         aparece en el resultado, para que el llamador use
         `.get(departamento)` de forma uniforme con "sin dato disponible".
     """
-    con_departamento = siembra_mensual.copy()
+    return estimate_departmental_modal_dates(
+        siembra_mensual=siembra_mensual,
+        provincia_a_departamento=provincia_a_departamento,
+        campanas_entrenamiento=siembra_mensual["campana_id"].unique(),
+    )
+
+
+def estimate_departmental_modal_dates(
+    siembra_mensual: pd.DataFrame,
+    provincia_a_departamento: dict[str, str],
+    campanas_entrenamiento: Iterable[int],
+) -> dict[str, tuple[int, int]]:
+    """Mes/día modal de siembra por departamento, solo con campañas de ENTRENAMIENTO.
+
+    Versión válida para la evaluación definitiva (sección 4.12.2): el
+    resultado no depende de ninguna campaña fuera de `campanas_entrenamiento`,
+    por lo que debe llamarse una vez por pliegue con las campañas de
+    entrenamiento de ese pliegue.
+
+    Args:
+        siembra_mensual: ver `estimate_departmental_modal_dates_exploratory`.
+        provincia_a_departamento: ver `estimate_departmental_modal_dates_exploratory`.
+        campanas_entrenamiento: `campana_id` permitidas en el cálculo.
+
+    Returns:
+        `{departamento: (mes, día)}` sin año fijo (ver la versión
+        exploratoria). Un departamento sin filas de entrenamiento no aparece
+        en el resultado.
+    """
+    entrenamiento = siembra_mensual[
+        siembra_mensual["campana_id"].isin(list(campanas_entrenamiento))
+    ]
+    con_departamento = entrenamiento.copy()
     con_departamento["departamento"] = con_departamento["provincia_id"].map(
         provincia_a_departamento
     )
@@ -150,6 +183,7 @@ def build_all_phase_windows(
     provincia_a_departamento: Optional[dict[str, str]] = None,
     umbral_ascenso_ndvi: float = 0.3,
     fecha_corte: Optional[date] = None,
+    dias_antes_de_cosecha: Optional[int] = None,
 ) -> list[dict]:
     """Alinea fenológicamente cada provincia-campaña del lote dado.
 
@@ -179,7 +213,15 @@ def build_all_phase_windows(
             fecha modal departamental recurrir).
         umbral_ascenso_ndvi: ver `phenology.estimate_sowing_date`.
         fecha_corte: ver `phenology.build_phase_windows` (regla anti-fuga,
-            sección 4.10.4).
+            sección 4.10.4). Corte común para todo el lote.
+        dias_antes_de_cosecha: si se especifica, el corte se calcula por
+            cada provincia-campaña como N días antes de su cosecha estimada
+            (`phenology.estimate_horizon_cutoff`, horizonte principal =
+            30, sección 4.10.4). Es excluyente con `fecha_corte`.
+
+    Raises:
+        ValueError: si se especifican `fecha_corte` y `dias_antes_de_cosecha`
+            a la vez.
 
     Returns:
         Lista de dicts, uno por cada `(provincia_id, campana_id)` de
@@ -190,6 +232,10 @@ def build_all_phase_windows(
             el mensaje, y las demás claves en `None` — no se propaga la
             excepción, para no descartar el resto del lote.
     """
+    if fecha_corte is not None and dias_antes_de_cosecha is not None:
+        raise ValueError(
+            "Especifique fecha_corte o dias_antes_de_cosecha, no ambos."
+        )
     provincia_a_departamento = provincia_a_departamento or {}
     resultados: list[dict] = []
 
@@ -239,10 +285,19 @@ def build_all_phase_windows(
             )
             continue
 
+        fecha_corte_observacion = (
+            estimate_horizon_cutoff(
+                fecha_siembra=fecha_estimada.fecha,
+                duracion_dias_por_fase=duracion_dias_por_fase,
+                dias_antes_de_cosecha=dias_antes_de_cosecha,
+            )
+            if dias_antes_de_cosecha is not None
+            else fecha_corte
+        )
         ventanas = build_phase_windows(
             fecha_siembra=fecha_estimada.fecha,
             duracion_dias_por_fase=duracion_dias_por_fase,
-            fecha_corte=fecha_corte,
+            fecha_corte=fecha_corte_observacion,
         )
 
         resultados.append(

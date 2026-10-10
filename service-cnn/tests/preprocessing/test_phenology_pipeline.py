@@ -21,6 +21,7 @@ import pytest
 from src.preprocessing.phenology import FuenteAlineacion
 from src.preprocessing.phenology_pipeline import (
     build_all_phase_windows,
+    estimate_departmental_modal_dates,
     estimate_departmental_modal_dates_exploratory,
     load_fenologia_bbch,
 )
@@ -217,6 +218,54 @@ class TestBuildAllPhaseWindows:
         entrada = resultado[0]
         assert entrada["ventanas"][-1].fin == date(2020, 11, 10)
 
+    def test_dias_antes_de_cosecha_trunca_al_horizonte_principal(
+        self, siembra_mensual, serie_ndvi_cruda, duracion_dias_por_fase
+    ):
+        # Siembra 2020-10-16 + 130 días de ciclo -> cosecha estimada
+        # 2021-02-22 (fin inclusivo de la última fase); 30 días antes ->
+        # corte 2021-01-23 (sección 4.10.4),
+        # dentro de llenado_grano. madurez queda excluida.
+        resultado = build_all_phase_windows(
+            provincia_campanas=[("AZANGARO", 2021)],
+            siembra_mensual=siembra_mensual,
+            serie_ndvi_cruda=serie_ndvi_cruda,
+            fechas_modales_departamentales={},
+            duracion_dias_por_fase=duracion_dias_por_fase,
+            dias_antes_de_cosecha=30,
+        )
+
+        ventanas = resultado[0]["ventanas"]
+        assert ventanas[-1].fase == "llenado_grano"
+        assert ventanas[-1].fin == date(2021, 1, 23)
+        assert "madurez" not in [v.fase for v in ventanas]
+
+    def test_sin_dias_antes_de_cosecha_no_trunca(
+        self, siembra_mensual, serie_ndvi_cruda, duracion_dias_por_fase
+    ):
+        resultado = build_all_phase_windows(
+            provincia_campanas=[("AZANGARO", 2021)],
+            siembra_mensual=siembra_mensual,
+            serie_ndvi_cruda=serie_ndvi_cruda,
+            fechas_modales_departamentales={},
+            duracion_dias_por_fase=duracion_dias_por_fase,
+        )
+
+        assert len(resultado[0]["ventanas"]) == 5
+
+    def test_rechaza_fecha_corte_y_dias_antes_de_cosecha_a_la_vez(
+        self, siembra_mensual, serie_ndvi_cruda, duracion_dias_por_fase
+    ):
+        with pytest.raises(ValueError, match="fecha_corte"):
+            build_all_phase_windows(
+                provincia_campanas=[("AZANGARO", 2021)],
+                siembra_mensual=siembra_mensual,
+                serie_ndvi_cruda=serie_ndvi_cruda,
+                fechas_modales_departamentales={},
+                duracion_dias_por_fase=duracion_dias_por_fase,
+                fecha_corte=date(2020, 11, 10),
+                dias_antes_de_cosecha=30,
+            )
+
 
 class TestLoadFenologiaBbch:
     def test_carga_las_5_fases_en_orden_desde_configs(self, tmp_path):
@@ -254,6 +303,63 @@ class TestLoadFenologiaBbch:
             "llenado_grano",
             "madurez",
         }
+
+
+class TestEstimateDepartmentalModalDates:
+    """Respaldo departamental restringido a campañas de ENTRENAMIENTO
+    (sección 4.12.2): el resultado no puede depender de campañas de prueba."""
+
+    @staticmethod
+    def _siembra():
+        return pd.DataFrame(
+            [
+                {"provincia_id": "AZANGARO", "campana_id": 2020, "mes": 10, "superficie_ha": 300.0},
+                {"provincia_id": "LAMPA", "campana_id": 2021, "mes": 10, "superficie_ha": 200.0},
+                # Campaña de prueba con muchísima más siembra en noviembre:
+                # si se filtrara mal, el mes modal pasaría a 11.
+                {"provincia_id": "LAMPA", "campana_id": 2022, "mes": 11, "superficie_ha": 9000.0},
+            ]
+        )
+
+    def test_ignora_campanas_fuera_del_conjunto_de_entrenamiento(self):
+        resultado = estimate_departmental_modal_dates(
+            siembra_mensual=self._siembra(),
+            provincia_a_departamento={"AZANGARO": "PUNO", "LAMPA": "PUNO"},
+            campanas_entrenamiento=[2020, 2021],
+        )
+
+        assert resultado["PUNO"] == (10, 16)
+
+    def test_el_resultado_no_cambia_si_se_altera_una_campana_de_prueba(self):
+        base = self._siembra()
+        alterada = base.copy()
+        alterada.loc[alterada["campana_id"] == 2022, "mes"] = 12
+        alterada.loc[alterada["campana_id"] == 2022, "superficie_ha"] = 1.0
+        kwargs = dict(
+            provincia_a_departamento={"AZANGARO": "PUNO", "LAMPA": "PUNO"},
+            campanas_entrenamiento=[2020, 2021],
+        )
+
+        assert estimate_departmental_modal_dates(base, **kwargs) == (
+            estimate_departmental_modal_dates(alterada, **kwargs)
+        )
+
+    def test_departamento_solo_con_campanas_de_prueba_no_aparece(self):
+        siembra = pd.DataFrame(
+            [
+                {"provincia_id": "AZANGARO", "campana_id": 2020, "mes": 10, "superficie_ha": 300.0},
+                {"provincia_id": "ABANCAY", "campana_id": 2022, "mes": 11, "superficie_ha": 100.0},
+            ]
+        )
+
+        resultado = estimate_departmental_modal_dates(
+            siembra_mensual=siembra,
+            provincia_a_departamento={"AZANGARO": "PUNO", "ABANCAY": "APURIMAC"},
+            campanas_entrenamiento=[2020],
+        )
+
+        assert "APURIMAC" not in resultado
+        assert "PUNO" in resultado
 
 
 class TestEstimateDepartmentalModalDatesExploratory:

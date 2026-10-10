@@ -157,6 +157,36 @@ def estimate_sowing_date(
     )
 
 
+def estimate_horizon_cutoff(
+    fecha_siembra: date,
+    duracion_dias_por_fase: dict[str, int],
+    dias_antes_de_cosecha: int = 30,
+) -> date:
+    """Calcula el punto de corte del horizonte principal (sección 4.10.4).
+
+    La fecha de cosecha se estima como la fecha de siembra más la duración
+    total de todas las fases BBCH declaradas (fin de la última fase); el
+    horizonte principal se fija `dias_antes_de_cosecha` días antes de esa
+    fecha estimada.
+
+    Args:
+        fecha_siembra: inicio de la primera fase (nivel de
+            `estimate_sowing_date`).
+        duracion_dias_por_fase: duración en días de cada fase BBCH — la misma
+            estructura que recibe `build_phase_windows`, ya calibrada con
+            respaldo agronómico (Sosa-Zuniga et al., 2017).
+        dias_antes_de_cosecha: margen del horizonte principal antes de la
+            fecha de cosecha estimada (30 días, sección 4.10.4).
+
+    Returns:
+        Fecha de corte a pasar como `fecha_corte` a `build_phase_windows`
+        (regla anti-fuga, sección 4.12.2).
+    """
+    duracion_total_dias = sum(duracion_dias_por_fase.values())
+    fecha_cosecha_estimada = fecha_siembra + timedelta(days=duracion_total_dias - 1)
+    return fecha_cosecha_estimada - timedelta(days=dias_antes_de_cosecha)
+
+
 def build_phase_windows(
     fecha_siembra: date,
     duracion_dias_por_fase: dict[str, int],
