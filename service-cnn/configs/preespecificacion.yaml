@@ -45,6 +45,9 @@ hipotesis:
     fases_criticas_horizonte_temprano: {valor: [floracion], estado: fijado_por_tesis, fuente: "3.3.5"}
     correccion_por_multiplicidad: {valor: holm, estado: fijado_por_tesis, fuente: "3.3.5"}
     familia_de_contrastes: {valor: [estabilidad, fidelidad, concordancia], estado: fijado_por_tesis, fuente: "3.3.5"}
+    valor_p_estabilidad: {valor: "permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales)", estado: propuesto, fuente: "src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud"}
+    valor_p_fidelidad: {valor: "aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra", estado: propuesto, fuente: "src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); por_decidir_asesor si se mantiene el control único"}
+    valor_p_concordancia: {valor: "binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano)", estado: propuesto, fuente: "src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167"}
     he2_se_respalda_si: {valor: "se cumplen estabilidad, fidelidad y concordancia a la vez", estado: fijado_por_tesis, fuente: "3.3.5"}
   hipotesis_general_conjuntiva: {valor: true, estado: fijado_por_tesis, fuente: "3.1"}
 

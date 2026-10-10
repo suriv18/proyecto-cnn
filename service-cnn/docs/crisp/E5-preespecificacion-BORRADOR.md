@@ -4,7 +4,7 @@
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
@@ -12,7 +12,7 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|
 | `por_decidir_asesor` | 8 |
 | `por_decidir_piloto` | 11 |
-| `propuesto` | 18 |
+| `propuesto` | 21 |
 
 ### Requieren al asesor
 
@@ -43,6 +43,9 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 - `hipotesis.n_bootstrap` — 10000 · _con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta_
 - `hipotesis.semilla_bootstrap` — 2026 · _reproducibilidad_
+- `hipotesis.he2.valor_p_estabilidad` — permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales) · _src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud_
+- `hipotesis.he2.valor_p_fidelidad` — aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra · _src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); por_decidir_asesor si se mantiene el control único_
+- `hipotesis.he2.valor_p_concordancia` — binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) · _src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167_
 - `datos.clasificaciones_excluidas` — costa_riego, selva · _4.7, criterio de exclusión 4_
 - `datos.exclusion_por_altitud_del_cultivo` — no · _E3 §7: la altitud del cultivo no es la de la quinua_
 - `datos.criterio_de_inclusion_por_completitud` — >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan · _4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571)_
@@ -85,6 +88,9 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `he2.fases_criticas_horizonte_temprano` | floracion | `fijado_por_tesis` | 3.3.5 |
 | `he2.correccion_por_multiplicidad` | holm | `fijado_por_tesis` | 3.3.5 |
 | `he2.familia_de_contrastes` | estabilidad, fidelidad, concordancia | `fijado_por_tesis` | 3.3.5 |
+| `he2.valor_p_estabilidad` | permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales) | `propuesto` | src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud |
+| `he2.valor_p_fidelidad` | aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra | `propuesto` | src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); por_decidir_asesor si se mantiene el control único |
+| `he2.valor_p_concordancia` | binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) | `propuesto` | src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167 |
 | `he2.he2_se_respalda_si` | se cumplen estabilidad, fidelidad y concordancia a la vez | `fijado_por_tesis` | 3.3.5 |
 | `hipotesis_general_conjuntiva` | sí | `fijado_por_tesis` | 3.1 |
 
