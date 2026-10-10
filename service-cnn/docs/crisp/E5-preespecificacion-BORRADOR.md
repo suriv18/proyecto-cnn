@@ -4,7 +4,7 @@
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
@@ -12,7 +12,7 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|
 | `por_decidir_asesor` | 8 |
 | `por_decidir_piloto` | 11 |
-| `propuesto` | 17 |
+| `propuesto` | 18 |
 
 ### Requieren al asesor
 
@@ -50,6 +50,7 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 - `validacion.validacion_interna.esquema` — origen_movil_dentro_del_entrenamiento · _4.12.2: orden temporal y solo campañas anteriores_
 - `validacion.validacion_interna.ventana_inicial_interna_campanas` — 2 · _con menos de 2 campañas no hay entrenamiento interno_
 - `validacion.semillas.valores` — 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 · _reproducibilidad_
+- `modelos.benchmark_secundario_persistencia` — B4 · _recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza_
 - `modelos.presupuesto_de_trials_por_modelo` — 30 · _src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo_
 - `modelos.entrenamiento_cnn1d.paciencia` — 10 · _TrainingConfig_
 - `modelos.imputacion_residual_de_celdas_vacias` — mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos · _4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones_
@@ -129,6 +130,7 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|---|---|
 | `factor_algoritmo` | cnn1d, elastic_net, random_forest, xgboost, svr | `fijado_por_tesis` | Tabla 1 y 8 |
 | `benchmarks` | B1, B2, B3 | `fijado_por_tesis` | Tabla 8; no se optimizan |
+| `benchmark_secundario_persistencia` | B4 | `propuesto` | recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza |
 | `presupuesto_de_trials_por_modelo` | 30 | `propuesto` | src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo |
 | `muestreador_de_hiperparametros` | tpe | `fijado_por_tesis` | 4.12.3 (Optuna, Sabo et al. 2023) |
 | `espacios_de_busqueda` | configs/hyperparams.yaml | `por_decidir_piloto` | 4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador |

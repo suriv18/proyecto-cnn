@@ -86,8 +86,8 @@ class TestExperimentos:
         assert set(resultados.p1["modelo"]) == {"cnn1d", "elastic_net", "random_forest", "xgboost", "svr"}
         assert {"r2_mediano", "pasa"} <= set(resultados.p1.columns)
 
-    def test_p2_referencias_b1_b2_b3(self, resultados):
-        assert set(resultados.p2["modelo"]) == {"B1", "B2", "B3"}
+    def test_p2_referencias_b1_b2_b3_y_b4(self, resultados):
+        assert set(resultados.p2["modelo"]) == {"B1", "B2", "B3", "B4"}
 
     def test_p3_el_presupuesto_es_igual_para_los_cinco_modelos(self, resultados):
         assert set(resultados.p3["n_trials"]) == {2}

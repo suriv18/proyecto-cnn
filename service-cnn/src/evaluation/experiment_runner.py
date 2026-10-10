@@ -192,9 +192,11 @@ def tune_model(
 
 
 def benchmark_predictions(fold: FoldData, indice_ndvi_max: int) -> dict[str, np.ndarray]:
-    """B1 (media histórica provincial), B2 (línea base provincial) y B3 (regresión con NDVI máximo).
+    """B1 (media provincial), B2 (línea base), B3 (regresión con NDVI máximo) y B4 (persistencia).
 
-    Los tres se ajustan solo con el entrenamiento y no se optimizan (4.12.3).
+    B4 repite el rendimiento de la última campaña de entrenamiento de cada provincia; es una
+    referencia secundaria y descriptiva, fuera de la familia confirmatoria. Todos se ajustan
+    solo con el entrenamiento y no se optimizan (4.12.3).
     """
     media_global = float(fold.y_train.mean())
     por_provincia = pd.Series(fold.y_train).groupby(fold.provincia_train).mean()
@@ -213,7 +215,11 @@ def benchmark_predictions(fold: FoldData, indice_ndvi_max: int) -> dict[str, np.
         ndvi_test = pico(fold.X_test_crudo)
         valido = ~np.isnan(ndvi_test)
         b3[valido] = predict_ndvi_benchmark(ajuste, ndvi_test[valido])
-    return {"B1": b1, "B2": fold.baseline_test.copy(), "B3": b3}
+    historia_y = pd.DataFrame({"p": fold.provincia_train, "c": fold.campana_train, "y": fold.y_train})
+    ultima_campana = historia_y.groupby("p")["c"].transform("max") == historia_y["c"]
+    persistencia = historia_y[ultima_campana].groupby("p")["y"].mean()
+    b4 = np.array([persistencia.get(p, media_global) for p in fold.provincia_test], dtype=float)
+    return {"B1": b1, "B2": fold.baseline_test.copy(), "B3": b3, "B4": b4}
 
 
 @dataclass

@@ -45,7 +45,7 @@ from src.explainability.shap_step import (
 )
 
 FASES_POR_DEFECTO = ["emergencia", "desarrollo_vegetativo", "floracion", "llenado_grano", "madurez"]
-BENCHMARKS = ("B1", "B2", "B3")
+BENCHMARKS = ("B1", "B2", "B3", "B4")
 
 
 class PilotGateError(RuntimeError):

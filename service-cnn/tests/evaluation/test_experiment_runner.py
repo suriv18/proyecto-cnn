@@ -180,10 +180,10 @@ class TestPrediccionesEnKgHa:
 
 
 class TestBenchmarks:
-    def test_devuelve_b1_b2_y_b3_para_cada_observacion_de_prueba(self, pliego):
+    def test_devuelve_b1_b2_b3_y_b4_para_cada_observacion_de_prueba(self, pliego):
         b = benchmark_predictions(pliego, indice_ndvi_max=4)
 
-        assert set(b) == {"B1", "B2", "B3"}
+        assert set(b) == {"B1", "B2", "B3", "B4"}
         assert all(len(v) == len(pliego.y_test) for v in b.values())
 
     def test_b2_es_la_linea_base_provincial(self, pliego):
@@ -195,6 +195,28 @@ class TestBenchmarks:
         media = pliego.y_train[pliego.provincia_train == provincia].mean()
 
         assert b1[0] == pytest.approx(media)
+
+    def test_b4_es_la_persistencia_la_ultima_campana_de_cada_provincia(self, pliego):
+        b4 = benchmark_predictions(pliego, 4)["B4"]
+        provincia = pliego.provincia_test[0]
+        de_la_provincia = pliego.provincia_train == provincia
+        ultima = pliego.campana_train[de_la_provincia].max()
+        esperado = pliego.y_train[de_la_provincia & (pliego.campana_train == ultima)].mean()
+
+        assert b4[0] == pytest.approx(esperado)
+
+    def test_b4_sin_historia_de_la_provincia_recurre_a_la_media_global(self, pliego):
+        sin_historia = dataclasses.replace(pliego, provincia_test=np.array(["NUEVA"] * len(pliego.y_test)))
+
+        b4 = benchmark_predictions(sin_historia, 4)["B4"]
+
+        np.testing.assert_allclose(b4, pliego.y_train.mean())
+
+    def test_b4_no_usa_la_verdad_de_la_prueba(self, pliego):
+        a = benchmark_predictions(pliego, 4)["B4"].copy()
+        b = benchmark_predictions(dataclasses.replace(pliego, y_test=pliego.y_test * 0 + 5e8), 4)["B4"]
+
+        np.testing.assert_array_equal(a, b)
 
     def test_b3_no_usa_la_verdad_de_la_prueba(self, pliego):
         a = benchmark_predictions(pliego, 4)["B3"].copy()
@@ -212,7 +234,7 @@ class TestRunFold:
         )
 
     def test_incluye_los_cinco_modelos_y_los_tres_benchmarks(self, resultado):
-        assert set(resultado.predicciones["modelo"]) == set(MODELOS) | {"B1", "B2", "B3"}
+        assert set(resultado.predicciones["modelo"]) == set(MODELOS) | {"B1", "B2", "B3", "B4"}
 
     def test_las_semillas_solo_se_repiten_en_los_modelos_estocasticos(self, resultado):
         semillas = resultado.predicciones.groupby("modelo")["semilla"].nunique()
