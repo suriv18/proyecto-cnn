@@ -26,6 +26,14 @@ from scipy import stats
 
 from src.evaluation.experiment_runner import MODELOS, build_adapter, rmse_per_campaign, run_fold
 from src.evaluation.fold_builder import build_folds, load_pilot_dataset, restrict_to_campaigns
+from src.evaluation.indicators import (
+    accuracy_table,
+    explained_fraction,
+    receptive_field,
+    reproducibility_rate,
+    shap_predictor_importance,
+    valid_prediction_rate,
+)
 from src.evaluation.leak_test import run_permutation_test
 from src.evaluation.pilot_experiments import (
     baseline_forms,
@@ -89,6 +97,7 @@ class PilotResults:
     p9: pd.DataFrame
     p10: pd.DataFrame
     predicciones: pd.DataFrame = field(default_factory=pd.DataFrame)
+    p11: dict = field(default_factory=dict)
 
 
 def _hp_central(espacio: dict) -> dict:
@@ -119,7 +128,11 @@ def run_pilot(cfg: PilotConfig) -> PilotResults:
     permitidas = pilot_campaigns(cfg.primera_campana, cfg.ventana_confirmatoria)
     obs, X, Z, descartadas = load_pilot_dataset(cfg.directorio_procesado, permitidas)
     meta_ruta = Path(cfg.directorio_procesado) / "metadata.json"
-    fases = json.loads(meta_ruta.read_text(encoding="utf-8")).get("orden_fases") if meta_ruta.exists() else None
+    meta = json.loads(meta_ruta.read_text(encoding="utf-8")) if meta_ruta.exists() else {}
+    fases = meta.get("orden_fases")
+    variables = meta.get("orden_variables")
+    if not variables or len(variables) != X.shape[1]:
+        variables = [f"variable_{i}" for i in range(X.shape[1])]
     if not fases or len(fases) != X.shape[2]:
         fases = FASES_POR_DEFECTO if X.shape[2] == len(FASES_POR_DEFECTO) else [f"paso_{i}" for i in range(X.shape[2])]
 
@@ -243,9 +256,31 @@ def run_pilot(cfg: PilotConfig) -> PilotResults:
         filas10.append({"n_campanas_entrenamiento": w, "n_observaciones_entrenamiento": len(pliego_w.y_train), "rmse_xgboost": _rmse(pliego_w.y_test, pred)})
     p10 = pd.DataFrame(filas10)
 
+    # ---------------- P11: indicadores de las dimensiones X1, X2 e Y1 (Anexo 01) ----------------
+    y1 = accuracy_table(preds[elegida])
+    semillas_repro = list(range(min(3, cfg.n_semillas)))
+    p11 = {
+        "y1": y1,
+        "x1": {
+            "campo_receptivo_pasos": receptive_field(modelo),
+            "predicciones_validas": valid_prediction_rate(preds[elegida].loc[preds[elegida]["modelo"] == "cnn1d", "y_pred"].to_numpy()),
+            "ejecuciones_reproducibles": reproducibility_rate(
+                lambda sem: build_adapter("cnn1d", cfg.epocas_cnn).ajustar_predecir(hp_cnn, ultimo, sem, elegida), semillas_repro,
+            ),
+            "semillas_verificadas": semillas_repro,
+        },
+        "x2": {
+            "fraccion_explicada": explained_fraction(n, len(ultimo.y_test)),
+            "n_explicadas": int(n),
+            "n_predicciones": int(len(ultimo.y_test)),
+            **{("importancia_por_predictor" if k == "importancia" else "orden_de_predictores"): v
+               for k, v in shap_predictor_importance(salida.explicacion.valores_secuenciales, variables).items()},
+        },
+    }
+
     return PilotResults(
         p0=p0, p1=p1, p2=p2, p3=p3, p4={**p4, "representacion_elegida": elegida}, p5=p5, p6=p6, p7=p7,
-        p8=p8, p9=p9, p10=p10, predicciones=preds[elegida],
+        p8=p8, p9=p9, p10=p10, predicciones=preds[elegida], p11=p11,
     )
 
 
@@ -275,9 +310,11 @@ def save_pilot_results(res: PilotResults, directorio: str | Path) -> None:
     res.p9.to_csv(directorio / "p9_bordes.csv", index=False)
     res.p10.to_csv(directorio / "p10_curva_de_aprendizaje.csv", index=False)
     res.predicciones.to_csv(directorio / "predicciones.csv", index=False)
+    res.p11["y1"].to_csv(directorio / "p11_indicadores_y1.csv", index=False)
     resumen = {
         "p0": res.p0, "p4": res.p4, "p5": {k: v for k, v in res.p5.items() if k != "tabla"},
         "p7": {k: v for k, v in res.p7.items() if k != "tabla"}, "p8": res.p8,
+        "p11": {"x1": res.p11["x1"], "x2": res.p11["x2"]},
     }
     (directorio / "resultados.json").write_text(json.dumps(resumen, indent=2, ensure_ascii=False, default=_json_seguro), encoding="utf-8")
     (directorio / "informe_piloto.md").write_text(render_pilot_report(res), encoding="utf-8", newline="\n")
@@ -341,4 +378,13 @@ Variante: **{p8['variante']}** · error de precisión local de DeepExplainer {p8
 
 ## P10 · Curva de aprendizaje (XGBoost)
 {_tabla(res.p10)}
+
+## P11 · Indicadores de las dimensiones X1, X2 e Y1 (Anexo 01)
+**Y1, exactitud predictiva** (mediana entre semillas; rRMSE vacío si la media observada es cercana a cero):
+
+{_tabla(res.p11['y1'])}
+
+**X1, modelo CNN-1D:** campo receptivo temporal de {res.p11['x1']['campo_receptivo_pasos']} pasos · predicciones válidas {res.p11['x1']['predicciones_validas']:.0%} · ejecuciones reproducibles {res.p11['x1']['ejecuciones_reproducibles']:.0%} (semillas {res.p11['x1']['semillas_verificadas']}).
+
+**X2, SHAP:** predicciones explicadas {res.p11['x2']['n_explicadas']} de {res.p11['x2']['n_predicciones']} ({res.p11['x2']['fraccion_explicada']:.0%}). Valor SHAP absoluto medio por predictor, de mayor a menor: {', '.join(f"{v} ({res.p11['x2']['importancia_por_predictor'][v]:.3f})" for v in res.p11['x2']['orden_de_predictores'])}.
 """

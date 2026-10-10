@@ -15,7 +15,7 @@ Copia del informe generado por `scripts/run_pilot.py --modo oficial --gate-f2-ap
 - Campañas permitidas: [2016, 2017, 2018, 2019, 2020]; **descartadas al cargar (solo sus identificadores): 2021, 2022, 2023, 2024, 2025**.
 - Campañas de prueba del piloto: [2019, 2020] · observaciones: 302.
 - sha256 de `tensores.npz`: `3a44df550568e9af…`
-- Pendientes de E5: {'por_decidir_asesor': 0, 'por_decidir_piloto': 11, 'propuesto': 18} · discrepancias con el código: ['historia mínima para la tendencia de B2: registro 5 frente a código 4']
+- Pendientes de E5: {'por_decidir_asesor': 0, 'por_decidir_piloto': 0, 'propuesto': 0} · discrepancias con el código: []
 
 ## P1 · Prueba de fuga por permutación — PASA
 | modelo | r2_mediano | r2_maximo | pasa |
@@ -41,26 +41,26 @@ Copia del informe generado por `scripts/run_pilot.py --modo oficial --gate-f2-ap
 ## P3 · Costo y presupuesto (igual para los 5 modelos)
 | representacion | modelo | n_trials | segundos_ajuste | segundos_semillas | rmse_validacion_interna |
 |---|---|---|---|---|---|
-| nivel | cnn1d | 30 | 17.79 | 4.77 | 371.37 |
-| nivel | elastic_net | 30 | 0.16 | 0.00 | 376.96 |
-| nivel | random_forest | 30 | 11.25 | 1.83 | 346.30 |
-| nivel | xgboost | 30 | 6.71 | 1.90 | 333.50 |
-| nivel | svr | 30 | 0.18 | 0.01 | 348.32 |
-| nivel | cnn1d | 30 | 25.80 | 4.79 | 355.91 |
-| nivel | elastic_net | 30 | 0.16 | 0.00 | 388.19 |
-| nivel | random_forest | 30 | 45.11 | 16.09 | 374.80 |
-| nivel | xgboost | 30 | 16.12 | 2.94 | 343.80 |
-| nivel | svr | 30 | 0.35 | 0.01 | 329.76 |
-| anomalia | cnn1d | 30 | 4.07 | 1.08 | 179.76 |
-| anomalia | elastic_net | 30 | 0.10 | 0.00 | 184.78 |
-| anomalia | random_forest | 30 | 19.06 | 10.16 | 180.60 |
-| anomalia | xgboost | 30 | 7.15 | 2.61 | 176.84 |
-| anomalia | svr | 30 | 0.19 | 0.00 | 184.26 |
-| anomalia | cnn1d | 30 | 8.77 | 1.75 | 188.23 |
-| anomalia | elastic_net | 30 | 0.14 | 0.00 | 193.50 |
-| anomalia | random_forest | 30 | 60.75 | 20.79 | 191.16 |
-| anomalia | xgboost | 30 | 17.28 | 3.51 | 190.24 |
-| anomalia | svr | 30 | 0.48 | 0.01 | 193.41 |
+| nivel | cnn1d | 30 | 37.77 | 8.58 | 371.37 |
+| nivel | elastic_net | 30 | 0.35 | 0.01 | 376.96 |
+| nivel | random_forest | 30 | 29.74 | 5.32 | 346.30 |
+| nivel | xgboost | 30 | 18.22 | 3.53 | 333.50 |
+| nivel | svr | 30 | 0.33 | 0.02 | 348.32 |
+| nivel | cnn1d | 30 | 54.51 | 10.86 | 355.91 |
+| nivel | elastic_net | 30 | 0.28 | 0.01 | 388.19 |
+| nivel | random_forest | 30 | 110.83 | 39.73 | 374.80 |
+| nivel | xgboost | 30 | 37.46 | 6.48 | 343.80 |
+| nivel | svr | 30 | 0.61 | 0.02 | 329.76 |
+| anomalia | cnn1d | 30 | 7.84 | 2.20 | 179.76 |
+| anomalia | elastic_net | 30 | 0.19 | 0.00 | 184.78 |
+| anomalia | random_forest | 30 | 43.48 | 20.23 | 180.60 |
+| anomalia | xgboost | 30 | 9.36 | 5.32 | 176.84 |
+| anomalia | svr | 30 | 0.30 | 0.01 | 184.26 |
+| anomalia | cnn1d | 30 | 15.32 | 3.57 | 188.23 |
+| anomalia | elastic_net | 30 | 0.32 | 0.00 | 193.50 |
+| anomalia | random_forest | 30 | 101.20 | 30.69 | 191.16 |
+| anomalia | xgboost | 30 | 29.11 | 6.48 | 190.24 |
+| anomalia | svr | 30 | 0.65 | 0.02 | 193.41 |
 
 ## P4 · Representación del objetivo
 Nivel 394.6 kg/ha · anomalía 198.2 kg/ha (diferencia relativa -49.8 %) → **anomalia**.
@@ -111,3 +111,31 @@ Variante: **deep_explainer** · error de precisión local de DeepExplainer 0.000
 | 2 | 122 | 210.394 |
 | 3 | 184 | 217.950 |
 | 4 | 244 | 187.450 |
+
+## P11 · Indicadores de las dimensiones X1, X2 e Y1 (Anexo 01)
+**Y1, exactitud predictiva** (mediana entre semillas; rRMSE vacío si la media observada es cercana a cero):
+
+| modelo | campana_prueba | rmse | mae | rrmse | r2 |
+|---|---|---|---|---|---|
+| B1 | 2019 | 202.392 | 136.367 | 15.157 | 0.794 |
+| B1 | 2020 | 231.115 | 152.698 | 16.977 | 0.783 |
+| B2 | 2019 | 202.392 | 136.367 | 15.157 | 0.794 |
+| B2 | 2020 | 193.791 | 146.804 | 14.235 | 0.848 |
+| B3 | 2019 | 466.077 | 344.016 | 34.904 | -0.094 |
+| B3 | 2020 | 507.595 | 392.966 | 37.286 | -0.045 |
+| B4 | 2019 | 198.893 | 142.169 | 14.895 | 0.801 |
+| B4 | 2020 | 171.840 | 118.192 | 12.623 | 0.880 |
+| cnn1d | 2019 | 200.356 | 136.911 | 15.004 | 0.798 |
+| cnn1d | 2020 | 196.368 | 148.842 | 14.424 | 0.844 |
+| elastic_net | 2019 | 202.192 | 136.031 | 15.142 | 0.794 |
+| elastic_net | 2020 | 193.516 | 146.511 | 14.215 | 0.848 |
+| random_forest | 2019 | 202.171 | 133.903 | 15.140 | 0.794 |
+| random_forest | 2020 | 188.650 | 140.431 | 13.857 | 0.856 |
+| svr | 2019 | 203.442 | 138.242 | 15.235 | 0.791 |
+| svr | 2020 | 195.589 | 150.138 | 14.367 | 0.845 |
+| xgboost | 2019 | 212.558 | 144.852 | 15.918 | 0.772 |
+| xgboost | 2020 | 187.600 | 140.982 | 13.780 | 0.857 |
+
+**X1, modelo CNN-1D:** campo receptivo temporal de 5 pasos · predicciones válidas 100% · ejecuciones reproducibles 100% (semillas [0, 1, 2]).
+
+**X2, SHAP:** predicciones explicadas 30 de 58 (52%). Valor SHAP absoluto medio por predictor, de mayor a menor: ndvi_max (0.146), radiacion_solar (0.120), precipitacion (0.111), temperatura_minima (0.109), ndvi_mean (0.083), temperatura_maxima (0.065).

@@ -117,6 +117,40 @@ class TestExperimentos:
         assert list(resultados.p10["n_campanas_entrenamiento"]) == [1, 2, 3]
 
 
+class TestP11IndicadoresDeLasDimensiones:
+    def test_y1_incluye_rmse_mae_rrmse_y_r2_por_modelo_y_campana(self, resultados):
+        y1 = resultados.p11["y1"]
+
+        assert {"modelo", "campana_prueba", "rmse", "mae", "rrmse", "r2"} <= set(y1.columns)
+        assert {"cnn1d", "xgboost", "B2", "B4"} <= set(y1["modelo"])
+        assert set(y1["campana_prueba"]) == {2019}
+
+    def test_x1_informa_campo_receptivo_predicciones_validas_y_reproducibilidad(self, resultados):
+        x1 = resultados.p11["x1"]
+
+        assert x1["campo_receptivo_pasos"] == 5
+        assert x1["predicciones_validas"] == pytest.approx(1.0)
+        assert x1["ejecuciones_reproducibles"] == pytest.approx(1.0)
+
+    def test_x2_informa_la_fraccion_explicada_y_la_importancia_por_predictor(self, resultados):
+        x2 = resultados.p11["x2"]
+
+        assert 0.0 < x2["fraccion_explicada"] <= 1.0
+        assert len(x2["orden_de_predictores"]) == 6 and set(x2["importancia_por_predictor"]) == set(x2["orden_de_predictores"])
+        valores = [x2["importancia_por_predictor"][v] for v in x2["orden_de_predictores"]]
+        assert valores == sorted(valores, reverse=True)
+
+    def test_el_informe_incluye_p11(self, resultados):
+        texto = render_pilot_report(resultados)
+
+        assert "P11" in texto and "campo receptivo" in texto.lower() and "predictor" in texto.lower()
+
+    def test_guarda_los_indicadores_de_y1(self, resultados, tmp_path):
+        save_pilot_results(resultados, tmp_path)
+
+        assert (tmp_path / "p11_indicadores_y1.csv").exists()
+
+
 class TestSalidas:
     def test_guarda_los_resultados_en_disco(self, resultados, tmp_path):
         save_pilot_results(resultados, tmp_path)
