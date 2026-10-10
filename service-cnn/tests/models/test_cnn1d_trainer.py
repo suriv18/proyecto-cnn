@@ -130,3 +130,91 @@ class TestTrainCNN1D:
                 y,
                 TrainingConfig(epocas_maximas=5, semilla=0, fraccion_validacion=1.5),
             )
+
+
+def _campanas(n_por_campana: list[int]) -> torch.Tensor:
+    """Un identificador de campaña por fila: [2016]*n0 + [2017]*n1 + ..."""
+    return torch.tensor(
+        [2016 + i for i, n in enumerate(n_por_campana) for _ in range(n)], dtype=torch.long
+    )
+
+
+def _mse(modelo, x, cov, y) -> float:
+    modelo.eval()
+    with torch.no_grad():
+        return float(torch.mean((modelo(x, cov) - y) ** 2))
+
+
+class TestValidacionTemporalDelEarlyStopping:
+    """Brecha G1: la sección 4.12.2 exige que la validación interna respete el
+    orden temporal y use solo campañas anteriores; una partición aleatoria mezcla
+    provincias de la misma campaña (correlacionadas) y sobreestima la capacidad."""
+
+    def _entrenar(self, semilla=0, grupos=None, **cfg):
+        config = CNN1DConfig(n_variables=3, n_pasos_temporales=5, n_covariables=2)
+        x, cov, y = _datos_sinteticos(40, config, semilla=1)
+        modelo = QuinuaYieldCNN1D(config)
+        grupos = _campanas([10, 10, 10, 10]) if grupos is None else grupos
+        return train_cnn1d(
+            modelo, x, cov, y,
+            TrainingConfig(epocas_maximas=cfg.pop("epocas_maximas", 30), semilla=semilla, **cfg),
+            grupos_temporales=grupos,
+        ), (modelo, x, cov, y)
+
+    def test_valida_con_las_filas_de_la_ultima_campana(self):
+        resultado, _ = self._entrenar()
+
+        assert resultado.filas_validacion == list(range(30, 40))
+
+    def test_la_particion_no_depende_de_la_semilla(self):
+        a, _ = self._entrenar(semilla=1)
+        b, _ = self._entrenar(semilla=2)
+
+        assert a.filas_validacion == b.filas_validacion
+
+    def test_exige_al_menos_dos_campanas(self):
+        with pytest.raises(ValueError, match="campañas"):
+            self._entrenar(grupos=_campanas([40]))
+
+    def test_sin_campanas_conserva_la_particion_aleatoria_anterior(self):
+        config = CNN1DConfig(n_variables=3, n_pasos_temporales=5, n_covariables=2)
+        x, cov, y = _datos_sinteticos(40, config)
+
+        resultado = train_cnn1d(QuinuaYieldCNN1D(config), x, cov, y, TrainingConfig(epocas_maximas=3, semilla=0))
+
+        assert len(resultado.filas_validacion) == 8  # 20 % de 40, como antes
+
+
+class TestRestauracionDeLaMejorEpoca:
+    """Brecha G2: el entrenamiento devolvía el modelo de la ÚLTIMA época aunque la
+    validación hubiera empeorado durante `paciencia` épocas."""
+
+    def test_con_restauracion_el_modelo_devuelto_tiene_la_mejor_perdida_de_validacion(self):
+        resultado, (modelo, x, cov, y) = TestValidacionTemporalDelEarlyStopping()._entrenar(
+            epocas_maximas=200, paciencia=3, restaurar_mejor_epoca=True
+        )
+        val = resultado.filas_validacion
+
+        mejor = min(resultado.historial_perdida_validacion)
+        assert _mse(resultado.modelo, x[val], cov[val], y[val]) == pytest.approx(mejor, rel=1e-5)
+
+    def test_sin_restauracion_el_modelo_es_el_de_la_ultima_epoca(self):
+        resultado, (modelo, x, cov, y) = TestValidacionTemporalDelEarlyStopping()._entrenar(
+            epocas_maximas=200, paciencia=3, restaurar_mejor_epoca=False
+        )
+        val = resultado.filas_validacion
+
+        ultima = resultado.historial_perdida_validacion[-1]
+        assert ultima > min(resultado.historial_perdida_validacion)  # el early stopping paró por empeorar
+        assert _mse(resultado.modelo, x[val], cov[val], y[val]) == pytest.approx(ultima, rel=1e-5)
+
+    def test_registra_la_mejor_epoca(self):
+        resultado, _ = TestValidacionTemporalDelEarlyStopping()._entrenar(epocas_maximas=200, paciencia=3)
+
+        historial = resultado.historial_perdida_validacion
+        assert resultado.mejor_epoca == historial.index(min(historial)) + 1  # numeración desde 1
+
+    def test_el_historial_de_validacion_tiene_una_entrada_por_epoca(self):
+        resultado, _ = TestValidacionTemporalDelEarlyStopping()._entrenar(epocas_maximas=7, paciencia=50)
+
+        assert len(resultado.historial_perdida_validacion) == len(resultado.historial_perdida) == 7

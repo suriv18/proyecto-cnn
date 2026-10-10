@@ -25,8 +25,14 @@ Además informa, sin decidir, la **ventana inicial de entrenamiento** (`por_deci
 
 ## 2. Regla de oro: las campañas externas no se tocan
 
+> **Salvedad sobre la ventana (detectada al implementar la guarda, 2026-10-10).** Las campañas del piloto son las
+> primeras `ventana_inicial` campañas, que es lo que el asesor todavía debe fijar. Con ventana 5 son 2016–2020; con
+> ventana 4, la campaña 2020 pasaría a ser **externa**. Por eso: (a) el piloto **oficial** espera a que el asesor fije
+> la ventana; (b) la **corrida técnica** de desarrollo (no vinculante) usa solo **2016–2019**, la menor ventana plausible,
+> y no lee 2020 en ningún caso. Con esa ventana mínima el piloto técnico tiene un único pliego (prueba 2019).
+
 - **Datos del piloto:** únicamente las campañas **2016–2020**: **302 observaciones elegibles** (60, 62, 60, 62 y 58 por campaña; 25 con alguna celda vacía que se imputa con la mediana de entrenamiento). Las campañas 2021–2025 no se cargan, no se grafican y no se usan para ninguna decisión.
-- **Control técnico (tarea T1):** una función de guarda que lanza un error si algún componente del piloto recibe una campaña posterior a 2020, y que registra en el informe del piloto las campañas efectivamente leídas. Sin esta guarda no se ejecuta el piloto sobre datos reales.
+- **Control técnico (tarea T1, hecha: `src/evaluation/pilot_guard.py`):** una guarda que lanza `CampanaExternaError` si algún componente del piloto recibe una campaña fuera de las `ventana_inicial` primeras, y que registra en el informe del piloto las campañas efectivamente leídas. Sin esta guarda no se ejecuta el piloto sobre datos reales.
 - **Salvedad:** el informe E3 ya muestra la serie de rendimiento por campaña con las 10 campañas (descriptiva, para describir los datos). Eso no influye en ninguna decisión del piloto, pero queda declarado.
 
 ## 3. Diseño
@@ -87,9 +93,9 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 
 | ID | Tarea | Tamaño | Depende de |
 |---|---|---|---|
-| T1 | Guarda de campañas del piloto (`assert_only_pilot_campaigns`) | S | — |
+| T1 | Guarda de campañas del piloto (`pilot_campaigns`, `assert_only_allowed_campaigns`) — **hecha** | S | — |
 | T2 | Constructor de pliegos desde `data/processed` (origen móvil, preprocesamiento ajustado solo con el entrenamiento, imputación residual) | M | T1 |
-| T3 | Cerrar G1 y G2 en `train_cnn1d` (partición temporal, restaurar mejor época) | M | — |
+| T3 | Cerrar G1 y G2 en `train_cnn1d` (partición temporal, restaurar mejor época) — **hecha** (`grupos_temporales`, `restaurar_mejor_epoca`; 8 pruebas) | M | — |
 | T4 | Ejecutor por pliego: ajuste de los 5 modelos con presupuesto equiparado, validación interna de origen móvil y semillas | L | T2, T3 |
 | T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` | M | T4 |
 | T6 | Paso de SHAP con verificación de precisión local y contingencia a KernelExplainer | M | T4 |

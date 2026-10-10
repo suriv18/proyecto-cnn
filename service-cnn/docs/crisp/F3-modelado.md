@@ -28,7 +28,7 @@
 | R-F3-2 | Selección retrospectiva del comparador o ajuste asimétrico | Mitigado por XGBoost preespecificado e igual presupuesto; **solo si se registra en E5** |
 | R-F3-3 | Piloto contamina la evaluación definitiva (uso de campañas externas) | Latente |
 | R-F3-4 | Modelo entrenado antes de cerrar F2 sobre datos provisionales | **Activo si se avanza sin gate F2** |
-| R-F3-5 | **Early stopping de la CNN-1D con partición aleatoria** del 20 % (brecha G1) y devolución del modelo de la última época (G2): contradicen 4.12.2 y sobreestiman la capacidad de generalización | **Detectado (2026-10-10)**; se cierra en la tarea T3 del plan del piloto (partición temporal y restauración de la mejor época) |
+| R-F3-5 | **Early stopping de la CNN-1D con partición aleatoria** del 20 % (brecha G1) y devolución del modelo de la última época (G2): contradicen 4.12.2 y sobreestiman la capacidad de generalización | **Cerrado en código (2026-10-10)**: `train_cnn1d(..., grupos_temporales=)` valida con la última campaña del entrenamiento y restaura la mejor época por defecto (8 pruebas). Falta usarlo en el ejecutor (T4) |
 
 ## Tareas de control
 
