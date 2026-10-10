@@ -38,7 +38,7 @@ Fecha: 2026-10-10. Criterio general: decidir lo que se pueda **antes de ver las 
 
 ## Tareas que se derivan (no ejecutadas)
 
-1. Recalibrar la amplitud de NDVI con 2016–2019 y actualizar `data/manifest/mascara_agricola.yaml` y E5.
-2. Re-ejecutar `run_preprocessing.py` si el umbral cambia.
+1. ~~Recalibrar la amplitud de NDVI con 2016–2019~~ **Hecho** (mismas celdas y semilla, sin red): p5 = **0,319** (antes 0,323; p1 0,246; p10 0,359; p25 0,417). Los datos extraídos usan 0,323. **Decidir:** re-extraer el NDVI con 0,319 (horas de GEE) o declarar la desviación de 0,004, que es un 1,2 % del umbral y cae dentro de la sensibilidad p1–p10. Recomendación como asesor: declarar la desviación y no re-extraer, salvo que la sensibilidad muestre sensibilidad al umbral.
+2. Re-ejecutar `run_preprocessing.py` solo si se re-extrae.
 3. Implementar B4 (persistencia) con pruebas y registrarla en E5.
 4. Actualizar las referencias a «5 externas, 2021–2025» en el resumen para el asesor, el plan del piloto y las fichas.

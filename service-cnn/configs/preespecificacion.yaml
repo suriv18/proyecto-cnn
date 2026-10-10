@@ -63,7 +63,7 @@ datos:
     altitud_minima_m: {valor: 2500, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)"}
     altitud_maxima_m: {valor: 4000, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7"}
     pendiente_maxima_grados: {valor: 14.04, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)"}
-    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Debe recalibrarse solo con 2016-2019 (la campaña 2020 pasa a ser externa). percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
+    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Recalibrado solo con 2016-2019 da p5=0.319 (p1 0.246, p10 0.359); los datos extraídos usan 0.323 y queda por decidir re-extraer o declarar la desviación de 0.004. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
 
 validacion:
   esquema_confirmatorio: {valor: origen_movil, estado: fijado_por_tesis, fuente: "4.12.1"}

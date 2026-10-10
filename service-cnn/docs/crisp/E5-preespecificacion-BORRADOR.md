@@ -22,7 +22,7 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 - `datos.umbrales_de_la_mascara.altitud_minima_m` — 2500 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)_
 - `datos.umbrales_de_la_mascara.altitud_maxima_m` — 4000 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7_
 - `datos.umbrales_de_la_mascara.pendiente_maxima_grados` — 14.04 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)_
-- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Debe recalibrarse solo con 2016-2019 (la campaña 2020 pasa a ser externa). percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
+- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Recalibrado solo con 2016-2019 da p5=0.319 (p1 0.246, p10 0.359); los datos extraídos usan 0.323 y queda por decidir re-extraer o declarar la desviación de 0.004. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
 - `validacion.ventana_inicial_de_entrenamiento_campanas` — 4 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016_
 
 ### Las decide el ensayo piloto (sin campañas externas)
@@ -104,7 +104,7 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `umbrales_de_la_mascara.altitud_minima_m` | 2500 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional) |
 | `umbrales_de_la_mascara.altitud_maxima_m` | 4000 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7 |
 | `umbrales_de_la_mascara.pendiente_maxima_grados` | 14.04 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI) |
-| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Debe recalibrarse solo con 2016-2019 (la campaña 2020 pasa a ser externa). percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
+| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Recalibrado solo con 2016-2019 da p5=0.319 (p1 0.246, p10 0.359); los datos extraídos usan 0.323 y queda por decidir re-extraer o declarar la desviación de 0.004. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
 
 ### validacion
 
