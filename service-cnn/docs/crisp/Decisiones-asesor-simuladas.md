@@ -16,7 +16,7 @@ Fecha: 2026-10-10. Criterio general: decidir lo que se pueda **antes de ver las 
 | 4 | Altitud mínima | **2500 m.** Confirmada por el autor (2026-10-10) | No |
 | 5 | Altitud máxima | **4000 m.** Confirmada por el autor (2026-10-10) | No |
 | 6 | Pendiente máxima | **14,04°** (D.S. 005-2022-MIDAGRI). Confirmada por el autor (2026-10-10) | No |
-| 7 | Amplitud mínima de NDVI | **Percentil 5**, con sensibilidad en p1 y p10; **recalibrar solo con 2016–2019** | Recalibrar |
+| 7 | Amplitud mínima de NDVI | **Percentil 5 = 0,323** (2016–2020, todas de entrenamiento), con sensibilidad en p1 y p10. **Confirmado por el autor (2026-10-10)** | No |
 | 8 | Ventana inicial de entrenamiento | **5 campañas** (2016–2020); **5 externas** (2021–2025). Se evaluó 4 y se descartó (ver corrección) | No (se revierte la propuesta intermedia de 4) |
 
 ## Razones

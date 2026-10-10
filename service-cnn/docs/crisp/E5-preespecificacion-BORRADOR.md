@@ -10,7 +10,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 | Estado | Parámetros |
 |---|---|
-| `por_decidir_asesor` | 4 |
+| `por_decidir_asesor` | 3 |
 | `por_decidir_piloto` | 11 |
 | `propuesto` | 18 |
 
@@ -18,7 +18,6 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 - `datos.provincias_de_transicion` — incluidas_y_marcadas · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)_
 - `datos.ciclos_fuera_de_la_ventana_de_extraccion` — excluir · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer_
-- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
 - `validacion.ventana_inicial_de_entrenamiento_campanas` — 5 · _Recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas_
 
 ### Las decide el ensayo piloto (sin campañas externas)
@@ -104,7 +103,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `umbrales_de_la_mascara.altitud_minima_m` | 2500 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. data/manifest/mascara_agricola.yaml (provisional) |
 | `umbrales_de_la_mascara.altitud_maxima_m` | 4000 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. ídem; E3 §7 |
 | `umbrales_de_la_mascara.pendiente_maxima_grados` | 14.04 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. ídem (D.S. 005-2022-MIDAGRI) |
-| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
+| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. Sensibilidad en p1 y p10. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
 
 ### validacion
 

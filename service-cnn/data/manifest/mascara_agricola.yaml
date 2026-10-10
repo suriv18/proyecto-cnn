@@ -84,7 +84,7 @@ umbrales:
         sobre el nivel del mar" — usado para fijar el límite superior
         (4000 msnm) que cubre con margen el rango de altiplano.
         URL: https://www2.congreso.gob.pe/sicr/cendocbib/con4_uibd.nsf/EA85F3E4F4B5AFD405257E85005CEFD4/$FILE/LaQuinua_CultivoMilenarioPag_1_33.pdf
-      estado: "PROVISIONAL — pendiente de aprobación del asesor"
+      estado: "CONFIRMADO por el autor (2026-10-10); el asesor lo revisa"
 
     pendiente:
       fuente: >
@@ -99,7 +99,7 @@ umbrales:
         directo en MaskThresholds.pendiente_max_grados.
         Publicado en El Peruano, 24 de abril de 2022.
         URL: https://dar.org.pe/wp-content/uploads/2022/04/2060758-1-1.pdf
-      estado: "PROVISIONAL — pendiente de aprobación del asesor"
+      estado: "CONFIRMADO por el autor (2026-10-10); el asesor lo revisa"
 
     amplitud_ndvi:
       fuente: >
@@ -123,10 +123,10 @@ umbrales:
         casi nulo. La elección del percentil es un compromiso a decidir con el
         asesor; el efecto debe cubrirse en el análisis de sensibilidad por
         umbral (4.10.1).
-      estado: "PROVISIONAL — percentil 5 propuesto (2026-10-09); pendiente de aprobación del asesor"
+      estado: "CONFIRMADO por el autor (2026-10-10): percentil 5 = 0.323; el asesor lo revisa. Sensibilidad en p1 y p10"
 
 pendiente:
-  - "Aprobación formal del asesor para altitud_min_m/altitud_max_m/pendiente_max_grados — provisionales hasta entonces."
-  - "Aprobación del asesor del percentil de amplitud_ndvi_min (hoy p5 = 0.323, provisional) considerando el sesgo regional (Arequipa, Puno)."
+  - "Revisión del asesor de altitud_min_m/altitud_max_m/pendiente_max_grados (confirmados por el autor el 2026-10-10)."
+  - "Revisión del asesor del percentil de amplitud_ndvi_min (p5 = 0.323, confirmado por el autor el 2026-10-10) considerando el sesgo regional (Arequipa, Puno)."
   - "FAO/GAUL/2015/level2 (geometrías provinciales) está marcado como obsoleto por Earth Engine (superado por FAO/GAUL/2025/level2): migrar o fijar el asset antes de que se retire."
   - "Re-ejecutar la extracción real de NDVI (GeeClient.extract_daily_series, filtrado de calidad + media/máximo) y de la máscara agrícola (extract_masked_ndvi_series, aún sin el mismo filtrado — ver docs/PENDIENTE.md) contra la API real de GEE, una vez los umbrales estén aprobados."
