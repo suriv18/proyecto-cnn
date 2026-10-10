@@ -5,3 +5,10 @@
 # tecnica.md §2). Cuenta autenticada y verificada el 2026-09-12 (ver
 # src/ingestion/gee_client.py, GeeClient.from_default) contra CHIRPS/DAILY.
 gee_project_id: "cnn-sentinel"
+
+# Preprocesamiento (scripts/run_preprocessing.py, fase F2 de CRISP-ML(Q)).
+# sisagri_path: archivo real SISAGRI.xlsx (fuera del repositorio).
+# dias_antes_de_cosecha: horizonte principal (sección 4.10.4).
+preprocesamiento:
+  sisagri_path: "../DATA_PERFIL_PRODUCTIVO_CULTIVO/SISAGRI.xlsx"
+  dias_antes_de_cosecha: 30

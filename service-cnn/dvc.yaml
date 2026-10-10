@@ -36,17 +36,34 @@ stages:
       - data/raw
 
   preprocess:
+    # --exploratorio: el respaldo departamental usa todo el histórico, NO válido
+    # para la evaluación definitiva; la ventana de entrenamiento por pliegue se
+    # fija en el piloto (H2, docs/crisp/F3). El gate de la máscara sigue activo:
+    # el stage falla mientras amplitud_ndvi_min no esté calibrada.
     cmd: >-
       python scripts/run_preprocessing.py
+      --archivo-sisagri ${preprocesamiento.sisagri_path}
       --datos-raw data/raw
       --salida data/processed
+      --exploratorio
+      --dias-antes-de-cosecha ${preprocesamiento.dias_antes_de_cosecha}
     deps:
       - scripts/run_preprocessing.py
       - src/preprocessing/mask.py
       - src/preprocessing/phenology.py
+      - src/preprocessing/phenology_pipeline.py
+      - src/preprocessing/preprocessing_pipeline.py
+      - src/features/dataset_builder.py
       - src/features/tensor_builder.py
       - src/features/target_transform.py
+      - src/ingestion/mask_manifest.py
+      - configs/provincias.csv
+      - configs/column_mapping.yaml
+      - configs/hyperparams.yaml
+      - data/manifest/mascara_agricola.yaml
       - data/raw
+    params:
+      - preprocesamiento.dias_antes_de_cosecha
     outs:
       - data/processed
 

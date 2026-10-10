@@ -12,7 +12,7 @@
 |---|---|---|---|
 | Q-F1-1 | Disponibilidad de rendimiento, producción y superficie a escala provincial verificada con fuente real (sec. 4.5.2) | Hecho | `data/manifest/midagri_sisagri.yaml`; commit "Ejecuta la auditoría H1 con datos reales de MIDAGRI" |
 | Q-F1-2 | Cascada N0–N5 (Tabla 5) sin tasas supuestas | Parcial | N0=800, N1=770, N2=670, N3=620, N4=604 (enmendado) / 730 (`_real`); **N5 = null** |
-| Q-F1-3 | Un único E1 canónico y versionado | Pendiente | Hay 5 JSON en `reports/E1_matriz_cobertura*.json` (original_2006_2024, 2016_2025, enmendado_2016_2025, real, base); N4 difiere (604 vs 730) sin explicación documentada |
+| Q-F1-3 | Un único E1 canónico y versionado | Pendiente | Hay 5 JSON en `reports/E1_matriz_cobertura*.json` (original_2006_2024, 2016_2025, enmendado_2016_2025, real, base); N4 difiere (604 vs 730) sin explicación documentada. Dato nuevo (2026-10-09): 730 celdas incluyen campañas fuera del periodo (2015 y 2026); en 2016–2025 hay **674** con producción y superficie cosechada > 0, que tampoco coincide con 604 |
 | Q-F1-4 | Estabilidad de la demarcación provincial verificada (sec. 4.5.4) | Pendiente | Sin evidencia en repo |
 | Q-F1-5 | Clasificación de celdas: cero estructural / vacío por intermitencia / dato faltante (4.5.5) | Parcial | `scripts/compute_n4_n5.py`; sin informe de resultados |
 | Q-F1-6 | Protocolo de revisión de literatura y matriz de antecedentes conservados (Act. 2, sec. 2.1) | Pendiente | Sin registro de búsquedas, duplicados ni exclusiones en el repo |

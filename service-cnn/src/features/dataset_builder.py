@@ -24,7 +24,7 @@ from src.ingestion.gee_config import AggregationRule, get_collection_spec
 from src.ingestion.gee_series_builder import aggregate_by_phase
 
 
-def _resolver_variable(entrada: str) -> tuple[str, str, AggregationRule]:
+def resolve_variable(entrada: str) -> tuple[str, str, AggregationRule]:
     """Devuelve `(variable, columna_de_valor, regla)` para una entrada de `orden_variables`."""
     for regla in AggregationRule:
         sufijo = f"_{regla.value}"
@@ -87,7 +87,7 @@ def build_all_observation_tensors(
     if orden_fases is None:
         orden_fases = _orden_de_fases_del_lote(fenologia_alineada)
 
-    resueltas = [(entrada, *_resolver_variable(entrada)) for entrada in orden_variables]
+    resueltas = [(entrada, *resolve_variable(entrada)) for entrada in orden_variables]
 
     resultados: list[dict] = []
     for (provincia_id, campana_id), fases in fenologia_alineada.groupby(
