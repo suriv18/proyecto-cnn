@@ -2,7 +2,7 @@
 
 **Fase CRISP-ML(Q):** F2 · Preparación de datos (actividades 3-5 del cronograma) · **Entregable:** E3
 **Proyecto:** Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana
-**Generado:** 2026-10-10 · **Commit:** `5a250f7` · **Estado del conjunto:** `exploratorio = true` (no válido aún para la evaluación definitiva)
+**Generado:** 2026-10-10 · **Commit:** `5429ba0` · **Estado del conjunto:** `exploratorio = true` (no válido aún para la evaluación definitiva)
 
 > Este informe se regenera con `python scripts/build_e3_report.py`; ninguna cifra se transcribe a mano.
 > Las relaciones predictor–rendimiento y la distribución del objetivo usan **solo las campañas de entrenamiento
@@ -10,7 +10,7 @@
 
 ## 1. Resumen
 
-- El conjunto analítico tiene **601 observaciones provincia-campaña** (66 provincias, 2016–2025). El **tensor completo (N5) es de 571** (95 %) tras una imputación limitada de NDVI sin fuga.
+- El conjunto analítico tiene **601 observaciones provincia-campaña** (66 provincias, 2016–2025): **N5 = 601**, todas con al menos el 80 % de celdas válidas (criterio de la sección 4.7; la menor tiene 86,7 %). **571 (95 %) tienen el tensor completo** tras una imputación limitada de NDVI sin fuga; las otras 30 conservan alguna celda vacía que se imputará con la mediana de entrenamiento, y el subconjunto completo sirve de análisis de sensibilidad.
 - El clima (CHIRPS, ERA5-Land) está **100 % completo**; el NDVI enmascarado tiene 12,7 % de filas sin valor: el 69 % corresponde a 7 provincias costeras o de selva que la máscara de altitud deja sin píxeles por diseño, y el resto son huecos puntuales de calidad (nubes).
 - Se detectaron y corrigieron **tres defectos de calidad** durante la preparación (sección 4.3); uno habría invalidado las variables climáticas.
 - **90 % de la varianza del rendimiento** (entrenamiento) es **entre provincias** y el resto, dentro de ellas: la línea base provincial (B2) captura buena parte de la señal y el valor añadido de los modelos está en la variación interanual.
@@ -33,7 +33,7 @@ Fuentes: SIEA-MIDAGRI (rendimiento y siembra, `SISAGRI.xlsx`); CHIRPS v2.0 (prec
 
 ![Cascada](E3/figuras/f1_cascada.png)
 
-Las cotas N0–N3 de la sección 4.5.6 (800, 770, 670 y 620 celdas) se calcularon en la auditoría H1 sobre el periodo enmendado; **N4 = 674** es el recuento real con producción y superficie cosechada > 0 en 2016–2025 y supera a N3 porque la producción observada abarca más provincias que las 62 documentadas de forma preliminar. De N4 se excluyeron 44 observaciones fuera del ámbito altoandino y 29 por ciclo fuera de la ventana de extracción; el tensor completo es **N5 = 571**.
+Las cotas N0–N3 de la sección 4.5.6 (800, 770, 670 y 620 celdas) se calcularon en la auditoría H1 sobre el periodo enmendado; **N4 = 674** es el recuento real con producción y superficie cosechada > 0 en 2016–2025 y supera a N3 porque la producción observada abarca más provincias que las 62 documentadas de forma preliminar. De N4 se excluyeron 44 observaciones fuera del ámbito altoandino y 29 por ciclo fuera de la ventana de extracción; quedan **N5 = 601** observaciones elegibles (571 con el tensor completo).
 
 ### 3.2 Exclusiones y su motivo
 

@@ -24,7 +24,7 @@
 
 | ID | Riesgo | Estado |
 |---|---|---|
-| R-F4-1 | Pocos bloques temporales → baja potencia | **Cuantificado (2026-10-10)**: con N5 = 571 y una ventana inicial de 5 campañas (2016–2020) quedan **5 campañas externas** (2021–2025), con 277–513 observaciones de entrenamiento antes de cada una. Con n = 5, el menor valor p posible del Wilcoxon unilateral es 1/32 ≈ 0,031 (solo se alcanza si las 5 campañas favorecen al mismo modelo) y el IC por bloques será muy ancho. Con ventana inicial de 4 serían 6 campañas externas y 49–109 observaciones de entrenamiento al inicio. **Decisión del asesor/piloto (H2)**: ventana inicial, y reportar la decisión de HE1a/HE1b con magnitud de efecto y no solo con el valor p |
+| R-F4-1 | Pocos bloques temporales → baja potencia | **Cuantificado (2026-10-10)**: con N5 = 601 y una ventana inicial de 5 campañas (2016–2020) quedan **5 campañas externas** (2021–2025), con 302–543 observaciones de entrenamiento antes de cada una. Con n = 5, el menor valor p posible del Wilcoxon unilateral es 1/32 ≈ 0,031 (solo se alcanza si las 5 campañas favorecen al mismo modelo) y el IC por bloques será muy ancho. Con ventana inicial de 4 serían 6 campañas externas y 49–109 observaciones de entrenamiento al inicio. **Decisión del asesor/piloto (H2)**: ventana inicial, y reportar la decisión de HE1a/HE1b con magnitud de efecto y no solo con el valor p |
 | R-F4-2 | HE1 y HE2 son conjuntivas: un fracaso en un componente invalida la hipótesis | Aceptado; reportar con honestidad |
 | R-F4-3 | Multiplicidad (Holm solo para HE2; comparaciones entre algoritmos exploratorias) | Mitigado por diseño |
 | R-F4-4 | SHAP interpretado como causalidad | Mitigado con terminología "contribución predictiva" |

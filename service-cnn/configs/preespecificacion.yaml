@@ -1,0 +1,121 @@
+# Preespecificación (E5) — BORRADOR. Fase F3 de CRISP-ML(Q), hito H2.
+#
+# Fuente única de verdad del registro fechado de hipótesis, márgenes, comparador,
+# umbrales de HE2, horizontes, espacios de búsqueda y reglas de depuración
+# (sección 4.18 de la tesis). El texto legible se genera con
+# `python scripts/render_e5.py` y la coherencia con el código se verifica con
+# `src.evaluation.preregistration.check_consistency_with_code`.
+#
+# Cada parámetro es {valor, estado, fuente} con estado:
+#   fijado_por_tesis      lo establece la tesis; no se discute.
+#   fijado                revisado y aprobado; ya no cambia.
+#   propuesto             valor razonado por quien redacta; revisar y pasarlo a `fijado`.
+#   por_decidir_piloto    lo determina el ensayo piloto SIN usar campañas externas.
+#   por_decidir_asesor    requiere decisión del asesor.
+# El documento solo puede congelarse (H2) cuando no queda ningún `propuesto` ni `por_decidir_*`.
+# Una vez congelado, todo cambio exige una enmienda fechada y trazable; no se ajusta
+# ningún umbral después de ver resultados de las campañas externas.
+
+metadatos:
+  estado_documento: "BORRADOR"
+  version: "0.1"
+  fecha_borrador: "2026-10-10"
+  fecha_congelamiento: null
+  commit_congelamiento: null
+  sha256_conjunto_de_datos: null   # se registra al congelar (data/processed/tensores.npz)
+
+hipotesis:
+  nivel_de_significancia: {valor: 0.05, estado: fijado_por_tesis, fuente: "3.3"}
+  margen_no_inferioridad_relativo: {valor: 0.05, estado: fijado_por_tesis, fuente: "3.3.1 (δ)"}
+  comparador_confirmatorio: {valor: xgboost, estado: fijado_por_tesis, fuente: "Tabla 8"}
+  benchmark_de_superioridad: {valor: B2, estado: fijado_por_tesis, fuente: "3.3.2"}
+  unidad_del_contraste: {valor: "campaña externa", estado: fijado_por_tesis, fuente: "3.3"}
+  estadistico_he1a: {valor: "mediana de q_f = RMSE(CNN-1D)/RMSE(XGBoost) - 1; H0: mediana >= 0.05", estado: fijado_por_tesis, fuente: "3.3.1"}
+  estadistico_he1b: {valor: "mediana de Δ_f = RMSE(CNN-1D) - RMSE(B2); H0: mediana >= 0", estado: fijado_por_tesis, fuente: "3.3.2"}
+  intervalo_de_confianza: {valor: "límite superior unilateral al 95 % por bootstrap de bloques de campaña", estado: fijado_por_tesis, fuente: "4.14"}
+  n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta"}
+  semilla_bootstrap: {valor: 2026, estado: propuesto, fuente: "reproducibilidad"}
+  contraste_de_apoyo: {valor: "Wilcoxon pareado unilateral, Hodges-Lehmann y correlación biserial de rangos", estado: fijado_por_tesis, fuente: "3.3.1 y 4.14"}
+  he1_se_respalda_si: {valor: "se cumplen HE1a y HE1b", estado: fijado_por_tesis, fuente: "3.3.2"}
+  he2:
+    estabilidad_w_kendall_minimo: {valor: 0.70, estado: fijado_por_tesis, fuente: "3.3.3"}
+    estabilidad_jaccard_minimo: {valor: 0.50, estado: fijado_por_tesis, fuente: "3.3.3"}
+    n_fases_principales: {valor: 3, estado: fijado_por_tesis, fuente: "3.3.3"}
+    fases_criticas_horizonte_principal: {valor: [floracion, llenado_grano], estado: fijado_por_tesis, fuente: "3.3.5 (Vásquez et al., 2024)"}
+    fases_criticas_horizonte_temprano: {valor: [floracion], estado: fijado_por_tesis, fuente: "3.3.5"}
+    correccion_por_multiplicidad: {valor: holm, estado: fijado_por_tesis, fuente: "3.3.5"}
+    familia_de_contrastes: {valor: [estabilidad, fidelidad, concordancia], estado: fijado_por_tesis, fuente: "3.3.5"}
+    he2_se_respalda_si: {valor: "se cumplen estabilidad, fidelidad y concordancia a la vez", estado: fijado_por_tesis, fuente: "3.3.5"}
+  hipotesis_general_conjuntiva: {valor: true, estado: fijado_por_tesis, fuente: "3.1"}
+
+datos:
+  periodo_de_campanas: {valor: "2016-2025", estado: por_decidir_asesor, fuente: "enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml"}
+  clasificaciones_excluidas: {valor: [costa_riego, selva], estado: propuesto, fuente: "4.7, criterio de exclusión 4"}
+  provincias_de_transicion: {valor: incluidas_y_marcadas, estado: por_decidir_asesor, fuente: "4.5.3; E3 §7 (evidencia SISAGRI por distrito)"}
+  exclusion_por_altitud_del_cultivo: {valor: false, estado: propuesto, fuente: "E3 §7: la altitud del cultivo no es la de la quinua"}
+  ciclos_fuera_de_la_ventana_de_extraccion: {valor: excluir, estado: por_decidir_asesor, fuente: "4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer"}
+  valores_extremos_del_rendimiento: {valor: "se marcan, no se eliminan", estado: fijado_por_tesis, fuente: "4.7 criterio de exclusión 3"}
+  criterio_de_inclusion_por_completitud: {valor: ">= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan", estado: propuesto, fuente: "4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571)"}
+  imputacion_de_ndvi_max_dias_de_arrastre: {valor: 16, estado: propuesto, fuente: "4.7; un compuesto MODIS; solo observaciones previas (sin fuga)"}
+  horizonte_principal_dias_antes_de_cosecha: {valor: 30, estado: fijado_por_tesis, fuente: "1.5, 4.10.4"}
+  horizonte_secundario: {valor: cierre_de_floracion, estado: fijado_por_tesis, fuente: "1.5, 4.10.4 (si la cobertura lo permite)"}
+  umbrales_de_la_mascara:
+    altitud_minima_m: {valor: 2500, estado: por_decidir_asesor, fuente: "data/manifest/mascara_agricola.yaml (provisional)"}
+    altitud_maxima_m: {valor: 4000, estado: por_decidir_asesor, fuente: "ídem; E3 §7"}
+    pendiente_maxima_grados: {valor: 14.04, estado: por_decidir_asesor, fuente: "ídem (D.S. 005-2022-MIDAGRI)"}
+    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
+
+validacion:
+  esquema_confirmatorio: {valor: origen_movil, estado: fijado_por_tesis, fuente: "4.12.1"}
+  ventana_inicial_de_entrenamiento_campanas: {valor: 5, estado: por_decidir_asesor, fuente: "4.12.1; deja 5 campañas externas (2021-2025); el piloto informa pero no decide con campañas externas"}
+  esquema_complementario_loco: {valor: "dejar una campaña fuera (secundario)", estado: fijado_por_tesis, fuente: "4.12.1"}
+  esquema_de_robustez_espacial: {valor: "dejar un departamento fuera (sensibilidad)", estado: fijado_por_tesis, fuente: "4.12.1"}
+  validacion_interna:
+    esquema: {valor: origen_movil_dentro_del_entrenamiento, estado: propuesto, fuente: "4.12.2: orden temporal y solo campañas anteriores"}
+    ventana_inicial_interna_campanas: {valor: 2, estado: propuesto, fuente: "con menos de 2 campañas no hay entrenamiento interno"}
+  semillas:
+    n_replicas: {valor: 10, estado: fijado_por_tesis, fuente: "4.12.4"}
+    modelos_estocasticos: {valor: [cnn1d, random_forest, xgboost], estado: fijado_por_tesis, fuente: "4.12.4"}
+    modelos_deterministas: {valor: [elastic_net, svr], estado: fijado_por_tesis, fuente: "4.12.4"}
+    valores: {valor: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], estado: propuesto, fuente: "reproducibilidad"}
+    agregacion_por_campana: {valor: mediana, estado: fijado_por_tesis, fuente: "4.12.4 y 3.3"}
+  campanas_externas: {valor: "derivadas de la ventana inicial: de la (ventana+1)-ésima campaña a la última", estado: fijado_por_tesis, fuente: "4.12.1"}
+
+modelos:
+  factor_algoritmo: {valor: [cnn1d, elastic_net, random_forest, xgboost, svr], estado: fijado_por_tesis, fuente: "Tabla 1 y 8"}
+  benchmarks: {valor: [B1, B2, B3], estado: fijado_por_tesis, fuente: "Tabla 8; no se optimizan"}
+  presupuesto_de_trials_por_modelo: {valor: 30, estado: propuesto, fuente: "src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo"}
+  muestreador_de_hiperparametros: {valor: tpe, estado: fijado_por_tesis, fuente: "4.12.3 (Optuna, Sabo et al. 2023)"}
+  espacios_de_busqueda: {valor: "configs/hyperparams.yaml", estado: por_decidir_piloto, fuente: "4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador"}
+  entrenamiento_cnn1d:
+    optimizador: {valor: adam, estado: fijado, fuente: "src/models/cnn1d_trainer.py"}
+    early_stopping_particion: {valor: "temporal: la última campaña del entrenamiento", estado: por_decidir_piloto, fuente: "BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal)"}
+    restaurar_mejor_epoca: {valor: true, estado: por_decidir_piloto, fuente: "BRECHA G2: el código devuelve el modelo de la última época"}
+    epocas_maximas: {valor: null, estado: por_decidir_piloto, fuente: "se fija con la curva de pérdida del piloto"}
+    paciencia: {valor: 10, estado: propuesto, fuente: "TrainingConfig"}
+  imputacion_residual_de_celdas_vacias: {valor: "mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos", estado: propuesto, fuente: "4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones"}
+  estandarizacion: {valor: "z-score por variable y fase, ajustado solo con el entrenamiento del pliegue", estado: fijado_por_tesis, fuente: "4.12.2"}
+
+variable_objetivo:
+  metrica_confirmatoria: {valor: "RMSE sobre el rendimiento reconstruido en kg/ha", estado: fijado_por_tesis, fuente: "4.11 y 4.13"}
+  representacion_de_modelado: {valor: null, estado: por_decidir_piloto, fuente: "4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas"}
+  forma_de_la_linea_base_b2: {valor: null, estado: por_decidir_piloto, fuente: "4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas"}
+  metricas_complementarias: {valor: [mae, rrmse, r2_fuera_de_muestra], estado: fijado_por_tesis, fuente: "Tabla 9"}
+
+interpretabilidad:
+  variante_de_shap: {valor: deep_explainer, estado: por_decidir_piloto, fuente: "4.15; contingencia: KernelExplainer si falla la precisión local"}
+  escala_de_salida_explicada: {valor: "la de la representación de modelado elegida", estado: por_decidir_piloto, fuente: "4.15"}
+  conjunto_de_referencia: {valor: "muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija", estado: propuesto, fuente: "4.15; solo entrenamiento"}
+  tolerancia_de_precision_local: {valor: null, estado: por_decidir_piloto, fuente: "se calibra en el piloto como fracción de la desviación estándar de la salida"}
+  tratamiento_de_predictores_correlacionados: {valor: "sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto", estado: propuesto, fuente: "2.3.2 (Aas et al., 2021), 4.15"}
+  agregacion: {valor: "por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad", estado: fijado_por_tesis, fuente: "4.15"}
+  oclusion:
+    valor_de_referencia: {valor: "media del conjunto de referencia por variable", estado: propuesto, fuente: "4.15"}
+    ventana_de_control: {valor: "fase de igual duración y menor contribución", estado: fijado_por_tesis, fuente: "3.3.4"}
+    sin_reentrenar: {valor: true, estado: fijado_por_tesis, fuente: "3.3.4 (ablación = con reentrenamiento, análisis secundario)"}
+
+sensibilidad:
+  analisis: {valor: [horizonte_de_pronostico, nivel_frente_a_anomalia, participacion_de_quinua_y_representatividad_de_la_mascara, calidad_de_la_alineacion_fenologica, fuente_climatica, campanas_extremas, percentil_de_amplitud_p1_p5, provincias_de_transicion, ventana_de_extraccion, imputacion_de_ndvi, exclusion_por_altitud, solo_tensor_completo_571], estado: fijado_por_tesis, fuente: "4.14 y 4.10.1; E3 §7"}
+
+politica_de_desviaciones:
+  regla: {valor: "toda desviación posterior al congelamiento se registra como enmienda fechada y trazable; no se ajustan umbrales, márgenes ni comparador tras ver resultados de las campañas externas", estado: fijado_por_tesis, fuente: "4.18 y 6"}

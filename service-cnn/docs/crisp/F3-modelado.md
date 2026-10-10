@@ -11,13 +11,14 @@
 | ID | Requisito / métrica | Estado | Evidencia |
 |---|---|---|---|
 | Q-F3-1 | Cinco modelos ajustables (CNN-1D, Elastic-Net, RF, XGBoost, SVR) + tres benchmarks B1–B3 | Parcial | `src/models/{cnn1d,classic_models,benchmarks}.py` con tests sintéticos |
-| Q-F3-2 | Presupuesto de ajuste igual (mismo nº máximo de evaluaciones) para los cinco modelos; espacios de búsqueda publicados | Parcial | `src/models/tuning*.py`, `configs/hyperparams.yaml`; falta verificar igualdad y fijarlo en E5 |
+| Q-F3-2 | Presupuesto de ajuste igual (mismo nº máximo de evaluaciones) para los cinco modelos; espacios de búsqueda publicados | Parcial | `src/models/tuning.py` (30 trials para los 5) y `configs/hyperparams.yaml`; la **igualdad queda verificada automáticamente** contra E5 (`check_consistency_with_code`). Falta confirmar el costo (P3) y revisar los espacios (P9) |
 | Q-F3-3 | Validación de origen móvil con anidamiento; ventana inicial mínima definida en el piloto | Parcial | `src/evaluation/splits.py`; ventana inicial sin definir (depende de N5) |
 | Q-F3-4 | Diez semillas solo para modelos estocásticos; agregación por campaña | Parcial | Por conectar en `run_experiment.py` (placeholder) |
-| Q-F3-5 | Variante SHAP, escala de salida, conjunto de referencia y tratamiento de correlación **registrados antes** de la evaluación (4.15) | Pendiente | `src/explainability/shap_explainer.py` implementado; decisión no registrada |
-| Q-F3-6 | Forma de la línea base (lineal o suavizada) elegida en el piloto sin campañas externas (4.11) | Pendiente | — |
-| Q-F3-7 | E5: hipótesis, margen δ = 0,05, comparador XGBoost, umbrales HE2 (W ≥ 0,70; J ≥ 0,50), horizontes, espacios, reglas de depuración, con fecha | **Pendiente** | No existe |
-| Q-F3-8 | Estimación de variabilidad en el piloto y de potencia con el nº real de campañas externas | Pendiente | — |
+| Q-F3-5 | Variante SHAP, escala de salida, conjunto de referencia y tratamiento de correlación **registrados antes** de la evaluación (4.15) | **Borrador (2026-10-10)** | Registrados como parámetros de E5 (`interpretabilidad.*`): conjunto de referencia propuesto (≤ 100 obs. de entrenamiento); variante, escala y tolerancia `por_decidir_piloto` (P8) |
+| Q-F3-6 | Forma de la línea base (lineal o suavizada) y representación nivel/anomalía elegidas en el piloto sin campañas externas (4.11) | **Plan listo (2026-10-10)** | `docs/crisp/F3-plan-del-piloto.md` P4 y P5, con regla de decisión preespecificada (empate → nivel / lineal). Pendiente ejecutar |
+| Q-F3-7 | E5: hipótesis, margen δ = 0,05, comparador XGBoost, umbrales HE2 (W ≥ 0,70; J ≥ 0,50), horizontes, espacios, reglas de depuración, con fecha | **Borrador (2026-10-10)** | `configs/preespecificacion.yaml` (fuente única, 74 parámetros: 41 fijados por la tesis, 15 propuestos, 8 con el asesor, 9 con el piloto) y `docs/crisp/E5-preespecificacion-BORRADOR.md` generado con `scripts/render_e5.py`. `preregistration.check_consistency_with_code` detecta divergencias con el código (13 tests) y `assert_can_freeze` **bloquea el congelamiento** mientras quede algo pendiente |
+| Q-F3-8 | Estimación de variabilidad en el piloto y de potencia con el nº real de campañas externas | **Plan listo (2026-10-10)** | P6 (10 semillas) y P10 (curva de aprendizaje); potencia ya cuantificada en F4 (R-F4-1: 5 campañas externas con ventana inicial de 5) |
+| Q-F3-9 | Plan del ensayo piloto con reglas de decisión fijadas antes de ejecutar y campañas externas protegidas | **Hecho (2026-10-10)** | `docs/crisp/F3-plan-del-piloto.md`: datos solo 2016–2020 (302 obs.), pliegues P-A (prueba 2019) y P-B (prueba 2020), 12 experimentos P0–P11 con regla de decisión, guarda técnica T1 y criterios de salida de H2 |
 
 ## Riesgos
 
@@ -27,6 +28,7 @@
 | R-F3-2 | Selección retrospectiva del comparador o ajuste asimétrico | Mitigado por XGBoost preespecificado e igual presupuesto; **solo si se registra en E5** |
 | R-F3-3 | Piloto contamina la evaluación definitiva (uso de campañas externas) | Latente |
 | R-F3-4 | Modelo entrenado antes de cerrar F2 sobre datos provisionales | **Activo si se avanza sin gate F2** |
+| R-F3-5 | **Early stopping de la CNN-1D con partición aleatoria** del 20 % (brecha G1) y devolución del modelo de la última época (G2): contradicen 4.12.2 y sobreestiman la capacidad de generalización | **Detectado (2026-10-10)**; se cierra en la tarea T3 del plan del piloto (partición temporal y restauración de la mejor época) |
 
 ## Tareas de control
 

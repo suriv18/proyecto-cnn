@@ -297,9 +297,10 @@ def main() -> None:
     n_obs = len(obs)
     n4 = n_obs + len(en_periodo)
     completo = ~np.isnan(X).any(axis=(1, 2))
-    n5 = int(completo.sum())
+    n5 = int((((~np.isnan(X)).mean(axis=(1, 2))) >= 0.8).sum())  # elegibles: >= 80 % de celdas válidas (4.7)
+    n_completo = int(completo.sum())
     pasos = [("N4  Celdas con producción", n4), ("Tras excluir costa con riego", n4 - n_ambito),
-             ("Tras excluir ciclos fuera de ventana", n_obs), ("N5  Tensor completo", n5)]
+             ("N5  Elegibles (≥ 80 % de celdas válidas)", n5), ("   de ellas, con el tensor completo", n_completo)]
     fig_cascada(pasos, figdir / "f1_cascada.png")
     fig_exclusiones(exc, figdir / "f2_exclusiones.png")
 
@@ -464,7 +465,7 @@ def main() -> None:
         ["Observaciones", "data/processed/observaciones.parquet", sha256(args.processed / "observaciones.parquet")[:16] + "…"],
     ], columns=["Artefacto", "Ruta", "sha256 (16 primeros)"]))
 
-    completos_pct = 100 * n5 / n_obs
+    completos_pct = 100 * n_completo / n_obs
     imput = int(I.sum())
     celdas_ndvi = X[:, 4:, :].size
 
@@ -480,7 +481,7 @@ def main() -> None:
 
 ## 1. Resumen
 
-- El conjunto analítico tiene **{fmt(n_obs, 0)} observaciones provincia-campaña** ({fmt(prov[prov.provincia_id.isin(obs.provincia_id)].shape[0], 0)} provincias, 2016–2025). El **tensor completo (N5) es de {fmt(n5, 0)}** ({fmt(completos_pct, 0)} %) tras una imputación limitada de NDVI sin fuga.
+- El conjunto analítico tiene **{fmt(n_obs, 0)} observaciones provincia-campaña** ({fmt(prov[prov.provincia_id.isin(obs.provincia_id)].shape[0], 0)} provincias, 2016–2025): **N5 = {fmt(n5, 0)}**, todas con al menos el 80 % de celdas válidas (criterio de la sección 4.7; la menor tiene {fmt(100 * float((~np.isnan(X)).mean(axis=(1, 2)).min()), 1)} %). **{fmt(n_completo, 0)} ({fmt(completos_pct, 0)} %) tienen el tensor completo** tras una imputación limitada de NDVI sin fuga; las otras {fmt(n5 - n_completo, 0)} conservan alguna celda vacía que se imputará con la mediana de entrenamiento, y el subconjunto completo sirve de análisis de sensibilidad.
 - El clima (CHIRPS, ERA5-Land) está **100 % completo**; el NDVI enmascarado tiene {fmt(100 * raw_ndvi['valor_mean'].isna().mean(), 1)} % de filas sin valor: el {fmt(pct_nulos_provs, 0)} % corresponde a {len(provs_sin_ndvi)} provincias costeras o de selva que la máscara de altitud deja sin píxeles por diseño, y el resto son huecos puntuales de calidad (nubes).
 - Se detectaron y corrigieron **tres defectos de calidad** durante la preparación (sección 4.3); uno habría invalidado las variables climáticas.
 - **{fmt(pct_entre, 0)} % de la varianza del rendimiento** (entrenamiento) es **entre provincias** y el resto, dentro de ellas: la línea base provincial (B2) captura buena parte de la señal y el valor añadido de los modelos está en la variación interanual.
@@ -499,7 +500,7 @@ Fuentes: SIEA-MIDAGRI (rendimiento y siembra, `SISAGRI.xlsx`); CHIRPS v2.0 (prec
 
 ![Cascada](E3/figuras/f1_cascada.png)
 
-Las cotas N0–N3 de la sección 4.5.6 (800, 770, 670 y 620 celdas) se calcularon en la auditoría H1 sobre el periodo enmendado; **N4 = {fmt(n4, 0)}** es el recuento real con producción y superficie cosechada > 0 en 2016–2025 y supera a N3 porque la producción observada abarca más provincias que las 62 documentadas de forma preliminar. De N4 se excluyeron {fmt(n_ambito, 0)} observaciones fuera del ámbito altoandino y {fmt(n_ventana, 0)} por ciclo fuera de la ventana de extracción; el tensor completo es **N5 = {fmt(n5, 0)}**.
+Las cotas N0–N3 de la sección 4.5.6 (800, 770, 670 y 620 celdas) se calcularon en la auditoría H1 sobre el periodo enmendado; **N4 = {fmt(n4, 0)}** es el recuento real con producción y superficie cosechada > 0 en 2016–2025 y supera a N3 porque la producción observada abarca más provincias que las 62 documentadas de forma preliminar. De N4 se excluyeron {fmt(n_ambito, 0)} observaciones fuera del ámbito altoandino y {fmt(n_ventana, 0)} por ciclo fuera de la ventana de extracción; quedan **N5 = {fmt(n5, 0)}** observaciones elegibles ({fmt(n_completo, 0)} con el tensor completo).
 
 ### 3.2 Exclusiones y su motivo
 
