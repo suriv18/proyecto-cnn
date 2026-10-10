@@ -42,3 +42,9 @@
 ## Criterio de gate F4
 
 Resultados completos y reproducibles (`dvc repro train_eval explain`); E6 con estabilidad, fidelidad y concordancia; decisiones HE1/HE2 tomadas con las reglas de E5; amenazas a la validez (Tabla 10) revisadas con evidencia.
+
+## Actualización: HE1 y HE2 definitivos (tesis v3, decisión del autor)
+
+- **HE1a (confirmatoria):** la CNN-1D no es inferior a XGBoost ni a la mejor línea base B* (B2 o B4, elegida con la validación interna) si la diferencia relativa del RMSE es menor que 5 % en **todas** las campañas externas (regla exacta de signos, nivel 0,5ⁿ = 0,031 con 5 campañas). **HE1b (exploratoria):** skill score de Murphy frente a B* y número de campañas con ganancia; no condiciona la decisión. Implementado en `src/evaluation/he1_evaluation.py`.
+- **HE2:** se respalda si se cumple la **concordancia agronómica** (binomial exacta, criterio primario, sin corrección). Fidelidad (aleatorización por rangos de la oclusión de cada fase) y estabilidad (permutación) son secundarias, con Holm entre ellas, y no condicionan la decisión. Implementado en `src/evaluation/he2_evaluation.py`.
+- Reemplaza lo indicado antes sobre Holm con tres contrastes y sobre «HE1b confirmatoria». Pendiente: que el asesor lo revise. Si no lo ratifica, la alternativa es volver a la superioridad frente a B2 y a los tres criterios de HE2 con Holm.

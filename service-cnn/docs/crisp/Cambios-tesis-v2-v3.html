@@ -71,11 +71,12 @@ code { font: 0.86em ui-monospace, monospace; background: var(--accent-soft); pad
   </div>
 
   <div class="open">
-    <h2>Decisiones que siguen abiertas</h2>
+    <h2>Decisiones tomadas por el autor</h2>
     <ul>
-      <li><strong>HE1:</strong> la v3 usa no inferioridad frente a XGBoost y frente a la mejor línea base B* como criterio confirmatorio, y la ganancia sobre B* como exploratoria. La alternativa es mantener la superioridad frente a B2, que exige ganar las 5 campañas.</li>
-      <li><strong>HE2:</strong> la v3 usa la concordancia como único criterio primario, con fidelidad y estabilidad como secundarias. La alternativa es exigir los tres con Holm, donde con 5 campañas HE2 solo se respalda si los tres alcanzan su valor p mínimo.</li>
+      <li><strong>HE1:</strong> no inferioridad frente a XGBoost y frente a la mejor línea base B* como criterio confirmatorio; la ganancia sobre B* es exploratoria. Ya está en el código (`evaluate_he1`) y en el pre-registro.</li>
+      <li><strong>HE2:</strong> la concordancia es el criterio primario; fidelidad y estabilidad son secundarias, con Holm entre ellas. Ya está en el código (`evaluate_he2`) y en el pre-registro.</li>
       <li><strong>Título:</strong> se conservó tal como lo escribiste («de cosecha», «, 2026»).</li>
+      <li><strong>Pendiente:</strong> que el asesor revise HE1 y HE2. La alternativa es volver a la superioridad frente a B2 y a los tres criterios de HE2 con Holm.</li>
     </ul>
   </div>
 

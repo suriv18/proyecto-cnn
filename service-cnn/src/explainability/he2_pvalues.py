@@ -1,4 +1,4 @@
-"""Valores p de los tres criterios de HE2 y decisión conjunta con Holm (sección 3.3.5).
+"""Valores p de los tres criterios de HE2 y su corrección de Holm (sección 3.3.5, tesis v3).
 
 Los criterios de HE2 (estabilidad, fidelidad, concordancia) son reglas con umbral. La corrección
 de Holm de 3.3.5 necesita un valor p por criterio; este módulo propone uno para cada uno. La
@@ -109,13 +109,15 @@ def concordance_pvalue(fases_maximas_por_campana: list[str], horizonte: str, n_f
 class He2Decision:
     p_ajustados: dict[str, float]
     rechazos: dict[str, bool]
-    he2_respaldada: bool
+    secundarios_cumplidos: bool
 
 
-def he2_family_decision(
-    p_estabilidad: float, p_fidelidad: float, p_concordancia: float, alfa: float = 0.05
-) -> He2Decision:
-    """Holm sobre la familia {estabilidad, fidelidad, concordancia}; HE2 exige las tres."""
-    p = {"estabilidad": p_estabilidad, "fidelidad": p_fidelidad, "concordancia": p_concordancia}
+def he2_family_decision(p_estabilidad: float, p_fidelidad: float, alfa: float = 0.05) -> He2Decision:
+    """Holm sobre la familia de contrastes SECUNDARIOS de HE2 {estabilidad, fidelidad}.
+
+    La concordancia agronómica es el criterio primario y se contrasta aparte, sin corrección
+    (tesis v3, 3.3.5); por eso no forma parte de esta familia.
+    """
+    p = {"estabilidad": p_estabilidad, "fidelidad": p_fidelidad}
     rechazos = holm_reject(p, alfa)
     return He2Decision(holm_adjust(p), rechazos, all(rechazos.values()))

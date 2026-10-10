@@ -12,7 +12,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|
 | `por_decidir_asesor` | 8 |
 | `por_decidir_piloto` | 11 |
-| `propuesto` | 29 |
+| `propuesto` | 18 |
 
 ### Requieren al asesor
 
@@ -41,19 +41,8 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 ### Propuestos, a revisar y fijar
 
-- `hipotesis.benchmark_de_superioridad` — B* = la mejor entre B2 (línea base provincial) y B4 (persistencia), elegida con la validación interna antes de las campañas externas · _Tesis v3 (propuesta, pendiente del asesor): 3.3.1 y 3.3.2; antes: B2_
-- `hipotesis.estadistico_he1a` — q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05 · _Tesis v3 (propuesta, pendiente del asesor): 3.3.1; antes solo frente a XGBoost_
-- `hipotesis.estadistico_he1b` — exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0 · _Tesis v3 (propuesta, pendiente del asesor): 3.3.2; antes: Δ_f frente a B2, confirmatorio_
-- `hipotesis.intervalo_de_confianza` — regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos · _Tesis v3 (propuesta, pendiente del asesor): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos_
 - `hipotesis.n_bootstrap` — 10000 · _con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta_
 - `hipotesis.semilla_bootstrap` — 2026 · _reproducibilidad_
-- `hipotesis.contraste_de_apoyo` — Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos · _Tesis v3 (propuesta, pendiente del asesor): 3.3.1 y 4.14_
-- `hipotesis.he1_se_respalda_si` — se cumple HE1a (HE1b es exploratoria) · _Tesis v3 (propuesta, pendiente del asesor): 3.3.2_
-- `hipotesis.he2.familia_de_contrastes` — estabilidad, fidelidad · _Tesis v3 (propuesta, pendiente del asesor): 3.3.5; la concordancia es el criterio primario y queda fuera de la familia corregida_
-- `hipotesis.he2.valor_p_estabilidad` — permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales) · _src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud_
-- `hipotesis.he2.valor_p_fidelidad` — aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra · _src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); por_decidir_asesor si se mantiene el control único_
-- `hipotesis.he2.valor_p_concordancia` — binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) · _src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167_
-- `hipotesis.he2.he2_se_respalda_si` — se cumple la concordancia agronómica (primaria); estabilidad y fidelidad son secundarias · _Tesis v3 (propuesta, pendiente del asesor): 3.3.5_
 - `datos.clasificaciones_excluidas` — costa_riego, selva · _4.7, criterio de exclusión 4_
 - `datos.exclusion_por_altitud_del_cultivo` — no · _E3 §7: la altitud del cultivo no es la de la quinua_
 - `datos.criterio_de_inclusion_por_completitud` — >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan · _4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571)_
@@ -80,26 +69,26 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `nivel_de_significancia` | 0.05 | `fijado_por_tesis` | 3.3 |
 | `margen_no_inferioridad_relativo` | 0.05 | `fijado_por_tesis` | 3.3.1 (δ) |
 | `comparador_confirmatorio` | xgboost | `fijado_por_tesis` | Tabla 8 |
-| `benchmark_de_superioridad` | B* = la mejor entre B2 (línea base provincial) y B4 (persistencia), elegida con la validación interna antes de las campañas externas | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.1 y 3.3.2; antes: B2 |
+| `benchmark_de_superioridad` | B* = la mejor entre B2 (línea base provincial) y B4 (persistencia), elegida con la validación interna antes de las campañas externas | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1 y 3.3.2; antes: B2 |
 | `unidad_del_contraste` | campaña externa | `fijado_por_tesis` | 3.3 |
-| `estadistico_he1a` | q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05 | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.1; antes solo frente a XGBoost |
-| `estadistico_he1b` | exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0 | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.2; antes: Δ_f frente a B2, confirmatorio |
-| `intervalo_de_confianza` | regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos |
+| `estadistico_he1a` | q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05 | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1; antes solo frente a XGBoost |
+| `estadistico_he1b` | exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0 | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2; antes: Δ_f frente a B2, confirmatorio |
+| `intervalo_de_confianza` | regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos |
 | `n_bootstrap` | 10000 | `propuesto` | con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta |
 | `semilla_bootstrap` | 2026 | `propuesto` | reproducibilidad |
-| `contraste_de_apoyo` | Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.1 y 4.14 |
-| `he1_se_respalda_si` | se cumple HE1a (HE1b es exploratoria) | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.2 |
+| `contraste_de_apoyo` | Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1 y 4.14 |
+| `he1_se_respalda_si` | se cumple HE1a (HE1b es exploratoria) | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2 |
 | `he2.estabilidad_w_kendall_minimo` | 0.7 | `fijado_por_tesis` | 3.3.3 |
 | `he2.estabilidad_jaccard_minimo` | 0.5 | `fijado_por_tesis` | 3.3.3 |
 | `he2.n_fases_principales` | 3 | `fijado_por_tesis` | 3.3.3 |
 | `he2.fases_criticas_horizonte_principal` | floracion, llenado_grano | `fijado_por_tesis` | 3.3.5 (Vásquez et al., 2024) |
 | `he2.fases_criticas_horizonte_temprano` | floracion | `fijado_por_tesis` | 3.3.5 |
 | `he2.correccion_por_multiplicidad` | holm | `fijado_por_tesis` | 3.3.5 |
-| `he2.familia_de_contrastes` | estabilidad, fidelidad | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.5; la concordancia es el criterio primario y queda fuera de la familia corregida |
-| `he2.valor_p_estabilidad` | permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales) | `propuesto` | src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud |
-| `he2.valor_p_fidelidad` | aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra | `propuesto` | src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); por_decidir_asesor si se mantiene el control único |
-| `he2.valor_p_concordancia` | binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) | `propuesto` | src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167 |
-| `he2.he2_se_respalda_si` | se cumple la concordancia agronómica (primaria); estabilidad y fidelidad son secundarias | `propuesto` | Tesis v3 (propuesta, pendiente del asesor): 3.3.5 |
+| `he2.familia_de_contrastes` | estabilidad, fidelidad | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.5; la concordancia es el criterio primario y queda fuera de la familia corregida |
+| `he2.valor_p_estabilidad` | permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales) | `fijado_por_tesis` | src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud |
+| `he2.valor_p_fidelidad` | aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra | `fijado_por_tesis` | src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); tesis v3, 3.3.4: sustituye al control único, que con 5 campañas no pasa Holm |
+| `he2.valor_p_concordancia` | binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) | `fijado_por_tesis` | src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167 |
+| `he2.he2_se_respalda_si` | se cumple la concordancia agronómica (primaria); estabilidad y fidelidad son secundarias | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.5 |
 | `hipotesis_general_conjuntiva` | sí | `fijado_por_tesis` | 3.1 |
 
 ### datos

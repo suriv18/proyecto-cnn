@@ -130,21 +130,21 @@ class TestConcordancePvalue:
             concordance_pvalue(["floracion"], "tardio", n_fases=5)
 
 
-class TestFamiliaHe2:
-    def test_he2_se_respalda_solo_si_se_rechazan_las_tres(self):
-        r = he2_family_decision(p_estabilidad=0.0004, p_fidelidad=0.0003, p_concordancia=0.0102)
+class TestFamiliaSecundariaHe2:
+    def test_holm_se_aplica_solo_a_estabilidad_y_fidelidad(self):
+        r = he2_family_decision(p_estabilidad=0.01, p_fidelidad=0.03)
 
-        assert r.he2_respaldada is True
-        assert all(r.rechazos.values())
+        assert set(r.p_ajustados) == {"estabilidad", "fidelidad"}
+        assert r.p_ajustados["estabilidad"] == pytest.approx(0.02)  # 0.01 * 2
+        assert r.p_ajustados["fidelidad"] == pytest.approx(0.03)  # max(0.02, 0.03 * 1)
 
-    def test_basta_un_criterio_no_significativo_para_no_respaldar(self):
-        r = he2_family_decision(p_estabilidad=0.0004, p_fidelidad=0.0003, p_concordancia=0.087)
+    def test_rechaza_los_contrastes_cuyo_ajustado_no_supera_alfa(self):
+        r = he2_family_decision(p_estabilidad=0.02, p_fidelidad=0.04)  # ajustados 0.04 y 0.04
+        s = he2_family_decision(p_estabilidad=0.03, p_fidelidad=0.04)  # ajustados 0.06 y 0.06
 
-        assert r.he2_respaldada is False
-        assert r.rechazos["concordancia"] is False
+        assert r.rechazos == {"estabilidad": True, "fidelidad": True}
+        assert s.rechazos == {"estabilidad": False, "fidelidad": False}
 
-    def test_holm_ajusta_con_una_familia_de_tres(self):
-        r = he2_family_decision(0.01, 0.02, 0.03)
-
-        assert r.p_ajustados["estabilidad"] == pytest.approx(0.03)
-        assert set(r.p_ajustados) == {"estabilidad", "fidelidad", "concordancia"}
+    def test_los_dos_secundarios_se_cumplen_solo_si_ambos_se_rechazan(self):
+        assert he2_family_decision(0.0004, 0.0003).secundarios_cumplidos is True
+        assert he2_family_decision(0.0004, 0.2).secundarios_cumplidos is False

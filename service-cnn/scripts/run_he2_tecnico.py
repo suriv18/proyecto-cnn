@@ -66,15 +66,20 @@ def main() -> None:
         "n_semillas": args.n_semillas, "segundos": segundos, "contribuciones": {str(k): v for k, v in contribuciones.items()},
         "aumentos_rmse": {str(k): v for k, v in aumentos.items()}, "fases_maximas": {str(k): v for k, v in r.fases_maximas.items()},
         "w_kendall": r.w_kendall, "jaccard_promedio": r.jaccard_promedio, "umbrales_de_estabilidad_cumplidos": r.umbrales_de_estabilidad_cumplidos,
-        "p_valores": r.p_valores, "p_ajustados": r.p_ajustados, "rechazos": r.rechazos, "he2_respaldada": r.he2_respaldada,
+        "p_valores": r.p_valores, "p_ajustados_secundarios": r.p_ajustados_secundarios, "rechazos_secundarios": r.rechazos_secundarios,
+        "rechaza_concordancia": r.rechaza_concordancia, "secundarios_cumplidos": r.secundarios_cumplidos,
+        "proporcion_contribucion_referente": r.proporcion_contribucion_referente, "proporcion_referente_supera_azar": r.proporcion_referente_supera_azar,
+        "he2_respaldada": r.he2_respaldada,
     }
     (args.salida / "resultados.json").write_text(json.dumps(resultado, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"HE2 técnico (NO VINCULANTE) sobre campañas {r.campanas} de entrenamiento; {segundos:.0f} s")
     print(f"Fases máximas: {r.fases_maximas}")
     print(f"W de Kendall {r.w_kendall:.2f} · Jaccard medio {r.jaccard_promedio:.2f} · umbrales de estabilidad: {r.umbrales_de_estabilidad_cumplidos}")
-    for k in r.p_valores:
-        print(f"  {k}: p = {r.p_valores[k]:.4f} · ajustado {r.p_ajustados[k]:.4f} · rechaza: {r.rechazos[k]}")
+    print(f"  concordancia (primaria): p = {r.p_concordancia:.4f} · rechaza: {r.rechaza_concordancia}")
+    for k in r.p_ajustados_secundarios:
+        print(f"  {k} (secundaria): p = {r.p_valores[k]:.4f} · ajustado {r.p_ajustados_secundarios[k]:.4f} · rechaza: {r.rechazos_secundarios[k]}")
+    print(f"Proporción de contribución en el referente agronómico: {r.proporcion_contribucion_referente:.2f} (supera el azar: {r.proporcion_referente_supera_azar})")
     print(f"HE2 respaldada: {r.he2_respaldada}")
 
 

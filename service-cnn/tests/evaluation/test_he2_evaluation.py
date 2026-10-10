@@ -30,13 +30,13 @@ def _evaluar(contribuciones, aumentos, **extra):
 
 
 class TestHe2Respaldada:
-    def test_se_respalda_cuando_los_tres_criterios_se_cumplen_en_las_cinco_campanas(self):
+    def test_se_respalda_cuando_la_concordancia_se_cumple_en_las_cinco_campanas(self):
         contribuciones, aumentos = _todo_concordante()
 
         r = _evaluar(contribuciones, aumentos)
 
-        assert r.he2_respaldada is True
-        assert all(r.rechazos.values())
+        assert r.he2_respaldada is True and r.rechaza_concordancia is True
+        assert r.secundarios_cumplidos is True
         assert r.campanas == CAMPANAS and r.n_campanas == 5
 
     def test_la_fase_maxima_se_identifica_por_campana(self):
@@ -52,8 +52,8 @@ class TestHe2Respaldada:
         r = _evaluar(contribuciones, aumentos)
 
         assert r.he2_respaldada is False
-        assert r.rechazos["concordancia"] is False
-        assert r.rechazos["estabilidad"] is True  # estable pero agronómicamente discordante
+        assert r.rechaza_concordancia is False
+        assert r.rechazos_secundarios["estabilidad"] is True  # estable pero agronómicamente discordante
 
     def test_no_se_respalda_si_una_sola_campana_discrepa_en_la_concordancia(self):
         contribuciones, aumentos = _todo_concordante()
@@ -62,21 +62,61 @@ class TestHe2Respaldada:
 
         r = _evaluar(contribuciones, aumentos)
 
-        assert r.p_valores["concordancia"] == pytest.approx(5 * 0.4**4 * 0.6 + 0.4**5)
+        assert r.p_concordancia == pytest.approx(5 * 0.4**4 * 0.6 + 0.4**5)
         assert r.he2_respaldada is False
 
-    def test_no_se_respalda_con_ordenes_inestables_aunque_la_fase_maxima_coincida(self):
+    def test_los_criterios_secundarios_no_condicionan_la_decision(self):
+        # la fase máxima coincide con el referente en las 5 campañas, pero el resto del orden rota
         contribuciones = {}
         for i, c in enumerate(CAMPANAS):
             resto = [f for f in FASES if f != "floracion"]
-            resto = resto[i % 4:] + resto[: i % 4]  # el resto rota; la mayor sigue siendo floración
+            resto = resto[i % 4:] + resto[: i % 4]
             contribuciones[c] = {f: float(5 - j) for j, f in enumerate(["floracion"] + resto)}
         aumentos = {c: _aumentos() for c in CAMPANAS}
 
         r = _evaluar(contribuciones, aumentos)
 
-        assert r.he2_respaldada is False
+        assert r.he2_respaldada is True
+        assert r.rechazos_secundarios["estabilidad"] is False
+        assert r.secundarios_cumplidos is False
         assert r.umbrales_de_estabilidad_cumplidos is False
+
+    def test_holm_se_aplica_solo_a_los_secundarios(self):
+        contribuciones, aumentos = _todo_concordante()
+
+        r = _evaluar(contribuciones, aumentos)
+
+        assert set(r.p_ajustados_secundarios) == {"estabilidad", "fidelidad"}
+        assert set(r.p_valores) == {"estabilidad", "fidelidad", "concordancia"}
+
+
+class TestProporcionDeContribucion:
+    def test_proporcion_agregada_de_floracion_y_llenado(self):
+        contribuciones = {c: {"emergencia": 1.0, "desarrollo_vegetativo": 1.0, "floracion": 3.0, "llenado_grano": 3.0, "madurez": 2.0} for c in CAMPANAS}
+        aumentos = {c: _aumentos() for c in CAMPANAS}
+
+        r = _evaluar(contribuciones, aumentos)
+
+        assert r.proporcion_contribucion_referente == pytest.approx(6.0 / 10.0)
+        assert r.proporcion_referente_supera_azar is True  # 0,60 > 0,40
+
+    def test_con_contribucion_plana_la_proporcion_es_cercana_al_azar(self):
+        contribuciones = {c: {f: 1.0 for f in FASES} for c in CAMPANAS}
+        aumentos = {c: _aumentos() for c in CAMPANAS}
+
+        r = _evaluar(contribuciones, aumentos)
+
+        assert r.proporcion_contribucion_referente == pytest.approx(0.4)
+        assert r.proporcion_referente_supera_azar is False
+
+    def test_el_horizonte_temprano_usa_solo_floracion(self):
+        contribuciones = {c: {"emergencia": 1.0, "desarrollo_vegetativo": 1.0, "floracion": 4.0, "llenado_grano": 3.0, "madurez": 1.0} for c in CAMPANAS}
+        aumentos = {c: _aumentos() for c in CAMPANAS}
+
+        r = _evaluar(contribuciones, aumentos, horizonte="temprano")
+
+        assert r.proporcion_contribucion_referente == pytest.approx(4.0 / 10.0)
+        assert r.proporcion_referente_supera_azar is True  # 0,40 > p0 temprano = 0,20
 
 
 class TestUmbralesDeMagnitud:
