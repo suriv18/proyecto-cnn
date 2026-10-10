@@ -94,7 +94,7 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 | ID | Tarea | Tamaño | Depende de |
 |---|---|---|---|
 | T1 | Guarda de campañas del piloto (`pilot_campaigns`, `assert_only_allowed_campaigns`) — **hecha** | S | — |
-| T2 | Constructor de pliegos desde `data/processed` (origen móvil, preprocesamiento ajustado solo con el entrenamiento, imputación residual) | M | T1 |
+| T2 | Constructor de pliegos desde `data/processed` (origen móvil, preprocesamiento ajustado solo con el entrenamiento, imputación residual) — **hecha** (`src/evaluation/fold_builder.py`: pliegos externos e internos, `load_pilot_dataset` que descarta las campañas no permitidas al leer; 21 pruebas) | M | T1 |
 | T3 | Cerrar G1 y G2 en `train_cnn1d` (partición temporal, restaurar mejor época) — **hecha** (`grupos_temporales`, `restaurar_mejor_epoca`; 8 pruebas) | M | — |
 | T4 | Ejecutor por pliego: ajuste de los 5 modelos con presupuesto equiparado, validación interna de origen móvil y semillas | L | T2, T3 |
 | T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` | M | T4 |
