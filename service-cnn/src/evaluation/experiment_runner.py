@@ -16,8 +16,9 @@ la representación es la anomalía (4.11).
 """
 from __future__ import annotations
 
+import time
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 import numpy as np
@@ -68,6 +69,13 @@ class Adaptador(Protocol):
 
 
 @dataclass
+class TuningDetail(TuningResult):
+    """`TuningResult` más todos los ensayos (hiperparámetros y RMSE de validación), para P9."""
+
+    ensayos: pd.DataFrame = field(default_factory=pd.DataFrame)
+
+
+@dataclass
 class AdaptadorClasico:
     nombre: str
 
@@ -94,6 +102,10 @@ class AdaptadorCNN:
     epocas: int = 100
     nombre: str = "cnn1d"
     estocastico: bool = True
+    # 'temporal': valida con la última campaña del entrenamiento (4.12.2, brecha G1 cerrada);
+    # 'aleatoria': la partición anterior, solo para compararla en el piloto (P7).
+    particion: str = "temporal"
+    ultima_mejor_epoca: int = 0
 
     def entrenar(self, hp: dict, fold: FoldData, semilla: int, representacion: str) -> tuple[QuinuaYieldCNN1D, float, float]:
         """Entrena la CNN-1D y devuelve (modelo en modo eval, media y desviación del objetivo).
@@ -117,8 +129,11 @@ class AdaptadorCNN:
         resultado = train_cnn1d(
             modelo, x, z, y,
             TrainingConfig(epocas_maximas=self.epocas, semilla=semilla, **entrenamiento),
-            grupos_temporales=torch.tensor(fold.campana_train, dtype=torch.long),
+            grupos_temporales=(
+                torch.tensor(fold.campana_train, dtype=torch.long) if self.particion == "temporal" else None
+            ),
         )
+        self.ultima_mejor_epoca = resultado.mejor_epoca
         resultado.modelo.eval()
         return resultado.modelo, media, desviacion
 
@@ -131,9 +146,11 @@ class AdaptadorCNN:
         return reconstruct_prediction(pred_z * desviacion + media, fold, representacion)
 
 
-def build_adapter(nombre: str, epocas_cnn: int = 100) -> Adaptador:
+def build_adapter(nombre: str, epocas_cnn: int = 100, particion: str = "temporal") -> Adaptador:
+    if particion not in ("temporal", "aleatoria"):
+        raise ValueError(f"partición del early stopping debe ser 'temporal' o 'aleatoria'; recibido '{particion}'.")
     if nombre == "cnn1d":
-        return AdaptadorCNN(epocas=epocas_cnn)
+        return AdaptadorCNN(epocas=epocas_cnn, particion=particion)
     if nombre in MODELOS:
         return AdaptadorClasico(nombre)
     raise ValueError(f"Modelo '{nombre}' no reconocido; use uno de {MODELOS}.")
@@ -146,7 +163,7 @@ def _rmse(y_real: np.ndarray, y_pred: np.ndarray) -> float:
 def tune_model(
     adaptador: Adaptador, pliegos_internos: list[FoldData], espacio: dict, n_trials: int,
     representacion: str, semilla_tpe: int = 0, semilla_modelo: int = 0,
-) -> TuningResult:
+) -> TuningDetail:
     """Busca hiperparámetros minimizando el RMSE medio (kg/ha) de los pliegos internos.
 
     Solo intervienen pliegos internos del entrenamiento: la campaña externa del
@@ -165,10 +182,12 @@ def tune_model(
 
     estudio = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=semilla_tpe))
     estudio.optimize(objetivo, n_trials=n_trials)
-    return TuningResult(
+    ensayos = pd.DataFrame([{**e.params, "valor": e.value} for e in estudio.trials])
+    return TuningDetail(
         mejores_hiperparametros=estudio.best_params,
         mejor_rmse_validacion=estudio.best_value,
         n_trials_ejecutados=len(estudio.trials),
+        ensayos=ensayos,
     )
 
 
@@ -200,7 +219,9 @@ def benchmark_predictions(fold: FoldData, indice_ndvi_max: int) -> dict[str, np.
 @dataclass
 class FoldResult:
     predicciones: pd.DataFrame  # larga: una fila por observación de prueba, modelo y semilla
-    ajuste: pd.DataFrame  # una fila por modelo: presupuesto ejecutado y mejor ajuste
+    ajuste: pd.DataFrame  # una fila por modelo: presupuesto ejecutado, mejor ajuste y tiempos
+    mejores_hiperparametros: dict[str, dict] = field(default_factory=dict)
+    ensayos: dict[str, pd.DataFrame] = field(default_factory=dict)  # todos los ensayos por modelo (P9)
 
 
 def run_fold(
@@ -210,7 +231,7 @@ def run_fold(
 ) -> FoldResult:
     """Ajusta y evalúa los modelos y los benchmarks en un pliego externo."""
     internos = build_inner_folds(fold, ventana_interna)
-    filas, ajustes = [], []
+    filas, ajustes, mejores_hp, ensayos = [], [], {}, {}
 
     def agregar(modelo: str, semilla: int, pred: np.ndarray) -> None:
         filas.append(pd.DataFrame({
@@ -220,18 +241,27 @@ def run_fold(
 
     for nombre in modelos:
         adaptador = build_adapter(nombre, epocas_cnn)
+        t0 = time.perf_counter()
         ajuste = tune_model(adaptador, internos, espacios[nombre], n_trials, representacion, semilla_tpe)
+        segundos_ajuste = time.perf_counter() - t0
+        t0 = time.perf_counter()
+        for semilla in range(n_semillas if adaptador.estocastico else 1):
+            agregar(nombre, semilla, adaptador.ajustar_predecir(ajuste.mejores_hiperparametros, fold, semilla, representacion))
         ajustes.append({
             "campana_prueba": fold.campana_prueba, "modelo": nombre, "n_trials": ajuste.n_trials_ejecutados,
             "rmse_validacion_interna": ajuste.mejor_rmse_validacion, "hiperparametros": str(ajuste.mejores_hiperparametros),
+            "segundos_ajuste": segundos_ajuste, "segundos_semillas": time.perf_counter() - t0,
         })
-        for semilla in range(n_semillas if adaptador.estocastico else 1):
-            agregar(nombre, semilla, adaptador.ajustar_predecir(ajuste.mejores_hiperparametros, fold, semilla, representacion))
+        mejores_hp[nombre] = dict(ajuste.mejores_hiperparametros)
+        ensayos[nombre] = ajuste.ensayos
 
     for nombre, pred in benchmark_predictions(fold, indice_ndvi_max).items():
         agregar(nombre, 0, pred)
 
-    return FoldResult(predicciones=pd.concat(filas, ignore_index=True), ajuste=pd.DataFrame(ajustes))
+    return FoldResult(
+        predicciones=pd.concat(filas, ignore_index=True), ajuste=pd.DataFrame(ajustes),
+        mejores_hiperparametros=mejores_hp, ensayos=ensayos,
+    )
 
 
 def rmse_per_campaign(predicciones: pd.DataFrame) -> pd.DataFrame:

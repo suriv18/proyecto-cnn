@@ -86,6 +86,43 @@ class TestPresupuestoEquiparado:
             tune_model(build_adapter("elastic_net"), [], ESPACIOS["elastic_net"], n_trials=2, representacion="nivel")
 
 
+class TestEnsayosDelAjuste:
+    """P9 necesita todos los ensayos, no solo el mejor."""
+
+    def test_el_resultado_incluye_una_fila_por_ensayo_con_parametros_y_valor(self, internos):
+        r = tune_model(build_adapter("elastic_net"), internos, ESPACIOS["elastic_net"], n_trials=4, representacion="nivel")
+
+        assert len(r.ensayos) == 4
+        assert {"alpha", "l1_ratio", "valor"} <= set(r.ensayos.columns)
+        assert r.ensayos["valor"].min() == pytest.approx(r.mejor_rmse_validacion)
+
+
+class TestParticionDelEarlyStopping:
+    """P7 compara la partición temporal (brecha G1 cerrada) con la aleatoria anterior."""
+
+    HP = {"filtros_capa1": 4, "filtros_capa2": 4, "dropout": 0.005, "tasa_aprendizaje": 0.01}
+
+    def test_la_particion_temporal_es_la_de_forma_predeterminada(self):
+        assert build_adapter("cnn1d").particion == "temporal"
+
+    def test_registra_la_mejor_epoca_del_ultimo_entrenamiento(self, pliego):
+        adaptador = build_adapter("cnn1d", epocas_cnn=8)
+
+        adaptador.entrenar(self.HP, pliego, 0, "nivel")
+
+        assert 1 <= adaptador.ultima_mejor_epoca <= 8
+
+    def test_las_dos_particiones_dan_resultados_distintos(self, pliego):
+        a = build_adapter("cnn1d", epocas_cnn=8, particion="temporal").ajustar_predecir(self.HP, pliego, 0, "nivel")
+        b = build_adapter("cnn1d", epocas_cnn=8, particion="aleatoria").ajustar_predecir(self.HP, pliego, 0, "nivel")
+
+        assert not np.allclose(a, b)
+
+    def test_una_particion_desconocida_falla(self):
+        with pytest.raises(ValueError, match="partición"):
+            build_adapter("cnn1d", particion="otra")
+
+
 class TestSinFuga:
     def test_el_ajuste_de_hiperparametros_no_depende_de_la_verdad_de_la_campana_externa(self, pliego):
         a = tune_model(build_adapter("random_forest"), build_inner_folds(pliego, 2), ESPACIOS["random_forest"], 3, "nivel")
@@ -192,6 +229,29 @@ class TestRunFold:
     def test_registra_el_presupuesto_ejecutado_por_modelo(self, resultado):
         assert set(resultado.ajuste["n_trials"]) == {2}
         assert set(resultado.ajuste["modelo"]) == set(MODELOS)
+
+
+class TestRunFoldDatosParaElPiloto:
+    """P3 (costo), P7/P8 (mejores hiperparámetros) y P9 (ensayos) salen de `run_fold`."""
+
+    @pytest.fixture(scope="class")
+    def resultado(self, pliego):
+        return run_fold(
+            pliego, ESPACIOS, n_trials=2, n_semillas=2, ventana_interna=2,
+            representacion="nivel", indice_ndvi_max=4, epocas_cnn=3,
+        )
+
+    def test_registra_el_tiempo_de_ajuste_y_de_las_semillas_por_modelo(self, resultado):
+        assert {"segundos_ajuste", "segundos_semillas"} <= set(resultado.ajuste.columns)
+        assert (resultado.ajuste["segundos_ajuste"] > 0).all()
+
+    def test_devuelve_los_mejores_hiperparametros_como_diccionarios(self, resultado):
+        assert set(resultado.mejores_hiperparametros) == set(MODELOS)
+        assert set(resultado.mejores_hiperparametros["elastic_net"]) == {"alpha", "l1_ratio"}
+
+    def test_devuelve_todos_los_ensayos_de_cada_modelo(self, resultado):
+        assert set(resultado.ensayos) == set(MODELOS)
+        assert all(len(e) == 2 for e in resultado.ensayos.values())
 
 
 class TestRmsePorCampana:
