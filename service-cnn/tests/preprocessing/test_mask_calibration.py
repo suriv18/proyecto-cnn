@@ -8,7 +8,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from src.preprocessing.mask import summarize_amplitude_calibration
+from src.preprocessing.mask import summarize_amplitude_calibration, summarize_cropland_altitude
 
 
 def _tabla() -> pd.DataFrame:
@@ -76,3 +76,34 @@ class TestSummarizeAmplitudeCalibration:
 
         with pytest.raises(ValueError, match="entrenamiento"):
             summarize_amplitude_calibration(tabla, percentiles=[50], **KW)
+
+
+class TestSummarizeCroplandAltitude:
+    """Altitud mediana de la superficie de cultivo por provincia: criterio
+    complementario de la sección 4.5.3 para decidir el ámbito altoandino."""
+
+    @staticmethod
+    def _celdas():
+        filas = []
+        for i, alt in enumerate([3000, 3200, 3400]):
+            filas.append(dict(provincia_id="LA MAR", celda_id=f"m{i}", cobertura_suelo="cultivo", altitud_m=alt))
+        for i, alt in enumerate([3900, 4100, 4300, 4500]):
+            filas.append(dict(provincia_id="CARABAYA", celda_id=f"c{i}", cobertura_suelo="cultivo", altitud_m=alt))
+        filas.append(dict(provincia_id="LA MAR", celda_id="x", cobertura_suelo="no_cultivo", altitud_m=100))
+        return pd.DataFrame(filas)
+
+    def test_mediana_y_fraccion_dentro_del_rango_por_provincia(self):
+        r = summarize_cropland_altitude(self._celdas(), altitud_min_m=2500, altitud_max_m=4000).set_index("provincia_id")
+
+        assert r.loc["LA MAR", "altitud_mediana_m"] == 3200
+        assert r.loc["LA MAR", "frac_en_rango"] == 1.0
+        assert r.loc["CARABAYA", "altitud_mediana_m"] == 4200
+        assert r.loc["CARABAYA", "frac_en_rango"] == 0.25
+        assert r.loc["LA MAR", "n_celdas"] == 3  # ignora la celda no_cultivo
+
+    def test_cuenta_una_sola_vez_una_celda_repetida_entre_campanas(self):
+        celdas = pd.concat([self._celdas(), self._celdas()])  # misma celda_id en dos campañas
+
+        r = summarize_cropland_altitude(celdas, altitud_min_m=2500, altitud_max_m=4000).set_index("provincia_id")
+
+        assert r.loc["LA MAR", "n_celdas"] == 3

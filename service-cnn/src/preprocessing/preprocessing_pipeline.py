@@ -24,7 +24,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 import numpy as np
 import pandas as pd
@@ -66,6 +66,10 @@ _LIMITES_FISICOS = {
     "radiacion_solar": (0.0, 4.5e7),
 }
 _LIMITES_NDVI = (-0.2, 1.0)
+
+CLASIFICACIONES_EXCLUIDAS_POR_DEFECTO = ("costa_riego", "selva")
+"""Criterio de exclusión 4 (sección 4.7): régimen productivo no comparable. Los
+casos de transición se conservan (marcados) hasta resolverse con evidencia."""
 
 
 class RawSchemaDesactualizadaError(ValueError):
@@ -169,6 +173,45 @@ def _aplanar_ventanas(resultados: list[dict]) -> tuple[pd.DataFrame, list[dict]]
     return pd.DataFrame(filas, columns=columnas), fallos
 
 
+def _separar_ciclos_fuera_de_la_serie(
+    fenologia: pd.DataFrame, series_crudas: pd.DataFrame
+) -> tuple[pd.DataFrame, list[dict]]:
+    """Descarta las observaciones cuyo ciclo (hasta el horizonte) excede la serie extraída.
+
+    Criterio de exclusión 2 (4.7): no se reconstruye una secuencia que exigiría
+    extrapolar fuera de los datos. Se compara con el rango de fechas realmente
+    presente en las series de esa provincia-campaña, no con una constante.
+    """
+    if fenologia.empty:
+        return fenologia, []
+    rango = (
+        series_crudas.assign(_f=pd.to_datetime(series_crudas["fecha"]))
+        .groupby(["provincia_id", "campana_id"])["_f"]
+        .agg(["min", "max"])
+    )
+    ciclo = fenologia.groupby(["provincia_id", "campana_id"]).agg(
+        inicio=("inicio", "min"), fin=("fin", "max")
+    )
+    exclusiones: list[dict] = []
+    descartar = []
+    for clave, fila in ciclo.iterrows():
+        if clave not in rango.index:
+            continue  # sin series: lo registra el tensor incompleto
+        serie_min, serie_max = rango.loc[clave, "min"], rango.loc[clave, "max"]
+        if pd.Timestamp(fila["inicio"]) < serie_min or pd.Timestamp(fila["fin"]) > serie_max:
+            descartar.append(clave)
+            exclusiones.append(
+                {"provincia_id": clave[0], "campana_id": clave[1],
+                 "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+                 "detalle": f"ciclo {fila['inicio']}..{fila['fin']} fuera de la serie "
+                            f"{serie_min.date()}..{serie_max.date()}"}
+            )
+    if descartar:
+        claves = pd.MultiIndex.from_frame(fenologia[["provincia_id", "campana_id"]])
+        fenologia = fenologia[~claves.isin(descartar)].reset_index(drop=True)
+    return fenologia, exclusiones
+
+
 def _diccionario(orden_variables: list[str]) -> pd.DataFrame:
     entradas = []
     for entrada in orden_variables:
@@ -195,6 +238,10 @@ def build_processed_dataset(
     orden_variables: Optional[list[str]] = None,
     campanas_entrenamiento: Optional[list[int]] = None,
     dias_antes_de_cosecha: Optional[int] = None,
+    clasificacion_por_provincia: Optional[dict[str, str]] = None,
+    clasificaciones_excluidas: Iterable[str] = CLASIFICACIONES_EXCLUIDAS_POR_DEFECTO,
+    altitud_mediana_cultivo_por_provincia: Optional[dict[str, float]] = None,
+    rango_altitudinal: Optional[tuple[float, float]] = None,
 ) -> ProcessedDataset:
     """Construye el conjunto de datos procesado (tensor V×T + objetivo).
 
@@ -213,10 +260,22 @@ def build_processed_dataset(
         campanas_entrenamiento: campañas con las que se estima el respaldo
             departamental. `None` => exploratorio (usa todo el histórico).
         dias_antes_de_cosecha: horizonte principal (4.10.4); `None` no trunca.
+        clasificacion_por_provincia: `{provincia_id: clasificacion}` (columna
+            `clasificacion` de `configs/provincias.csv`). Sin él no se aplica
+            el filtro territorial.
+        clasificaciones_excluidas: clasificaciones que se descartan (4.7,
+            criterio de exclusión 4).
+        altitud_mediana_cultivo_por_provincia: `{provincia_id: altitud}` de la
+            superficie de cultivo (ver `mask.summarize_cropland_altitude`).
+            Con `rango_altitudinal`, descarta las provincias cuyo cultivo está
+            fuera del rango de la máscara (4.5.3). Una provincia sin dato no
+            se excluye.
+        rango_altitudinal: `(min, max)` en metros, el de la máscara agrícola.
 
     Returns:
         `ProcessedDataset`. Las observaciones descartadas quedan en
-        `exclusiones` con su `motivo` (`sin_alineacion_fenologica` o
+        `exclusiones` con su `motivo` (`fuera_del_ambito_altoandino`,
+        `sin_alineacion_fenologica`, `ciclo_fuera_de_ventana_de_extraccion` o
         `tensor_incompleto`).
 
     Raises:
@@ -238,10 +297,40 @@ def build_processed_dataset(
             campanas_entrenamiento=campanas_entrenamiento,
         )
 
-    celdas = [
-        (str(p), int(c))
-        for p, c in rendimiento[["provincia_id", "campana_id"]].itertuples(index=False)
-    ]
+    clasificaciones_excluidas = list(clasificaciones_excluidas)
+    clasificacion_por_provincia = clasificacion_por_provincia or {}
+    if not clasificacion_por_provincia:
+        clasificaciones_excluidas = []
+
+    celdas = []
+    exclusiones: list[dict] = []
+    for p, c in rendimiento[["provincia_id", "campana_id"]].itertuples(index=False):
+        clasificacion = clasificacion_por_provincia.get(p)
+        if clasificacion in clasificaciones_excluidas:
+            exclusiones.append(
+                {"provincia_id": str(p), "campana_id": int(c),
+                 "motivo": "fuera_del_ambito_altoandino",
+                 "detalle": f"clasificacion={clasificacion}"}
+            )
+            continue
+        altitud = (
+            altitud_mediana_cultivo_por_provincia.get(p)
+            if altitud_mediana_cultivo_por_provincia
+            else None
+        )
+        if (
+            altitud is not None
+            and rango_altitudinal is not None
+            and not (rango_altitudinal[0] <= altitud <= rango_altitudinal[1])
+        ):
+            exclusiones.append(
+                {"provincia_id": str(p), "campana_id": int(c),
+                 "motivo": "fuera_del_ambito_altoandino",
+                 "detalle": f"altitud mediana del cultivo={altitud:.0f} m fuera de "
+                            f"[{rango_altitudinal[0]:g}, {rango_altitudinal[1]:g}]"}
+            )
+            continue
+        celdas.append((str(p), int(c)))
     resultados = build_all_phase_windows(
         provincia_campanas=celdas,
         siembra_mensual=siembra_mensual,
@@ -253,11 +342,14 @@ def build_processed_dataset(
     )
     fenologia, fallos_alineacion = _aplanar_ventanas(resultados)
 
-    exclusiones = [
+    exclusiones += [
         {"provincia_id": f["provincia_id"], "campana_id": f["campana_id"],
          "motivo": "sin_alineacion_fenologica", "detalle": f["error"]}
         for f in fallos_alineacion
     ]
+
+    fenologia, fuera_de_ventana = _separar_ciclos_fuera_de_la_serie(fenologia, series_crudas)
+    exclusiones += fuera_de_ventana
 
     orden_fases = list(duracion_dias_por_fase)
     tensores = build_all_observation_tensors(
@@ -290,6 +382,7 @@ def build_processed_dataset(
                 "fuente_alineacion": fila_alineacion["fuente"],
                 "es_imputado": bool(fila_alineacion["es_imputado"]),
                 "fecha_siembra": fila_alineacion["fecha_siembra"],
+                "clasificacion": clasificacion_por_provincia.get(clave[0]),
             }
         )
         arreglos.append(t["tensor"])
@@ -298,7 +391,7 @@ def build_processed_dataset(
         filas_validas,
         columns=[
             "provincia_id", "campana_id", "rendimiento_kg_ha",
-            "fuente_alineacion", "es_imputado", "fecha_siembra",
+            "fuente_alineacion", "es_imputado", "fecha_siembra", "clasificacion",
         ],
     )
     X = (
@@ -316,6 +409,8 @@ def build_processed_dataset(
             None if campanas_entrenamiento is None else [int(c) for c in campanas_entrenamiento]
         ),
         "dias_antes_de_cosecha": dias_antes_de_cosecha,
+        "clasificaciones_excluidas": clasificaciones_excluidas,
+        "rango_altitudinal": None if rango_altitudinal is None else list(rango_altitudinal),
         "orden_variables": list(orden_variables),
         "orden_fases": orden_fases,
         "n_observaciones": int(len(observaciones)),

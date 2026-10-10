@@ -169,3 +169,31 @@ def summarize_amplitude_calibration(
         "campanas_entrenamiento": [int(c) for c in campanas_entrenamiento],
         "umbrales": umbrales,
     }
+
+
+def summarize_cropland_altitude(
+    celdas: pd.DataFrame, altitud_min_m: float, altitud_max_m: float
+) -> pd.DataFrame:
+    """Altitud mediana de la superficie de cultivo de cada provincia.
+
+    Criterio complementario de la sección 4.5.3 para decidir si una provincia
+    pertenece al ámbito altoandino. Si la mediana queda fuera del rango
+    altitudinal de la máscara, el NDVI enmascarado se calcula sobre una
+    fracción pequeña de la superficie cultivada y no representa a la provincia.
+
+    Args:
+        celdas: columnas `provincia_id`, `celda_id`, `cobertura_suelo`,
+            `altitud_m`. Una celda repetida entre campañas se cuenta una vez.
+
+    Returns:
+        DataFrame con `provincia_id`, `n_celdas`, `altitud_mediana_m` y
+        `frac_en_rango` (fracción de celdas dentro de [min, max]).
+    """
+    cultivo = celdas[celdas["cobertura_suelo"].isin(_COBERTURAS_AGRICOLAS)]
+    cultivo = cultivo.drop_duplicates("celda_id")
+    resumen = cultivo.groupby("provincia_id")["altitud_m"].agg(
+        n_celdas="count",
+        altitud_mediana_m="median",
+        frac_en_rango=lambda s: float(s.between(altitud_min_m, altitud_max_m).mean()),
+    )
+    return resumen.reset_index()

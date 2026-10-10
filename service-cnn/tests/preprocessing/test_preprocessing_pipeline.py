@@ -198,6 +198,101 @@ class TestBuildProcessedDataset:
         assert ds.metadata["orden_fases"] == ["emergencia", "desarrollo_vegetativo"]
 
 
+class TestAmbitoTerritorial:
+    """Criterio de exclusión 4 (sección 4.7): se excluyen las provincias
+    costeras bajo riego y de selva por régimen productivo no comparable; los
+    casos de transición se conservan marcados hasta resolverse con evidencia."""
+
+    CLASIF = {"AZANGARO": "altoandina", "CHUCUITO": "costa_riego", "LAMPA": "transicion"}
+
+    def test_excluye_provincias_costeras_con_su_motivo(self):
+        ds = _construir(clasificacion_por_provincia=self.CLASIF)
+
+        assert set(ds.observaciones["provincia_id"]) == {"AZANGARO"}
+        excluida = ds.exclusiones.query("provincia_id == 'CHUCUITO'")
+        assert list(excluida["motivo"]) == ["fuera_del_ambito_altoandino"]
+        assert "costa_riego" in excluida["detalle"].iloc[0]
+
+    def test_conserva_los_casos_de_transicion_marcados(self):
+        rendimiento = pd.concat(
+            [_rendimiento(), pd.DataFrame([dict(provincia_id="LAMPA", campana_id=2021, rendimiento_kg_ha=1000.0)])]
+        )
+        series = _series([("AZANGARO", 2021), ("AZANGARO", 2022), ("CHUCUITO", 2022), ("LAMPA", 2021)])
+        siembra = pd.concat(
+            [_siembra(), pd.DataFrame([dict(provincia_id="LAMPA", campana_id=2021, mes=10, superficie_ha=50.0)])]
+        )
+
+        ds = _construir(
+            series_crudas=series, rendimiento=rendimiento, siembra_mensual=siembra,
+            clasificacion_por_provincia=self.CLASIF,
+        )
+
+        lampa = ds.observaciones.query("provincia_id == 'LAMPA'")
+        assert len(lampa) == 1
+        assert lampa["clasificacion"].iloc[0] == "transicion"
+
+    def test_registra_en_metadata_las_clasificaciones_excluidas(self):
+        ds = _construir(clasificacion_por_provincia=self.CLASIF)
+
+        assert ds.metadata["clasificaciones_excluidas"] == ["costa_riego", "selva"]
+
+    def test_sin_mapa_de_clasificacion_no_excluye_nada(self):
+        ds = _construir()
+
+        assert len(ds.observaciones) == 3
+        assert ds.metadata["clasificaciones_excluidas"] == []
+
+
+class TestAmbitoAltitudinal:
+    """La provincia es ámbito altoandino operativo solo si la altitud mediana
+    de su superficie de cultivo está dentro del rango de la máscara (4.5.3):
+    fuera de él, el NDVI enmascarado no representa a la provincia."""
+
+    ALT = {"AZANGARO": 3800.0, "CHUCUITO": 4300.0}
+
+    def test_excluye_provincia_cuyo_cultivo_esta_fuera_del_rango_altitudinal(self):
+        ds = _construir(altitud_mediana_cultivo_por_provincia=self.ALT, rango_altitudinal=(2500, 4000))
+
+        assert set(ds.observaciones["provincia_id"]) == {"AZANGARO"}
+        excluida = ds.exclusiones.query("provincia_id == 'CHUCUITO'")
+        assert list(excluida["motivo"]) == ["fuera_del_ambito_altoandino"]
+        assert "4300" in excluida["detalle"].iloc[0]
+
+    def test_provincia_sin_dato_de_altitud_no_se_excluye(self):
+        ds = _construir(altitud_mediana_cultivo_por_provincia={"AZANGARO": 3800.0}, rango_altitudinal=(2500, 4000))
+
+        assert "CHUCUITO" in set(ds.observaciones["provincia_id"])
+
+    def test_registra_el_rango_en_metadata(self):
+        ds = _construir(altitud_mediana_cultivo_por_provincia=self.ALT, rango_altitudinal=(2500, 4000))
+
+        assert ds.metadata["rango_altitudinal"] == [2500, 4000]
+
+
+class TestCoberturaDeLaVentana:
+    """Criterio de exclusión 2 (4.7): no se reconstruye una secuencia que
+    exigiría extrapolar fuera de la serie extraída."""
+
+    def test_excluye_observacion_cuyo_ciclo_excede_la_serie_extraida(self):
+        # la serie sintética llega al 15-dic; siembra el 16-dic + 8 días de ciclo
+        siembra = pd.DataFrame(
+            [
+                dict(provincia_id="AZANGARO", campana_id=2021, mes=10, superficie_ha=300.0),
+                dict(provincia_id="AZANGARO", campana_id=2022, mes=12, superficie_ha=300.0),
+            ]
+        )
+        ds = _construir(siembra_mensual=siembra, campanas_entrenamiento=[2021])
+
+        excluida = ds.exclusiones.query("provincia_id == 'AZANGARO' and campana_id == 2022")
+        assert list(excluida["motivo"]) == ["ciclo_fuera_de_ventana_de_extraccion"]
+
+    def test_conserva_las_observaciones_cuyo_ciclo_esta_cubierto(self):
+        ds = _construir()
+
+        assert len(ds.observaciones) == 3
+        assert "ciclo_fuera_de_ventana_de_extraccion" not in set(ds.exclusiones["motivo"])
+
+
 class TestSaveProcessedDataset:
     def test_escribe_los_cuatro_artefactos_y_se_puede_releer(self, tmp_path):
         ds = _construir()

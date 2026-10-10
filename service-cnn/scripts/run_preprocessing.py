@@ -86,6 +86,19 @@ def _leer_quinua_sisagri(archivo: Path, column_mapping: Path) -> tuple[pd.DataFr
     return pd.concat(fragmentos, ignore_index=True), config
 
 
+def _leer_quinua_sisagri_con_cache(archivo: Path, column_mapping: Path, cache: Path) -> tuple[pd.DataFrame, object]:
+    """Como `_leer_quinua_sisagri`, pero guarda la tabla filtrada (quinua de los 8
+    departamentos, ~67 mil filas) en `cache`: leer las 5 hojas del Excel tarda ~26 min."""
+    config = load_sisagri_headerless_config(column_mapping)
+    if cache.exists():
+        print(f"Leyendo quinua de SISAGRI desde el caché {cache}...", file=sys.stderr)
+        return pd.read_parquet(cache), config
+    quinua, config = _leer_quinua_sisagri(archivo, column_mapping)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    quinua.to_parquet(cache, index=False)
+    return quinua, config
+
+
 def _rendimiento_por_provincia_campana(quinua: pd.DataFrame, config) -> pd.DataFrame:
     """Rendimiento (kg/ha) = producción / superficie cosechada, solo celdas con ambas > 0."""
     mensual = load_sisagri_headerless(quinua, config)
@@ -108,8 +121,30 @@ def main() -> None:
     parser.add_argument("--salida", type=Path, default=Path("data/processed"))
     parser.add_argument("--campanas-entrenamiento", type=int, nargs="+", default=None)
     parser.add_argument("--exploratorio", action="store_true")
+    parser.add_argument(
+        "--excluir-por-altitud",
+        action="store_true",
+        help=(
+            "Descarta las provincias cuya altitud mediana de cultivo "
+            "(configs/altitud_cultivo_por_provincia.csv) queda fuera de "
+            "[2500, 4000] m. DESACTIVADO por defecto: mide la altitud de todo el "
+            "cultivo, no la de la quinua; úsese para el análisis de sensibilidad."
+        ),
+    )
+    parser.add_argument(
+        "--altitud-cultivo-csv",
+        type=Path,
+        default=Path("configs/altitud_cultivo_por_provincia.csv"),
+    )
+    parser.add_argument("--cache-sisagri", type=Path, default=Path("data/interim/sisagri_quinua_8deptos.parquet"))
     parser.add_argument("--permitir-sin-mascara", action="store_true")
     parser.add_argument("--dias-antes-de-cosecha", type=int, default=None)
+    parser.add_argument(
+        "--clasificaciones-excluidas",
+        nargs="*",
+        default=["costa_riego", "selva"],
+        help="Clasificaciones de configs/provincias.csv que se descartan (4.7, criterio 4).",
+    )
     args = parser.parse_args()
 
     if (args.campanas_entrenamiento is None) == (not args.exploratorio):
@@ -151,10 +186,17 @@ def main() -> None:
     provincia_a_departamento = dict(zip(provincias["provincia_id"], provincias["departamento"]))
 
     print("Leyendo quinua de SISAGRI...", file=sys.stderr)
-    quinua, config = _leer_quinua_sisagri(args.archivo_sisagri, args.column_mapping)
+    quinua, config = _leer_quinua_sisagri_con_cache(
+        args.archivo_sisagri, args.column_mapping, args.cache_sisagri
+    )
     siembra_mensual = load_siembra_mensual_por_provincia(quinua)
     rendimiento = _rendimiento_por_provincia_campana(quinua, config)
     print(f"Celdas con rendimiento: {len(rendimiento)}", file=sys.stderr)
+
+    altitud_cultivo = None
+    if args.excluir_por_altitud:
+        tabla_altitud = pd.read_csv(args.altitud_cultivo_csv)
+        altitud_cultivo = dict(zip(tabla_altitud["provincia_id"], tabla_altitud["altitud_mediana_m"]))
 
     dataset = build_processed_dataset(
         series_crudas=series_crudas,
@@ -164,6 +206,10 @@ def main() -> None:
         duracion_dias_por_fase=load_fenologia_bbch(args.hyperparams),
         campanas_entrenamiento=args.campanas_entrenamiento,
         dias_antes_de_cosecha=args.dias_antes_de_cosecha,
+        clasificacion_por_provincia=dict(zip(provincias["provincia_id"], provincias["clasificacion"])),
+        clasificaciones_excluidas=args.clasificaciones_excluidas,
+        altitud_mediana_cultivo_por_provincia=altitud_cultivo,
+        rango_altitudinal=(2500, 4000) if args.excluir_por_altitud else None,
     )
     dataset.metadata["mascara_calibrada"] = mascara_calibrada
     save_processed_dataset(dataset, args.salida)
