@@ -99,7 +99,7 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 | T4 | Ejecutor por pliego: ajuste de los 5 modelos con presupuesto equiparado, validación interna de origen móvil y semillas — **hecha** (`src/evaluation/experiment_runner.py`: adaptadores de los 5 modelos, `tune_model`, `benchmark_predictions` B1–B3, `run_fold`, `rmse_per_campaign`; 26 pruebas) | L | T2, T3 |
 | T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` — **hecha** (`src/evaluation/he1_evaluation.py`; además se corrigió el contraste de apoyo de HE1a, que comparaba con cero en vez de con el margen; 10 pruebas) | M | T4 |
 | T6 | Paso de SHAP con verificación de precisión local y contingencia a KernelExplainer — **hecha** (`src/explainability/shap_step.py`: fondo reproducible solo de entrenamiento, `explain_with_contingency`, `KernelExplainer` con `l1_reg=0`; 11 pruebas) | M | T4 |
-| T7 | `scripts/run_pilot.py` (P0–P11) y plantilla del informe del piloto | M | T1–T6 |
+| T7 | `scripts/run_pilot.py` (P0–P10) y plantilla del informe del piloto — **hecha** (`src/evaluation/pilot_runner.py`: orquesta P0–P10 con guarda de campañas, modos técnico y oficial, y genera resultados e informe; P11 queda opcional; 16 pruebas de integración) | M | T1–T6 |
 | T8 | Prueba de fuga por permutación (P1) como prueba automática — **hecha** (`src/evaluation/leak_test.py`: `permuted_training_fold`, `run_permutation_test` con mediana y control positivo; 8 pruebas, verificadas contra el código anterior) | S | T4 |
 
 ## 7. Criterios de salida (hito H2)
