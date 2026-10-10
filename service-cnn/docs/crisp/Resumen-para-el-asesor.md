@@ -26,7 +26,7 @@ Corrida de desarrollo con datos reales de **solo 2016–2019** (un pliego, prueb
 
 - Predecir la **anomalía** respecto a la provincia reduce el RMSE de 389 a 205 kg/ha frente a predecir el nivel (el 90 % de la varianza es entre provincias).
 - En anomalía, los 5 modelos quedan entre 199 y 213 kg/ha; la línea base B2 (media provincial) da 202,4. **Referencias simples ya igualan a los modelos:** persistencia (repetir la última campaña) 198,9 en 2019 y 166,9 en 2018 (media 185,3).
-- Consecuencia para las hipótesis: con la ventana propuesta de 4 (6 campañas externas), HE1b (CNN mejor que B2) exige que la CNN gane las **6 de 6**; con 5 externas habría exigido 5 de 5. Las correlaciones dentro de la provincia son débiles (|r| ≤ 0,28), así que la señal interanual es modesta.
+- Consecuencia para las hipótesis: con 5 campañas externas, HE1b (CNN mejor que B2) exige que la CNN gane las **5 de 5**. Las correlaciones dentro de la provincia son débiles (|r| ≤ 0,28), así que la señal interanual es modesta.
 - SHAP: DeepExplainer cumple la precisión local (error 0) y coincide con KernelExplainer; la contribución por fase es casi plana, con máximo en floración.
 - Costo estimado de todo el confirmatorio (30 trials y 10 semillas): ≈ 0,5 h.
 - Hallazgo corregido: XGBoost era determinista y sus 10 semillas eran idénticas; se añadió submuestreo a su espacio de búsqueda (propuesto, a confirmar en el piloto).
@@ -41,8 +41,8 @@ Corrida de desarrollo con datos reales de **solo 2016–2019** (un pliego, prueb
 | 4 | Altitud mínima de la máscara agrícola | 2500 m | Qué superficie se considera cultivo de quinua |
 | 5 | Altitud máxima | 4000 m | Ídem |
 | 6 | Pendiente máxima | 14,04° (D.S. 005-2022-MIDAGRI) | Ídem |
-| 7 | Amplitud mínima de NDVI | p5: 0,323 con 2016–2020; con 2016–2019 (necesario si la ventana es 4) da 0,319. Los datos usan 0,323; hay que decidir si se re-extrae o se declara la desviación (sesgo regional en Arequipa y Puno) | Ídem; es el umbral más sensible |
-| 8 | Ventana inicial de entrenamiento | **Propuesta de cambio: 4 campañas (2016–2019) → 6 externas (2020–2025).** Antes: 5 → 5 externas | Poder de los contrastes: con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031 y no sobrevive a Holm con 2 contrastes; con 6 es 1/64 = 0,016. Contrapartida: HE1b exige 6 de 6 |
+| 7 | Amplitud mínima de NDVI | percentil 5 de 2016–2020, todas de entrenamiento: 0,323 (sesgo regional en Arequipa y Puno) | Ídem; es el umbral más sensible |
+| 8 | Ventana inicial de entrenamiento | 5 campañas → quedan 5 externas (2021–2025). Se evaluó 4 (6 externas) y se descartó: HE1b exigiría 6 de 6 y B2 con tendencia necesita ≥ 5 campañas de historia | Poder de los contrastes: con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031, alcanzable al nivel 0,05 |
 
 ## 4. Consultas de diseño
 

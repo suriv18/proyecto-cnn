@@ -63,8 +63,8 @@ umbrales:
   pendiente_max_porcentaje: 25
   pendiente_max_grados: 14.04  # arctan(0.25), redondeado a 2 decimales
   amplitud_ndvi_min: 0.323  # percentil 5 de la amplitud del cultivo elegible, campañas 2016-2020
-  # RECALIBRACIÓN 2026-10-10 (ventana inicial 4: 2020 pasa a ser campaña externa): con 2016-2019, p5 = 0.319 (p1 0.246, p10 0.359, p25 0.417;
-  # reports/calibracion_mascara_amplitud.json). Los datos extraídos usan 0.323; re-extraer con 0.319 o declarar la desviación (0.004) es decisión pendiente.
+  # 2026-10-10: con ventana inicial 5 las campañas 2016-2020 son todas de entrenamiento, así que 0.323 es válido sin recalibrar.
+  # (Si se adoptara ventana 4, p5 con 2016-2019 sería 0.319; ver reports/calibracion_mascara_amplitud_2016_2020.json y el registro de decisiones.)
 
   detalle:
     altitud:

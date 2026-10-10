@@ -33,7 +33,7 @@ hipotesis:
   estadistico_he1a: {valor: "mediana de q_f = RMSE(CNN-1D)/RMSE(XGBoost) - 1; H0: mediana >= 0.05", estado: fijado_por_tesis, fuente: "3.3.1"}
   estadistico_he1b: {valor: "mediana de Δ_f = RMSE(CNN-1D) - RMSE(B2); H0: mediana >= 0", estado: fijado_por_tesis, fuente: "3.3.2"}
   intervalo_de_confianza: {valor: "límite superior unilateral al 95 % por bootstrap de bloques de campaña", estado: fijado_por_tesis, fuente: "4.14"}
-  n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 externas solo había 5^5 = 3125 remuestreos distintos; con 6 (ventana propuesta de 4) hay 6^6 = 46 656, y 10 000 es suficiente"}
+  n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta"}
   semilla_bootstrap: {valor: 2026, estado: propuesto, fuente: "reproducibilidad"}
   contraste_de_apoyo: {valor: "Wilcoxon pareado unilateral, Hodges-Lehmann y correlación biserial de rangos", estado: fijado_por_tesis, fuente: "3.3.1 y 4.14"}
   he1_se_respalda_si: {valor: "se cumplen HE1a y HE1b", estado: fijado_por_tesis, fuente: "3.3.2"}
@@ -63,11 +63,11 @@ datos:
     altitud_minima_m: {valor: 2500, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)"}
     altitud_maxima_m: {valor: 4000, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7"}
     pendiente_maxima_grados: {valor: 14.04, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)"}
-    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Recalibrado solo con 2016-2019 da p5=0.319 (p1 0.246, p10 0.359); los datos extraídos usan 0.323 y queda por decidir re-extraer o declarar la desviación de 0.004. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
+    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
 
 validacion:
   esquema_confirmatorio: {valor: origen_movil, estado: fijado_por_tesis, fuente: "4.12.1"}
-  ventana_inicial_de_entrenamiento_campanas: {valor: 4, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016"}
+  ventana_inicial_de_entrenamiento_campanas: {valor: 5, estado: por_decidir_asesor, fuente: "Recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas"}
   esquema_complementario_loco: {valor: "dejar una campaña fuera (secundario)", estado: fijado_por_tesis, fuente: "4.12.1"}
   esquema_de_robustez_espacial: {valor: "dejar un departamento fuera (sensibilidad)", estado: fijado_por_tesis, fuente: "4.12.1"}
   validacion_interna:

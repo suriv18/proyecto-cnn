@@ -22,8 +22,8 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 - `datos.umbrales_de_la_mascara.altitud_minima_m` — 2500 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)_
 - `datos.umbrales_de_la_mascara.altitud_maxima_m` — 4000 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7_
 - `datos.umbrales_de_la_mascara.pendiente_maxima_grados` — 14.04 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)_
-- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Recalibrado solo con 2016-2019 da p5=0.319 (p1 0.246, p10 0.359); los datos extraídos usan 0.323 y queda por decidir re-extraer o declarar la desviación de 0.004. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
-- `validacion.ventana_inicial_de_entrenamiento_campanas` — 4 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016_
+- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
+- `validacion.ventana_inicial_de_entrenamiento_campanas` — 5 · _Recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas_
 
 ### Las decide el ensayo piloto (sin campañas externas)
 
@@ -41,7 +41,7 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 ### Propuestos, a revisar y fijar
 
-- `hipotesis.n_bootstrap` — 10000 · _con 5 externas solo había 5^5 = 3125 remuestreos distintos; con 6 (ventana propuesta de 4) hay 6^6 = 46 656, y 10 000 es suficiente_
+- `hipotesis.n_bootstrap` — 10000 · _con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta_
 - `hipotesis.semilla_bootstrap` — 2026 · _reproducibilidad_
 - `datos.clasificaciones_excluidas` — costa_riego, selva · _4.7, criterio de exclusión 4_
 - `datos.exclusion_por_altitud_del_cultivo` — no · _E3 §7: la altitud del cultivo no es la de la quinua_
@@ -74,7 +74,7 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `estadistico_he1a` | mediana de q_f = RMSE(CNN-1D)/RMSE(XGBoost) - 1; H0: mediana >= 0.05 | `fijado_por_tesis` | 3.3.1 |
 | `estadistico_he1b` | mediana de Δ_f = RMSE(CNN-1D) - RMSE(B2); H0: mediana >= 0 | `fijado_por_tesis` | 3.3.2 |
 | `intervalo_de_confianza` | límite superior unilateral al 95 % por bootstrap de bloques de campaña | `fijado_por_tesis` | 4.14 |
-| `n_bootstrap` | 10000 | `propuesto` | con 5 externas solo había 5^5 = 3125 remuestreos distintos; con 6 (ventana propuesta de 4) hay 6^6 = 46 656, y 10 000 es suficiente |
+| `n_bootstrap` | 10000 | `propuesto` | con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta |
 | `semilla_bootstrap` | 2026 | `propuesto` | reproducibilidad |
 | `contraste_de_apoyo` | Wilcoxon pareado unilateral, Hodges-Lehmann y correlación biserial de rangos | `fijado_por_tesis` | 3.3.1 y 4.14 |
 | `he1_se_respalda_si` | se cumplen HE1a y HE1b | `fijado_por_tesis` | 3.3.2 |
@@ -105,14 +105,14 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `umbrales_de_la_mascara.altitud_minima_m` | 2500 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional) |
 | `umbrales_de_la_mascara.altitud_maxima_m` | 4000 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7 |
 | `umbrales_de_la_mascara.pendiente_maxima_grados` | 14.04 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI) |
-| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Recalibrado solo con 2016-2019 da p5=0.319 (p1 0.246, p10 0.359); los datos extraídos usan 0.323 y queda por decidir re-extraer o declarar la desviación de 0.004. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
+| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
 
 ### validacion
 
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
 | `esquema_confirmatorio` | origen_movil | `fijado_por_tesis` | 4.12.1 |
-| `ventana_inicial_de_entrenamiento_campanas` | 4 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016 |
+| `ventana_inicial_de_entrenamiento_campanas` | 5 | `por_decidir_asesor` | Recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas |
 | `esquema_complementario_loco` | dejar una campaña fuera (secundario) | `fijado_por_tesis` | 4.12.1 |
 | `esquema_de_robustez_espacial` | dejar un departamento fuera (sensibilidad) | `fijado_por_tesis` | 4.12.1 |
 | `validacion_interna.esquema` | origen_movil_dentro_del_entrenamiento | `propuesto` | 4.12.2: orden temporal y solo campañas anteriores |
