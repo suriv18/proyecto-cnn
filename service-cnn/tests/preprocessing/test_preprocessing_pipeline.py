@@ -13,9 +13,11 @@ import pandas as pd
 import pytest
 
 from src.preprocessing.preprocessing_pipeline import (
+    RawDatosImplausiblesError,
     RawSchemaDesactualizadaError,
     build_processed_dataset,
     save_processed_dataset,
+    validate_raw_ranges,
     validate_raw_schema,
 )
 
@@ -87,6 +89,38 @@ class TestValidateRawSchema:
 
         with pytest.raises(RawSchemaDesactualizadaError, match="re-extra"):
             validate_raw_schema(viejo)
+
+
+class TestValidateRawRanges:
+    """Control de plausibilidad física de las series crudas.
+
+    Habría detectado la regresión del reductor espacial (commit de73679): la
+    precipitación diaria de una provincia salía como la SUMA de ~177 píxeles
+    (hasta 85 970 mm) y la radiación como ~25 veces el valor real."""
+
+    def test_acepta_series_fisicamente_plausibles(self):
+        validate_raw_ranges(_series([("AZANGARO", 2021)]))
+
+    def test_rechaza_precipitacion_diaria_imposible_por_suma_espacial(self):
+        series = _series([("AZANGARO", 2021)])
+        series.loc[series["variable"] == "precipitacion", "valor"] = 114.06 * 300  # suma de píxeles
+
+        with pytest.raises(RawDatosImplausiblesError, match="precipitacion"):
+            validate_raw_ranges(series)
+
+    def test_rechaza_radiacion_solar_fuera_de_rango_fisico(self):
+        series = _series([("AZANGARO", 2021)])
+        filas = series[series["variable"] == "precipitacion"].copy()
+        filas["variable"] = "radiacion_solar"
+        filas["valor"] = 8.8e8  # J/m2 por dia: ~25 veces el maximo posible
+        series = pd.concat([series, filas], ignore_index=True)
+
+        with pytest.raises(RawDatosImplausiblesError, match="radiacion_solar"):
+            validate_raw_ranges(series)
+
+    def test_ignora_los_nulos_estructurales_de_columnas_que_no_aplican(self):
+        # las filas de NDVI no tienen `valor` y las demás no tienen `valor_mean`
+        validate_raw_ranges(_series([("AZANGARO", 2021)]))
 
 
 class TestBuildProcessedDataset:

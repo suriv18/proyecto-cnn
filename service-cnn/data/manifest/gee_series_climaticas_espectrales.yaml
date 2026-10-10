@@ -52,10 +52,13 @@ fuente:
       DEPARTAMENTOS_GAUL. Verificado 80/80 sin faltantes.
 
 esquema_del_archivo_generado:
+  # Parquet COMPUESTO (2026-10-10): cada variable proviene de la corrida cuyo
+  # método es el correcto; ver `procedencia_por_variable` y el incidente en
+  # `bugs_reales_detectados_y_corregidos_durante_esta_extraccion`.
   ruta: "data/raw/gee_series_crudo.parquet"
-  columnas: ["provincia_id", "fecha", "valor", "variable", "campana_id"]
-  sha256: "85c1a593e0b607ee2e28b652b836b86b2a84bf40fd7db0a81f7e8862fb46a415"
-  tamano_bytes: 9079328
+  columnas: ["provincia_id", "fecha", "variable", "campana_id", "valor", "valor_mean", "valor_max"]
+  sha256: "6e7a991a53c8eba2edcb4ab3a9597bf48d300f40659195e92cc3b5c81b9f1a9f"
+  tamano_bytes: 10279571
   filas_totales: 1148160
   filas_por_variable:
     precipitacion: 282640
@@ -63,8 +66,35 @@ esquema_del_archivo_generado:
     temperatura_minima: 282640
     radiacion_solar: 282640
     ndvi: 17600
-  valores_nulos: 0
+  valores_nulos:
+    nota: >
+      `valor` solo aplica a las 4 variables climáticas y `valor_mean`/`valor_max`
+      solo a NDVI (nulos estructurales). NDVI: 2235 de 17600 filas (12.7 %) sin
+      valor porque la máscara agrícola o el filtro de calidad dejaron la
+      provincia sin píxeles válidos en esa fecha; 70 provincia-campañas sin
+      ningún NDVI válido = 7 provincias (ASCOPE, CAMANA, CHEPEN, ISLAY,
+      PACASMAYO, SATIPO, VIRU) x 10 campañas, costeras o de selva, que la
+      máscara de altitud excluye por diseño (N2 de la Tabla 5).
   rango_de_campanas: "2016-2025 (10 campañas, periodo enmendado — ver data/manifest/midagri_sisagri.yaml, enmienda_metodologica)"
+
+procedencia_por_variable:
+  precipitacion_temperaturas_radiacion:
+    corrida: "2026-09-12 (copia local: data/raw/gee_series_crudo_esquema_ndvi_antiguo.parquet, no versionada)"
+    reductor_espacial: "media sobre los píxeles de la provincia"
+    verificacion: >
+      2026-10-10: el código corregido (reductor espacial = media) reproduce estas
+      filas exactamente (58 filas x 4 variables, 2 provincias, nov-2018,
+      tolerancia 1e-6), por lo que no se repitió la extracción.
+  ndvi:
+    corrida: "2026-10-09/10 (scripts/run_ingestion.py, ~3 h 30 min, 600 llamadas, sin fallos)"
+    mascara_agricola: >
+      Aplicada (data/manifest/mascara_agricola.yaml: cultivo WorldCover, 2500-4000 m,
+      pendiente <= 14.04 grados, amplitud >= 0.323). Umbrales PROVISIONALES
+      pendientes de aprobación del asesor.
+    filtro_de_calidad: "DetailedQA: VI Quality <= 1, sin nube adyacente ni nubes mixtas"
+    reducers: "media y máximo espaciales por imagen (valor_mean, valor_max)"
+  archivos_no_versionados_conservados:
+    - "data/raw/gee_series_crudo_corrida_20261010_4var_invalidas_suma_espacial.parquet — corrida con las 4 variables climáticas INVÁLIDAS (suma espacial); no usar"
 
 cobertura:
   provincias_unicas: 80
@@ -82,7 +112,8 @@ cobertura:
     temperatura_maxima_c: [1.1, 31.5]
     temperatura_minima_c: [-14.4, 23.9]
     radiacion_solar_j_m2: [3056131, 35413960]
-    ndvi: [0.0536, 0.8337]
+    ndvi_valor_mean: [0.1698, 0.878]   # con máscara agrícola y filtro de calidad (2026-10-10)
+    ndvi_valor_max: [0.188, 0.999]
   nota_validacion: >
     Rangos verificados como fisicamente coherentes con clima de sierra
     altoandina (heladas nocturnas en temporada seca, NDVI de vegetación
@@ -132,6 +163,32 @@ bugs_reales_detectados_y_corregidos_durante_esta_extraccion:
       (max_workers=8 en la ejecución real). Tiempo real observado: ~2h34min
       para las 600 llamadas (más lento de lo estimado por contención de
       GIL en deserialización JSON pesada, pero sin fallos).
+
+  - descripcion: >
+      REGRESIÓN (commit de73679, 2026-09-13; detectada el 2026-10-10 al
+      verificar la re-extracción con máscara): GeeClient.extract_daily_series
+      pasó a usar la regla TEMPORAL de agregación por fase (`aggregation` del
+      spec: suma, máximo, mínimo) como reductor ESPACIAL de reduceRegions. La
+      precipitación diaria de una provincia salía como la suma de ~177 píxeles
+      CHIRPS (114.06 mm el 2018-07-03 en Azángaro frente a la media real de
+      0.649 mm; máximo 85 970 mm), la radiación ~25 veces su valor real, y las
+      temperaturas el máximo/mínimo espacial en vez del promedio provincial. Los
+      tests existentes fijaban el comportamiento erróneo (filas simuladas con
+      claves "sum"/"max" y aserción SUM_REDUCER). Costó una corrida de 3 h 30 min
+      cuyas 4 variables climáticas hubo que descartar.
+    fix: >
+      El reductor espacial es siempre la media (`reducers = spec.reducers if
+      spec.reducers else (AggregationRule.MEAN,)`); la regla temporal se aplica
+      después por fase en gee_series_builder. Tests corregidos y 4 tests nuevos.
+      Control permanente: preprocessing_pipeline.validate_raw_ranges rechaza
+      series fuera de los límites físicos (probado: rechaza el parquet
+      erróneo y acepta el final).
+  - descripcion: >
+      reduceRegions con reducers combinados sobre una imagen de UNA banda
+      devuelve las propiedades `mean`/`max` a secas (no `NDVI_mean`/`NDVI_max`,
+      como describe la guía de Earth Engine); el código y los dobles de prueba
+      asumían el prefijo y habrían fallado con KeyError en la corrida real.
+    fix: "Verificado contra la API real el 2026-10-09; se lee `mean`/`max` con el prefijo como alternativa."
 
 pendiente:
   - "Extraer capa de cobertura de suelo + MDE (altitud/pendiente) por celda para src.preprocessing.mask.apply_agricultural_mask — no cubierto por esta extracción, que es agregada a nivel de polígono provincial, no de celda."

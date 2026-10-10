@@ -56,8 +56,24 @@ _UNIDADES = {
 }
 
 
+# Límites físicos por variable (valor diario promedio provincial), amplios a
+# propósito: detectan errores de agregación (ej. sumar píxeles en vez de
+# promediarlos), no valores atípicos. Radiación: J/m2 por día (ERA5-Land).
+_LIMITES_FISICOS = {
+    "precipitacion": (0.0, 500.0),
+    "temperatura_maxima": (-30.0, 50.0),
+    "temperatura_minima": (-50.0, 40.0),
+    "radiacion_solar": (0.0, 4.5e7),
+}
+_LIMITES_NDVI = (-0.2, 1.0)
+
+
 class RawSchemaDesactualizadaError(ValueError):
     """El parquet crudo usa un esquema anterior al vigente (NDVI sin `valor_mean`/`valor_max`)."""
+
+
+class RawDatosImplausiblesError(ValueError):
+    """Hay valores fuera de los límites físicos de la variable (posible error de agregación)."""
 
 
 @dataclass
@@ -89,6 +105,41 @@ def validate_raw_schema(series_crudas: pd.DataFrame) -> None:
                 "calidad, solo media). Debe re-extraerse el NDVI de Earth "
                 "Engine (scripts/run_ingestion.py) antes de preprocesar."
             )
+
+
+def validate_raw_ranges(series_crudas: pd.DataFrame) -> None:
+    """Rechaza series crudas con valores físicamente imposibles.
+
+    Control de calidad de datos (CRISP-ML(Q), F2): habría detectado la
+    regresión del reductor espacial (commit de73679), que dejó la precipitación
+    diaria de una provincia como la suma de ~177 píxeles CHIRPS.
+
+    Raises:
+        RawDatosImplausiblesError: indicando la variable, el rango esperado y el
+            mínimo/máximo observado.
+    """
+    problemas = []
+    for variable, (minimo, maximo) in _LIMITES_FISICOS.items():
+        valores = series_crudas.loc[series_crudas["variable"] == variable, "valor"].dropna()
+        if len(valores) and (valores.min() < minimo or valores.max() > maximo):
+            problemas.append(
+                f"{variable}: observado [{valores.min():.4g}, {valores.max():.4g}], "
+                f"esperado [{minimo:g}, {maximo:g}]"
+            )
+    ndvi = series_crudas[series_crudas["variable"] == "ndvi"]
+    for columna in ("valor_mean", "valor_max"):
+        if columna in ndvi.columns:
+            valores = ndvi[columna].dropna()
+            if len(valores) and (valores.min() < _LIMITES_NDVI[0] or valores.max() > _LIMITES_NDVI[1]):
+                problemas.append(
+                    f"ndvi.{columna}: observado [{valores.min():.4g}, {valores.max():.4g}], "
+                    f"esperado [{_LIMITES_NDVI[0]:g}, {_LIMITES_NDVI[1]:g}]"
+                )
+    if problemas:
+        raise RawDatosImplausiblesError(
+            "Valores fuera de los límites físicos (posible error de agregación "
+            "espacial al extraer de Earth Engine): " + "; ".join(problemas)
+        )
 
 
 def _aplanar_ventanas(resultados: list[dict]) -> tuple[pd.DataFrame, list[dict]]:
@@ -173,6 +224,7 @@ def build_processed_dataset(
     """
     orden_variables = orden_variables or ORDEN_VARIABLES_POR_DEFECTO
     validate_raw_schema(series_crudas)
+    validate_raw_ranges(series_crudas)
 
     if campanas_entrenamiento is None:
         fechas_respaldo = estimate_departmental_modal_dates_exploratory(

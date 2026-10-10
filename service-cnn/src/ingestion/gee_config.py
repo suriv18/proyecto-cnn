@@ -46,6 +46,9 @@ class GeeCollectionSpec:
     band: str
     spatial_resolution_m: int
     temporal_resolution: str
+    # Regla TEMPORAL por fase fenológica (Tabla 7). NO es el reductor espacial
+    # de reduceRegions, que es siempre la media provincial (ver
+    # GeeClient.extract_daily_series).
     aggregation: AggregationRule
     factor_escala: float = 1.0
     offset_aditivo: float = 0.0

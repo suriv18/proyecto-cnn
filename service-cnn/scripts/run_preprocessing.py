@@ -47,9 +47,11 @@ from src.ingestion.midagri_siembra_mensual import (  # noqa: E402
 )
 from src.preprocessing.phenology_pipeline import load_fenologia_bbch  # noqa: E402
 from src.preprocessing.preprocessing_pipeline import (  # noqa: E402
+    RawDatosImplausiblesError,
     RawSchemaDesactualizadaError,
     build_processed_dataset,
     save_processed_dataset,
+    validate_raw_ranges,
     validate_raw_schema,
 )
 
@@ -126,7 +128,8 @@ def main() -> None:
     series_crudas = pd.read_parquet(parquet)
     try:
         validate_raw_schema(series_crudas)
-    except RawSchemaDesactualizadaError as exc:
+        validate_raw_ranges(series_crudas)
+    except (RawSchemaDesactualizadaError, RawDatosImplausiblesError) as exc:
         print(f"PREPROCESAMIENTO NO LISTO: {exc}", file=sys.stderr)
         sys.exit(1)
 

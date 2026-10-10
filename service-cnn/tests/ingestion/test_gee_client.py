@@ -261,14 +261,50 @@ class TestGeeClientInitialize:
         assert cliente.ee_module is fake_ee
 
 
+class TestGeeClientReductorEspacial:
+    """El reductor ESPACIAL de `reduceRegions` es siempre la media sobre los
+    píxeles de la provincia. La regla de agregación de cada variable (suma de
+    precipitación, máximo de temperatura máxima, etc., Tabla 7) es TEMPORAL:
+    se aplica después, por fase fenológica, en `gee_series_builder`.
+
+    Regresión real (commit de73679, detectada el 2026-10-10): se usó la regla
+    temporal como reductor espacial, de modo que la precipitación diaria de
+    una provincia era la SUMA de ~177 píxeles CHIRPS (114,06 mm el 2018-07-03
+    en Azángaro, cuando la media es 0,649 mm) y la radiación, el máximo o el
+    mínimo espacial en vez del promedio provincial.
+    """
+
+    @pytest.mark.parametrize(
+        "variable",
+        ["precipitacion", "temperatura_maxima", "temperatura_minima", "radiacion_solar"],
+    )
+    def test_usa_la_media_espacial_sea_cual_sea_la_regla_temporal(
+        self, variable, geometria_provincias_fake
+    ):
+        filas = [{"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 2.0}]
+        fake_ee = _FakeEeModule(filas_resultado=filas)
+        cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
+
+        resultado = cliente.extract_daily_series(
+            variable=variable,
+            geometrias_por_provincia=geometria_provincias_fake,
+            fecha_inicio=date(2020, 9, 1),
+            fecha_fin=date(2020, 9, 1),
+        )
+
+        llamadas = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
+        assert llamadas[0][1] == "MEAN_REDUCER"
+        assert list(resultado.columns) == ["provincia_id", "fecha", "valor"]
+
+
 class TestGeeClientExtractSeries:
     def test_extrae_serie_diaria_por_provincia(self, geometria_provincias_fake):
-        # precipitacion usa AggregationRule.SUM (Tabla 7): la columna que
-        # reduceRegions produce se llama "sum" (nombre del reducer real de
-        # Earth Engine), no "mean".
+        # El reductor espacial es la media provincial: la columna que
+        # reduceRegions produce se llama "mean". La suma de precipitación es
+        # una regla temporal por fase, no espacial.
         filas_esperadas = [
-            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "sum": 5.0},
-            {"provincia_id": "PUN-AZA", "fecha": "2020-09-02", "sum": 3.2},
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 5.0},
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-02", "mean": 3.2},
         ]
         fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
         cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
@@ -346,9 +382,9 @@ class TestGeeClientExtractSeries:
     def test_aplica_offset_aditivo_de_la_variable(self, geometria_provincias_fake):
         """ERA5-Land reporta temperatura en Kelvin; extract_daily_series debe
         restar 273.15 (offset_aditivo del spec) para devolver Celsius."""
-        # temperatura_maxima usa AggregationRule.MAX: columna real "max".
+        # Media espacial de la temperatura máxima diaria: columna real "mean".
         filas_esperadas = [
-            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "max": 284.02},
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 284.02},
         ]
         fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
         cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
@@ -368,7 +404,7 @@ class TestGeeClientExtractSeries:
         prueba ahora reproduce ese rechazo, así que este test falla en rojo
         si el código de producción vuelve a pasar `reducer=None`."""
         filas_esperadas = [
-            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "sum": 5.0},
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 5.0},
         ]
         fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
         cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")
@@ -382,7 +418,7 @@ class TestGeeClientExtractSeries:
 
         llamadas_reduce = [l for l in fake_ee.llamadas if l[0] == "Image.reduceRegions"]
         assert len(llamadas_reduce) == 1
-        assert llamadas_reduce[0][1] == "SUM_REDUCER"
+        assert llamadas_reduce[0][1] == "MEAN_REDUCER"
 
     def test_rechaza_rango_de_fechas_invertido(self, geometria_provincias_fake):
         fake_ee = _FakeEeModule(filas_resultado=[])
@@ -555,9 +591,9 @@ class TestGeeClientReducersMultiples:
         """Retrocompatibilidad: una variable con un solo reducer (el caso de
         hoy para las 4 variables sin banda de calidad) no debe cambiar de
         esquema de salida."""
-        # precipitacion usa AggregationRule.SUM: columna real "sum".
+        # Media espacial: columna real "mean".
         filas_esperadas = [
-            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "sum": 5.0},
+            {"provincia_id": "PUN-AZA", "fecha": "2020-09-01", "mean": 5.0},
         ]
         fake_ee = _FakeEeModule(filas_resultado=filas_esperadas)
         cliente = GeeClient(ee_module=fake_ee, project_id="mi-proyecto-gee")

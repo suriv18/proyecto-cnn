@@ -136,7 +136,11 @@ class GeeClient:
             .select(bandas)
         )
 
-        reducers = spec.reducers if spec.reducers else (spec.aggregation,)
+        # Reductor ESPACIAL: la media sobre los píxeles de la provincia. La
+        # regla `spec.aggregation` (suma, máximo, mínimo) es TEMPORAL: se aplica
+        # después por fase fenológica en gee_series_builder. Usarla aquí fue una
+        # regresión real (commit de73679): sumaba ~177 píxeles CHIRPS por día.
+        reducers = spec.reducers if spec.reducers else (AggregationRule.MEAN,)
         reducer_ee = _combinar_reducers(ee, reducers)
 
         def _reducir_imagen(imagen):
