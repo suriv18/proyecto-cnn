@@ -56,6 +56,6 @@
 
 ## Entregables y criterio de gate
 
-- **E2**: conjunto de datos (`data/processed`) + diccionario de variables (forma, unidad, fuente, transformación, rol).
-- **E3**: informe de depuración y EDA (conteos de entrada, exclusión, imputación y cobertura por campaña).
-- **Gate F2**: Q-F2-1…Q-F2-10 cumplidos, suite de tests verde sobre datos regenerados, `dvc repro preprocess` reproduce `data/processed`, E2 y E3 entregados, umbrales aprobados y fijados antes de cualquier evaluación.
+- **E2** (conjunto de datos y diccionario de variables): **entregado en versión exploratoria (2026-10-10)** — `data/processed/` (`tensores.npz`, `observaciones.parquet`, `diccionario_variables.csv`, `exclusiones.csv`, `metadata.json`). Faltan las covariables estática (altitud media de la superficie agrícola) y dinámica (proporción de quinua) del tensor (4.10.3) y regenerarlo con la ventana de entrenamiento definitiva.
+- **E3** (informe de depuración y EDA): **entregado (2026-10-10)** — `docs/crisp/E3-informe-depuracion-eda.md` (6 figuras en `docs/crisp/E3/figuras/`), generado por `scripts/build_e3_report.py` (reproducible; relaciones predictor–rendimiento solo con campañas de entrenamiento).
+- **Gate F2**: abierto. Falta: (1) aprobación del asesor de las decisiones provisionales (umbrales de la máscara, percentil de amplitud, provincias de transición, ventana de extracción/calendario, ventana inicial de entrenamiento; ver E3 §7); (2) covariables del tensor; (3) conectar el respaldo departamental por pliego en F3; (4) `dvc repro preprocess` reproducible de extremo a extremo y E2 regenerado con los datos aprobados.
