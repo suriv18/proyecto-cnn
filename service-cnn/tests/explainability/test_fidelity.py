@@ -220,3 +220,90 @@ class TestOcclusionIncrementsByPhase:
 
         with pytest.raises(ValueError, match="al menos 2 fases"):
             occlusion_increments_by_phase(*datos, indices_por_fase={"a": [0]})
+
+
+class TestConditionalOcclusionIncrements:
+    """Oclusión con reemplazo condicional: la fase se rellena con lo que habría dado el resto de la observación."""
+
+    class _Modelo(torch.nn.Module):
+        def forward(self, x, cov):
+            return (x[:, 0, :] * torch.tensor([1.0, 5.0, 0.2])).sum(dim=1, keepdim=True)
+
+    FASES = {"a": [0], "b": [1], "c": [2]}
+
+    @staticmethod
+    def _datos(n=60, correlacion=True, semilla=0):
+        g = torch.Generator().manual_seed(semilla)
+        a = torch.randn(n, generator=g)
+        c = torch.randn(n, generator=g)
+        b = a.clone() if correlacion else torch.randn(n, generator=g)  # la fase b es copia de la a
+        x = torch.stack([a, b, c], dim=1).unsqueeze(1)  # (n, 1 variable, 3 fases)
+        return x, torch.zeros(n, 1)
+
+    def _preparar(self, correlacion):
+        modelo = self._Modelo()
+        x_f, _ = self._datos(200, correlacion, semilla=1)
+        x_t, cov = self._datos(40, correlacion, semilla=2)
+        with torch.no_grad():
+            y = modelo(x_t, cov)
+        return modelo, x_t, cov, y, x_f
+
+    def test_devuelve_un_aumento_por_fase(self):
+        from src.explainability.fidelity import conditional_occlusion_increments_by_phase
+
+        modelo, x_t, cov, y, x_f = self._preparar(True)
+
+        aumentos = conditional_occlusion_increments_by_phase(modelo, x_t, cov, y, x_f, self.FASES, k=10)
+
+        assert set(aumentos) == set(self.FASES) and all(isinstance(v, float) for v in aumentos.values())
+
+    def test_si_la_fase_se_puede_deducir_de_las_demas_el_condicional_casi_no_degrada(self):
+        from src.explainability.fidelity import conditional_occlusion_increments_by_phase, occlusion_increments_by_phase
+
+        modelo, x_t, cov, y, x_f = self._preparar(True)  # la fase b (la de más peso) es copia de la a
+
+        marginal = occlusion_increments_by_phase(modelo, x_t, cov, y, torch.zeros(1), self.FASES)
+        condicional = conditional_occlusion_increments_by_phase(modelo, x_t, cov, y, x_f, self.FASES, k=5)
+
+        assert marginal["b"] > 1.0  # ocluir con un valor fijo rompe la relación
+        assert condicional["b"] < 0.5 * marginal["b"]  # el condicional recupera lo que da la fase a
+
+    def test_si_la_fase_es_independiente_el_condicional_se_parece_al_marginal(self):
+        from src.explainability.fidelity import conditional_occlusion_increments_by_phase, occlusion_increments_by_phase
+
+        modelo, x_t, cov, y, x_f = self._preparar(False)
+
+        marginal = occlusion_increments_by_phase(modelo, x_t, cov, y, torch.zeros(1), self.FASES)
+        condicional = conditional_occlusion_increments_by_phase(modelo, x_t, cov, y, x_f, self.FASES, k=10)
+
+        assert condicional["b"] > 0.5 * marginal["b"]
+
+    def test_no_modifica_las_entradas_ni_reentrena(self):
+        from src.explainability.fidelity import conditional_occlusion_increments_by_phase
+
+        modelo, x_t, cov, y, x_f = self._preparar(True)
+        x_antes, f_antes = x_t.clone(), x_f.clone()
+        pesos = [p.clone() for p in modelo.parameters()]
+
+        conditional_occlusion_increments_by_phase(modelo, x_t, cov, y, x_f, self.FASES, k=5)
+
+        assert torch.equal(x_t, x_antes) and torch.equal(x_f, f_antes)
+        assert all(torch.equal(a, b) for a, b in zip(pesos, modelo.parameters()))
+
+    def test_k_mayor_que_el_fondo_se_acota_al_tamano_del_fondo(self):
+        from src.explainability.fidelity import conditional_occlusion_increments_by_phase
+
+        modelo, x_t, cov, y, _ = self._preparar(True)
+        pequeno, _ = self._datos(4, True, semilla=3)
+
+        aumentos = conditional_occlusion_increments_by_phase(modelo, x_t, cov, y, pequeno, self.FASES, k=50)
+
+        assert set(aumentos) == set(self.FASES)
+
+    def test_exige_fases_de_igual_duracion(self):
+        from src.explainability.fidelity import conditional_occlusion_increments_by_phase
+
+        modelo, x_t, cov, y, x_f = self._preparar(True)
+
+        with pytest.raises(ValueError, match="misma duraci[oó]n"):
+            conditional_occlusion_increments_by_phase(modelo, x_t, cov, y, x_f, {"a": [0], "b": [1, 2]}, k=5)

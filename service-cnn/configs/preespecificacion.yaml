@@ -33,8 +33,8 @@ hipotesis:
   estadistico_he1a: {valor: "q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05", estado: fijado_por_tesis, fuente: "Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1; antes solo frente a XGBoost"}
   estadistico_he1b: {valor: "exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0", estado: fijado_por_tesis, fuente: "Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2; antes: Δ_f frente a B2, confirmatorio"}
   intervalo_de_confianza: {valor: "regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos", estado: fijado_por_tesis, fuente: "Tesis v3 (decisión del autor; el asesor la revisa): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos"}
-  n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta"}
-  semilla_bootstrap: {valor: 2026, estado: propuesto, fuente: "reproducibilidad"}
+  n_bootstrap: {valor: 10000, estado: fijado, fuente: "Piloto oficial (2026-10-10): solo para los intervalos descriptivos por bloques; la decisión de HE1a usa la regla exacta de signos (con 5 campañas hay 5^5 = 3125 remuestreos distintos)"}
+  semilla_bootstrap: {valor: 2026, estado: fijado, fuente: "reproducibilidad. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   contraste_de_apoyo: {valor: "Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos", estado: fijado_por_tesis, fuente: "Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1 y 4.14"}
   he1_se_respalda_si: {valor: "se cumple HE1a (HE1b es exploratoria)", estado: fijado_por_tesis, fuente: "Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2"}
   he2:
@@ -53,13 +53,13 @@ hipotesis:
 
 datos:
   periodo_de_campanas: {valor: "2016-2025", estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10). Enmienda H1: no existe fuente provincial de rendimiento anterior a 2015 (data/manifest/midagri_sisagri.yaml); el asesor la revisa"}
-  clasificaciones_excluidas: {valor: [costa_riego, selva], estado: propuesto, fuente: "4.7, criterio de exclusión 4"}
+  clasificaciones_excluidas: {valor: [costa_riego, selva], estado: fijado, fuente: "4.7, criterio de exclusión 4. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   provincias_de_transicion: {valor: incluidas_y_marcadas, estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)"}
-  exclusion_por_altitud_del_cultivo: {valor: false, estado: propuesto, fuente: "E3 §7: la altitud del cultivo no es la de la quinua"}
+  exclusion_por_altitud_del_cultivo: {valor: false, estado: fijado, fuente: "E3 §7: la altitud del cultivo no es la de la quinua. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   ciclos_fuera_de_la_ventana_de_extraccion: {valor: excluir, estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer"}
   valores_extremos_del_rendimiento: {valor: "se marcan, no se eliminan", estado: fijado_por_tesis, fuente: "4.7 criterio de exclusión 3"}
-  criterio_de_inclusion_por_completitud: {valor: ">= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan", estado: propuesto, fuente: "4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571)"}
-  imputacion_de_ndvi_max_dias_de_arrastre: {valor: 16, estado: propuesto, fuente: "4.7; un compuesto MODIS; solo observaciones previas (sin fuga)"}
+  criterio_de_inclusion_por_completitud: {valor: ">= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan", estado: fijado, fuente: "4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571). Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
+  imputacion_de_ndvi_max_dias_de_arrastre: {valor: 16, estado: fijado, fuente: "4.7; un compuesto MODIS; solo observaciones previas (sin fuga). Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   horizonte_principal_dias_antes_de_cosecha: {valor: 30, estado: fijado_por_tesis, fuente: "1.5, 4.10.4"}
   horizonte_secundario: {valor: cierre_de_floracion, estado: fijado_por_tesis, fuente: "1.5, 4.10.4 (si la cobertura lo permite)"}
   umbrales_de_la_mascara:
@@ -74,21 +74,21 @@ validacion:
   esquema_complementario_loco: {valor: "dejar una campaña fuera (secundario)", estado: fijado_por_tesis, fuente: "4.12.1"}
   esquema_de_robustez_espacial: {valor: "dejar un departamento fuera (sensibilidad)", estado: fijado_por_tesis, fuente: "4.12.1"}
   validacion_interna:
-    esquema: {valor: origen_movil_dentro_del_entrenamiento, estado: propuesto, fuente: "4.12.2: orden temporal y solo campañas anteriores"}
-    ventana_inicial_interna_campanas: {valor: 2, estado: propuesto, fuente: "con menos de 2 campañas no hay entrenamiento interno"}
+    esquema: {valor: origen_movil_dentro_del_entrenamiento, estado: fijado, fuente: "4.12.2: orden temporal y solo campañas anteriores. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
+    ventana_inicial_interna_campanas: {valor: 2, estado: fijado, fuente: "con menos de 2 campañas no hay entrenamiento interno. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   semillas:
     n_replicas: {valor: 10, estado: fijado_por_tesis, fuente: "4.12.4"}
     modelos_estocasticos: {valor: [cnn1d, random_forest, xgboost], estado: fijado_por_tesis, fuente: "4.12.4"}
     modelos_deterministas: {valor: [elastic_net, svr], estado: fijado_por_tesis, fuente: "4.12.4"}
-    valores: {valor: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], estado: propuesto, fuente: "reproducibilidad"}
+    valores: {valor: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], estado: fijado, fuente: "reproducibilidad. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
     agregacion_por_campana: {valor: mediana, estado: fijado_por_tesis, fuente: "4.12.4 y 3.3"}
   campanas_externas: {valor: "derivadas de la ventana inicial: de la (ventana+1)-ésima campaña a la última", estado: fijado_por_tesis, fuente: "4.12.1"}
 
 modelos:
   factor_algoritmo: {valor: [cnn1d, elastic_net, random_forest, xgboost, svr], estado: fijado_por_tesis, fuente: "Tabla 1 y 8"}
   benchmarks: {valor: [B1, B2, B3], estado: fijado_por_tesis, fuente: "Tabla 8; no se optimizan"}
-  benchmark_secundario_persistencia: {valor: B4, estado: propuesto, fuente: "recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza"}
-  presupuesto_de_trials_por_modelo: {valor: 30, estado: propuesto, fuente: "src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo"}
+  benchmark_secundario_persistencia: {valor: "B4: persistencia de la última campaña; candidata a B* junto con B2 (B* = la de menor RMSE de validación interna, fijada antes de las campañas externas)", estado: fijado, fuente: "Piloto oficial: B4 dio 198,9 y 171,8 kg/ha frente a 202,4 y 193,8 de B2 en 2019 y 2020; no se optimiza"}
+  presupuesto_de_trials_por_modelo: {valor: 30, estado: fijado, fuente: "src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   muestreador_de_hiperparametros: {valor: tpe, estado: fijado_por_tesis, fuente: "4.12.3 (Optuna, Sabo et al. 2023)"}
   espacios_de_busqueda: {valor: "configs/hyperparams.yaml (versión de la ronda 2 del piloto oficial)", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): se ensancharon una sola vez alpha (Elastic-Net) y C (SVR) una década, y el dropout de la CNN a [0, 0,5]; tras la ronda 2 persisten ensayos en el borde inferior de alpha, C y filtros_capa1, y en el superior de subsample (tope natural 1,0), porque el mejor ajuste es casi la línea base; no se ensancha más y queda como limitación"}
   submuestreo_de_xgboost: {valor: "subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): con submuestreo las 10 semillas de XGBoost varían (error estándar 0,8 a 1,3 kg/ha)"}
@@ -97,9 +97,9 @@ modelos:
     early_stopping_particion: {valor: "temporal: la última campaña del entrenamiento", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G1 cerrada en el código; la partición temporal dio mejor época 10 y RMSE 196,4 frente a 7 y 198,2 de la aleatoria, sin diferencia relevante"}
     restaurar_mejor_epoca: {valor: true, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G2 cerrada en el código (se restaura la mejor época de validación)"}
     epocas_maximas: {valor: 47, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): mejor época mediana 10 con partición temporal; regla de épocas máximas del piloto"}
-    paciencia: {valor: 10, estado: propuesto, fuente: "TrainingConfig"}
-  imputacion_residual_de_celdas_vacias: {valor: "mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos", estado: propuesto, fuente: "4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones"}
-  estandarizacion_del_objetivo: {valor: "z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha", estado: propuesto, fuente: "los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000)"}
+    paciencia: {valor: 10, estado: fijado, fuente: "TrainingConfig. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
+  imputacion_residual_de_celdas_vacias: {valor: "mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos", estado: fijado, fuente: "4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
+  estandarizacion_del_objetivo: {valor: "z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha", estado: fijado, fuente: "los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000). Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   estandarizacion: {valor: "z-score por variable y fase, ajustado solo con el entrenamiento del pliegue", estado: fijado_por_tesis, fuente: "4.12.2"}
 
 variable_objetivo:
@@ -112,13 +112,13 @@ variable_objetivo:
 interpretabilidad:
   variante_de_shap: {valor: "deep_explainer", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): error de precisión local 0,0000 frente a una tolerancia de 0,0139; contingencia KernelExplainer con l1_reg = 0; acuerdo por fase con Kernel ρ = 0,90"}
   escala_de_salida_explicada: {valor: "anomalía respecto de B2, estandarizada con la media y la desviación del entrenamiento del pliego", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): coherente con la representación elegida"}
-  conjunto_de_referencia: {valor: "muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija", estado: propuesto, fuente: "4.15; solo entrenamiento"}
+  conjunto_de_referencia: {valor: "muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija", estado: fijado, fuente: "4.15; solo entrenamiento. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   tolerancia_de_precision_local: {valor: 0.05, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): fracción de la desviación estándar de la salida del modelo sobre el fondo de referencia (tolerancia 0,0139 en el piloto; DeepExplainer con error 0,0000)"}
-  tratamiento_de_predictores_correlacionados: {valor: "sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto", estado: propuesto, fuente: "2.3.2 (Aas et al., 2021), 4.15"}
-  kernel_explainer_regularizacion: {valor: "l1_reg = 0 (sin regularización L1)", estado: propuesto, fuente: "piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95"}
+  tratamiento_de_predictores_correlacionados: {valor: "DeepExplainer con fondo de referencia, sin supuesto de independencia entre predictores; comparado con KernelExplainer (l1_reg = 0)", estado: fijado, fuente: "Piloto oficial: acuerdo por fase con Kernel ρ = 0,90"}
+  kernel_explainer_regularizacion: {valor: "l1_reg = 0 (sin regularización L1)", estado: fijado, fuente: "piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios"}
   agregacion: {valor: "por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad", estado: fijado_por_tesis, fuente: "4.15"}
   oclusion:
-    valor_de_referencia: {valor: "media del conjunto de referencia por variable", estado: propuesto, fuente: "4.15"}
+    valor_de_referencia: {valor: "marginal: media del conjunto de referencia por variable; sensibilidad: reemplazo condicional con el promedio de los 10 vecinos más cercanos del fondo en las demás fases", estado: fijado, fuente: "Piloto oficial (2026-10-10): tesis v3, 3.3.4; implementado en src/explainability/fidelity.py (occlusion_increments_by_phase y conditional_occlusion_increments_by_phase)"}
     ventana_de_control: {valor: "fase de igual duración y menor contribución", estado: fijado_por_tesis, fuente: "3.3.4"}
     sin_reentrenar: {valor: true, estado: fijado_por_tesis, fuente: "3.3.4 (ablación = con reentrenamiento, análisis secundario)"}
 

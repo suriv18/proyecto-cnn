@@ -12,7 +12,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|
 | `por_decidir_asesor` | 0 |
 | `por_decidir_piloto` | 0 |
-| `propuesto` | 18 |
+| `propuesto` | 0 |
 
 ### Requieren al asesor
 
@@ -22,24 +22,6 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 ### Propuestos, a revisar y fijar
 
-- `hipotesis.n_bootstrap` — 10000 · _con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta_
-- `hipotesis.semilla_bootstrap` — 2026 · _reproducibilidad_
-- `datos.clasificaciones_excluidas` — costa_riego, selva · _4.7, criterio de exclusión 4_
-- `datos.exclusion_por_altitud_del_cultivo` — no · _E3 §7: la altitud del cultivo no es la de la quinua_
-- `datos.criterio_de_inclusion_por_completitud` — >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan · _4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571)_
-- `datos.imputacion_de_ndvi_max_dias_de_arrastre` — 16 · _4.7; un compuesto MODIS; solo observaciones previas (sin fuga)_
-- `validacion.validacion_interna.esquema` — origen_movil_dentro_del_entrenamiento · _4.12.2: orden temporal y solo campañas anteriores_
-- `validacion.validacion_interna.ventana_inicial_interna_campanas` — 2 · _con menos de 2 campañas no hay entrenamiento interno_
-- `validacion.semillas.valores` — 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 · _reproducibilidad_
-- `modelos.benchmark_secundario_persistencia` — B4 · _recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza_
-- `modelos.presupuesto_de_trials_por_modelo` — 30 · _src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo_
-- `modelos.entrenamiento_cnn1d.paciencia` — 10 · _TrainingConfig_
-- `modelos.imputacion_residual_de_celdas_vacias` — mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos · _4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones_
-- `modelos.estandarizacion_del_objetivo` — z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha · _los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000)_
-- `interpretabilidad.conjunto_de_referencia` — muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija · _4.15; solo entrenamiento_
-- `interpretabilidad.tratamiento_de_predictores_correlacionados` — sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto · _2.3.2 (Aas et al., 2021), 4.15_
-- `interpretabilidad.kernel_explainer_regularizacion` — l1_reg = 0 (sin regularización L1) · _piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95_
-- `interpretabilidad.oclusion.valor_de_referencia` — media del conjunto de referencia por variable · _4.15_
 
 ## Registro completo
 
@@ -55,8 +37,8 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `estadistico_he1a` | q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05 | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1; antes solo frente a XGBoost |
 | `estadistico_he1b` | exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0 | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2; antes: Δ_f frente a B2, confirmatorio |
 | `intervalo_de_confianza` | regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos |
-| `n_bootstrap` | 10000 | `propuesto` | con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta |
-| `semilla_bootstrap` | 2026 | `propuesto` | reproducibilidad |
+| `n_bootstrap` | 10000 | `fijado` | Piloto oficial (2026-10-10): solo para los intervalos descriptivos por bloques; la decisión de HE1a usa la regla exacta de signos (con 5 campañas hay 5^5 = 3125 remuestreos distintos) |
+| `semilla_bootstrap` | 2026 | `fijado` | reproducibilidad. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `contraste_de_apoyo` | Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1 y 4.14 |
 | `he1_se_respalda_si` | se cumple HE1a (HE1b es exploratoria) | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2 |
 | `he2.estabilidad_w_kendall_minimo` | 0.7 | `fijado_por_tesis` | 3.3.3 |
@@ -77,13 +59,13 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
 | `periodo_de_campanas` | 2016-2025 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10). Enmienda H1: no existe fuente provincial de rendimiento anterior a 2015 (data/manifest/midagri_sisagri.yaml); el asesor la revisa |
-| `clasificaciones_excluidas` | costa_riego, selva | `propuesto` | 4.7, criterio de exclusión 4 |
+| `clasificaciones_excluidas` | costa_riego, selva | `fijado` | 4.7, criterio de exclusión 4. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `provincias_de_transicion` | incluidas_y_marcadas | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.5.3; E3 §7 (evidencia SISAGRI por distrito) |
-| `exclusion_por_altitud_del_cultivo` | no | `propuesto` | E3 §7: la altitud del cultivo no es la de la quinua |
+| `exclusion_por_altitud_del_cultivo` | no | `fijado` | E3 §7: la altitud del cultivo no es la de la quinua. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `ciclos_fuera_de_la_ventana_de_extraccion` | excluir | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer |
 | `valores_extremos_del_rendimiento` | se marcan, no se eliminan | `fijado_por_tesis` | 4.7 criterio de exclusión 3 |
-| `criterio_de_inclusion_por_completitud` | >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan | `propuesto` | 4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571) |
-| `imputacion_de_ndvi_max_dias_de_arrastre` | 16 | `propuesto` | 4.7; un compuesto MODIS; solo observaciones previas (sin fuga) |
+| `criterio_de_inclusion_por_completitud` | >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan | `fijado` | 4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571). Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
+| `imputacion_de_ndvi_max_dias_de_arrastre` | 16 | `fijado` | 4.7; un compuesto MODIS; solo observaciones previas (sin fuga). Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `horizonte_principal_dias_antes_de_cosecha` | 30 | `fijado_por_tesis` | 1.5, 4.10.4 |
 | `horizonte_secundario` | cierre_de_floracion | `fijado_por_tesis` | 1.5, 4.10.4 (si la cobertura lo permite) |
 | `umbrales_de_la_mascara.altitud_minima_m` | 2500 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. data/manifest/mascara_agricola.yaml (provisional) |
@@ -99,12 +81,12 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `ventana_inicial_de_entrenamiento_campanas` | 5 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas |
 | `esquema_complementario_loco` | dejar una campaña fuera (secundario) | `fijado_por_tesis` | 4.12.1 |
 | `esquema_de_robustez_espacial` | dejar un departamento fuera (sensibilidad) | `fijado_por_tesis` | 4.12.1 |
-| `validacion_interna.esquema` | origen_movil_dentro_del_entrenamiento | `propuesto` | 4.12.2: orden temporal y solo campañas anteriores |
-| `validacion_interna.ventana_inicial_interna_campanas` | 2 | `propuesto` | con menos de 2 campañas no hay entrenamiento interno |
+| `validacion_interna.esquema` | origen_movil_dentro_del_entrenamiento | `fijado` | 4.12.2: orden temporal y solo campañas anteriores. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
+| `validacion_interna.ventana_inicial_interna_campanas` | 2 | `fijado` | con menos de 2 campañas no hay entrenamiento interno. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `semillas.n_replicas` | 10 | `fijado_por_tesis` | 4.12.4 |
 | `semillas.modelos_estocasticos` | cnn1d, random_forest, xgboost | `fijado_por_tesis` | 4.12.4 |
 | `semillas.modelos_deterministas` | elastic_net, svr | `fijado_por_tesis` | 4.12.4 |
-| `semillas.valores` | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 | `propuesto` | reproducibilidad |
+| `semillas.valores` | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 | `fijado` | reproducibilidad. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `semillas.agregacion_por_campana` | mediana | `fijado_por_tesis` | 4.12.4 y 3.3 |
 | `campanas_externas` | derivadas de la ventana inicial: de la (ventana+1)-ésima campaña a la última | `fijado_por_tesis` | 4.12.1 |
 
@@ -114,8 +96,8 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|---|---|
 | `factor_algoritmo` | cnn1d, elastic_net, random_forest, xgboost, svr | `fijado_por_tesis` | Tabla 1 y 8 |
 | `benchmarks` | B1, B2, B3 | `fijado_por_tesis` | Tabla 8; no se optimizan |
-| `benchmark_secundario_persistencia` | B4 | `propuesto` | recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza |
-| `presupuesto_de_trials_por_modelo` | 30 | `propuesto` | src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo |
+| `benchmark_secundario_persistencia` | B4: persistencia de la última campaña; candidata a B* junto con B2 (B* = la de menor RMSE de validación interna, fijada antes de las campañas externas) | `fijado` | Piloto oficial: B4 dio 198,9 y 171,8 kg/ha frente a 202,4 y 193,8 de B2 en 2019 y 2020; no se optimiza |
+| `presupuesto_de_trials_por_modelo` | 30 | `fijado` | src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `muestreador_de_hiperparametros` | tpe | `fijado_por_tesis` | 4.12.3 (Optuna, Sabo et al. 2023) |
 | `espacios_de_busqueda` | configs/hyperparams.yaml (versión de la ronda 2 del piloto oficial) | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): se ensancharon una sola vez alpha (Elastic-Net) y C (SVR) una década, y el dropout de la CNN a [0, 0,5]; tras la ronda 2 persisten ensayos en el borde inferior de alpha, C y filtros_capa1, y en el superior de subsample (tope natural 1,0), porque el mejor ajuste es casi la línea base; no se ensancha más y queda como limitación |
 | `submuestreo_de_xgboost` | subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): con submuestreo las 10 semillas de XGBoost varían (error estándar 0,8 a 1,3 kg/ha) |
@@ -123,9 +105,9 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `entrenamiento_cnn1d.early_stopping_particion` | temporal: la última campaña del entrenamiento | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G1 cerrada en el código; la partición temporal dio mejor época 10 y RMSE 196,4 frente a 7 y 198,2 de la aleatoria, sin diferencia relevante |
 | `entrenamiento_cnn1d.restaurar_mejor_epoca` | sí | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G2 cerrada en el código (se restaura la mejor época de validación) |
 | `entrenamiento_cnn1d.epocas_maximas` | 47 | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): mejor época mediana 10 con partición temporal; regla de épocas máximas del piloto |
-| `entrenamiento_cnn1d.paciencia` | 10 | `propuesto` | TrainingConfig |
-| `imputacion_residual_de_celdas_vacias` | mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos | `propuesto` | 4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones |
-| `estandarizacion_del_objetivo` | z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha | `propuesto` | los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000) |
+| `entrenamiento_cnn1d.paciencia` | 10 | `fijado` | TrainingConfig. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
+| `imputacion_residual_de_celdas_vacias` | mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos | `fijado` | 4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
+| `estandarizacion_del_objetivo` | z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha | `fijado` | los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000). Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `estandarizacion` | z-score por variable y fase, ajustado solo con el entrenamiento del pliegue | `fijado_por_tesis` | 4.12.2 |
 
 ### variable_objetivo
@@ -144,12 +126,12 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|---|---|
 | `variante_de_shap` | deep_explainer | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): error de precisión local 0,0000 frente a una tolerancia de 0,0139; contingencia KernelExplainer con l1_reg = 0; acuerdo por fase con Kernel ρ = 0,90 |
 | `escala_de_salida_explicada` | anomalía respecto de B2, estandarizada con la media y la desviación del entrenamiento del pliego | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): coherente con la representación elegida |
-| `conjunto_de_referencia` | muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija | `propuesto` | 4.15; solo entrenamiento |
+| `conjunto_de_referencia` | muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija | `fijado` | 4.15; solo entrenamiento. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `tolerancia_de_precision_local` | 0.05 | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): fracción de la desviación estándar de la salida del modelo sobre el fondo de referencia (tolerancia 0,0139 en el piloto; DeepExplainer con error 0,0000) |
-| `tratamiento_de_predictores_correlacionados` | sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto | `propuesto` | 2.3.2 (Aas et al., 2021), 4.15 |
-| `kernel_explainer_regularizacion` | l1_reg = 0 (sin regularización L1) | `propuesto` | piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95 |
+| `tratamiento_de_predictores_correlacionados` | DeepExplainer con fondo de referencia, sin supuesto de independencia entre predictores; comparado con KernelExplainer (l1_reg = 0) | `fijado` | Piloto oficial: acuerdo por fase con Kernel ρ = 0,90 |
+| `kernel_explainer_regularizacion` | l1_reg = 0 (sin regularización L1) | `fijado` | piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
 | `agregacion` | por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad | `fijado_por_tesis` | 4.15 |
-| `oclusion.valor_de_referencia` | media del conjunto de referencia por variable | `propuesto` | 4.15 |
+| `oclusion.valor_de_referencia` | marginal: media del conjunto de referencia por variable; sensibilidad: reemplazo condicional con el promedio de los 10 vecinos más cercanos del fondo en las demás fases | `fijado` | Piloto oficial (2026-10-10): tesis v3, 3.3.4; implementado en src/explainability/fidelity.py (occlusion_increments_by_phase y conditional_occlusion_increments_by_phase) |
 | `oclusion.ventana_de_control` | fase de igual duración y menor contribución | `fijado_por_tesis` | 3.3.4 |
 | `oclusion.sin_reentrenar` | sí | `fijado_por_tesis` | 3.3.4 (ablación = con reentrenamiento, análisis secundario) |
 

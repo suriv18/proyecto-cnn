@@ -74,3 +74,25 @@ def test_rechaza_fases_que_no_coinciden_con_los_pasos_temporales(pliegos):
 def test_rechaza_una_lista_vacia_de_pliegos():
     with pytest.raises(ValueError, match="pliego"):
         _recolectar([])
+
+
+def test_los_aumentos_con_reemplazo_condicional_tienen_la_misma_forma_que_los_marginales(pliegos):
+    from src.evaluation.he2_runner import collect_he2_conditional_increments
+
+    _, marginales = _recolectar(pliegos)
+    condicionales = collect_he2_conditional_increments(
+        pliegos, HP, "anomalia", FASES, n_semillas=2, epocas_cnn=8, n_fondo=20, semilla=0, k=5,
+    )
+
+    assert set(condicionales) == set(marginales) == {2018, 2019}
+    for campana in condicionales:
+        assert set(condicionales[campana]) == set(FASES)
+        assert all(np.isfinite(v) for v in condicionales[campana].values())
+
+
+def test_los_aumentos_condicionales_son_reproducibles(pliegos):
+    from src.evaluation.he2_runner import collect_he2_conditional_increments
+
+    kw = dict(hp_cnn=HP, representacion="anomalia", fases=FASES, n_semillas=2, epocas_cnn=8, n_fondo=20, semilla=0, k=5)
+
+    assert collect_he2_conditional_increments(pliegos, **kw) == collect_he2_conditional_increments(pliegos, **kw)

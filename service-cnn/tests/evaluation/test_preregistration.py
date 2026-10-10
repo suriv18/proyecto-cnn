@@ -137,9 +137,16 @@ class TestDecisionesPendientes:
 
 
 class TestCongelamiento:
+    def test_el_registro_real_ya_no_tiene_pendientes_y_se_puede_congelar(self, prereg):
+        assert all(lista == [] for lista in pending_decisions(prereg).values())
+        assert_can_freeze(prereg)  # no lanza
+
     def test_no_se_puede_congelar_con_decisiones_pendientes(self, prereg):
+        alterado = copy.deepcopy(prereg)
+        alterado["datos"]["periodo_de_campanas"]["estado"] = "propuesto"
+
         with pytest.raises(PreregistrationNotReadyError, match="propuesto"):
-            assert_can_freeze(prereg)
+            assert_can_freeze(alterado)
 
     def test_tampoco_se_puede_congelar_con_valores_sin_definir_aunque_todo_este_fijado(self, prereg):
         listo = copy.deepcopy(prereg)
@@ -165,5 +172,5 @@ class TestRenderizado:
 
         assert "BORRADOR" in texto
         assert "Decisiones pendientes" in texto
-        assert "modelos.presupuesto_de_trials_por_modelo" in texto
+        assert "| `por_decidir_asesor` | 0 |" in texto and "| `propuesto` | 0 |" in texto
         assert "fijado_por_tesis" in texto

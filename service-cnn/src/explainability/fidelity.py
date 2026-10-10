@@ -151,3 +151,44 @@ def occlusion_increments_by_phase(
             ocluido = occlude_phase(x_prueba, indices, valor_referencia)
             aumentos[fase] = float(rmse(y_real.numpy(), modelo(ocluido, covariables_prueba).numpy()) - rmse_base)
     return aumentos
+
+
+def conditional_occlusion_increments_by_phase(
+    modelo: nn.Module,
+    x_prueba: torch.Tensor,
+    covariables_prueba: torch.Tensor,
+    y_real: torch.Tensor,
+    x_fondo: torch.Tensor,
+    indices_por_fase: dict[str, list[int]],
+    k: int = 10,
+) -> dict[str, float]:
+    """Aumento de RMSE al ocluir cada fase con un reemplazo CONDICIONAL, sin reentrenar.
+
+    En lugar de un valor de referencia fijo (que crea combinaciones fuera de distribución, Hase et
+    al., 2021), la fase ocluida de cada observación se rellena con el promedio de esa misma fase en
+    las `k` observaciones del fondo más parecidas en el RESTO de las fases (distancia euclídea). Así
+    se conserva la dependencia entre fases. El fondo debe provenir solo del entrenamiento.
+
+    Raises:
+        ValueError: si hay menos de 2 fases o sus duraciones difieren.
+    """
+    if len(indices_por_fase) < 2:
+        raise ValueError("Se requieren al menos 2 fases para comparar la oclusión.")
+    if len({len(i) for i in indices_por_fase.values()}) != 1:
+        raise ValueError("Todas las fases deben tener la misma duración para que la comparación sea válida (sección 3.3.4).")
+
+    n_pasos = x_prueba.shape[2]
+    k = max(1, min(k, x_fondo.shape[0]))
+    modelo.eval()
+    with torch.no_grad():
+        rmse_base = rmse(y_real.numpy(), modelo(x_prueba, covariables_prueba).numpy())
+        aumentos = {}
+        for fase, indices in indices_por_fase.items():
+            resto = [i for i in range(n_pasos) if i not in indices]
+            distancias = torch.cdist(x_prueba[:, :, resto].flatten(1), x_fondo[:, :, resto].flatten(1))
+            vecinos = distancias.topk(k, dim=1, largest=False).indices  # (n_prueba, k)
+            reemplazo = x_fondo[:, :, indices][vecinos].mean(dim=1)  # (n_prueba, V, len(indices))
+            ocluido = x_prueba.clone()
+            ocluido[:, :, indices] = reemplazo
+            aumentos[fase] = float(rmse(y_real.numpy(), modelo(ocluido, covariables_prueba).numpy()) - rmse_base)
+    return aumentos

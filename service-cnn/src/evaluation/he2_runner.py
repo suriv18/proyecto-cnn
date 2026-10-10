@@ -15,7 +15,7 @@ import torch
 
 from src.evaluation.experiment_runner import build_adapter
 from src.evaluation.fold_builder import FoldData
-from src.explainability.fidelity import occlusion_increments_by_phase
+from src.explainability.fidelity import conditional_occlusion_increments_by_phase, occlusion_increments_by_phase
 from src.explainability.shap_step import campaign_phase_contribution, explain_with_contingency, sample_background
 
 
@@ -63,3 +63,39 @@ def collect_he2_inputs(
         contribuciones[campana] = {f: float(np.mean([d[f] for d in por_semilla_c])) for f in fases}
         aumentos[campana] = {f: float(np.mean([d[f] for d in por_semilla_a])) for f in fases}
     return contribuciones, aumentos
+
+
+def collect_he2_conditional_increments(
+    pliegos: list[FoldData], hp_cnn: dict, representacion: str, fases: list[str],
+    n_semillas: int, epocas_cnn: int, n_fondo: int, semilla: int, k: int = 10,
+) -> dict[int, dict[str, float]]:
+    """Aumento de RMSE por oclusión CONDICIONAL de cada fase, por campaña de prueba.
+
+    Es la segunda variante de oclusión de la sección 3.3.4 (sensibilidad frente al reemplazo
+    marginal). Reentrena con las mismas semillas que `collect_he2_inputs`, por lo que usa los mismos
+    modelos; el fondo es una muestra del entrenamiento del pliego.
+
+    Raises:
+        ValueError: si no hay pliegos o las fases no coinciden con los pasos temporales.
+    """
+    if not pliegos:
+        raise ValueError("Se requiere al menos un pliego para obtener los insumos de HE2.")
+    if len(fases) != pliegos[0].X_train.shape[2]:
+        raise ValueError(
+            f"Las fases ({len(fases)}) deben coincidir con los pasos temporales del tensor ({pliegos[0].X_train.shape[2]})."
+        )
+    indices_por_fase = {fase: [i] for i, fase in enumerate(fases)}
+    resultado: dict[int, dict[str, float]] = {}
+    for pliego in pliegos:
+        x_tr, z_tr = (torch.tensor(a, dtype=torch.float32) for a in (pliego.X_train, pliego.Z_train))
+        x_te, z_te = (torch.tensor(a, dtype=torch.float32) for a in (pliego.X_test, pliego.Z_test))
+        xb, _ = sample_background(x_tr, z_tr, n_fondo, semilla)
+        objetivo_prueba = pliego.y_test if representacion == "nivel" else pliego.y_anomalia_test
+        por_semilla = []
+        for s in range(n_semillas):
+            modelo, media, desviacion = build_adapter("cnn1d", epocas_cnn).entrenar(hp_cnn, pliego, s, representacion)
+            y_z = torch.tensor((objetivo_prueba - media) / desviacion, dtype=torch.float32).unsqueeze(1)
+            por_semilla.append(conditional_occlusion_increments_by_phase(modelo, x_te, z_te, y_z, xb, indices_por_fase, k))
+        resultado[int(np.unique(pliego.campana_test)[0])] = {f: float(np.mean([d[f] for d in por_semilla])) for f in fases}
+    return resultado
+
