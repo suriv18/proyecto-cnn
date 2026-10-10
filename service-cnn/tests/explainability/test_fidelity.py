@@ -149,3 +149,74 @@ class TestEvaluateFidelityByOcclusion:
             resultado.incremento_rmse_alta_contribucion
             > resultado.incremento_rmse_control
         )
+
+
+class TestOcclusionIncrementsByPhase:
+    """Aumento de RMSE al ocluir cada fase (insumo de `he2_pvalues.fidelity_pvalue`)."""
+
+    class _Modelo(torch.nn.Module):
+        # pesos por paso: la fase 'c' (paso 2) domina y la 'a' (paso 0) casi no pesa
+        def forward(self, x, cov):
+            pesos = torch.tensor([0.01, 1.0, 10.0, 3.0, 0.5])
+            return (x[:, 0, :] * pesos).sum(dim=1, keepdim=True)
+
+    @pytest.fixture
+    def datos(self):
+        torch.manual_seed(2)
+        modelo = self._Modelo()
+        x = torch.randn(30, 1, 5)
+        cov = torch.zeros(30, 1)
+        with torch.no_grad():
+            y = modelo(x, cov)
+        return modelo, x, cov, y, torch.zeros(1)
+
+    FASES = {"a": [0], "b": [1], "c": [2], "d": [3], "e": [4]}
+
+    def test_devuelve_un_aumento_por_fase(self, datos):
+        from src.explainability.fidelity import occlusion_increments_by_phase
+
+        aumentos = occlusion_increments_by_phase(*datos, indices_por_fase=self.FASES)
+
+        assert set(aumentos) == set(self.FASES)
+        assert all(isinstance(v, float) for v in aumentos.values())
+
+    def test_ordena_las_fases_segun_su_peso_en_el_modelo(self, datos):
+        from src.explainability.fidelity import occlusion_increments_by_phase
+
+        aumentos = occlusion_increments_by_phase(*datos, indices_por_fase=self.FASES)
+
+        assert sorted(aumentos, key=aumentos.get, reverse=True) == ["c", "d", "b", "e", "a"]
+
+    def test_coincide_con_evaluate_fidelity_by_occlusion(self, datos):
+        from src.explainability.fidelity import occlusion_increments_by_phase
+
+        aumentos = occlusion_increments_by_phase(*datos, indices_por_fase=self.FASES)
+        unica = evaluate_fidelity_by_occlusion(*datos[:4], indices_fase_alta_contribucion=[2],
+                                               indices_fase_control=[0], valor_referencia=datos[4])
+
+        assert aumentos["c"] == pytest.approx(unica.incremento_rmse_alta_contribucion)
+        assert aumentos["a"] == pytest.approx(unica.incremento_rmse_control)
+
+    def test_no_reentrena_ni_modifica_las_entradas(self, datos):
+        from src.explainability.fidelity import occlusion_increments_by_phase
+
+        modelo, x, cov, y, ref = datos
+        x_antes = x.clone()
+        pesos_antes = [p.clone() for p in modelo.parameters()]
+
+        occlusion_increments_by_phase(modelo, x, cov, y, ref, indices_por_fase=self.FASES)
+
+        assert torch.equal(x, x_antes)
+        assert all(torch.equal(a, b) for a, b in zip(pesos_antes, modelo.parameters()))
+
+    def test_exige_fases_de_igual_duracion(self, datos):
+        from src.explainability.fidelity import occlusion_increments_by_phase
+
+        with pytest.raises(ValueError, match="misma duraci[oó]n"):
+            occlusion_increments_by_phase(*datos, indices_por_fase={"a": [0], "b": [1, 2]})
+
+    def test_exige_al_menos_dos_fases(self, datos):
+        from src.explainability.fidelity import occlusion_increments_by_phase
+
+        with pytest.raises(ValueError, match="al menos 2 fases"):
+            occlusion_increments_by_phase(*datos, indices_por_fase={"a": [0]})

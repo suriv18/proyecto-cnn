@@ -115,3 +115,39 @@ def evaluate_fidelity_by_occlusion(
         incremento_rmse_control=incremento_control,
         fidelidad_sostenida=incremento_alta_contribucion > incremento_control,
     )
+
+
+def occlusion_increments_by_phase(
+    modelo: nn.Module,
+    x_prueba: torch.Tensor,
+    covariables_prueba: torch.Tensor,
+    y_real: torch.Tensor,
+    valor_referencia: torch.Tensor,
+    indices_por_fase: dict[str, list[int]],
+) -> dict[str, float]:
+    """Aumento de RMSE al ocluir cada fase por separado, sin reentrenar.
+
+    Es el insumo de `he2_pvalues.fidelity_pvalue`: permite comparar la fase de mayor
+    contribución con todas las demás y no solo con un control. Exige que todas las fases
+    tengan la misma duración, como la comparación de 3.3.4.
+
+    Raises:
+        ValueError: si hay menos de 2 fases o sus duraciones difieren.
+    """
+    if len(indices_por_fase) < 2:
+        raise ValueError("Se requieren al menos 2 fases para comparar la oclusión.")
+    duraciones = {len(indices) for indices in indices_por_fase.values()}
+    if len(duraciones) != 1:
+        raise ValueError(
+            "Todas las fases deben tener la misma duración para que la comparación sea válida "
+            f"(sección 3.3.4); recibido {sorted(duraciones)}."
+        )
+
+    modelo.eval()
+    with torch.no_grad():
+        rmse_base = rmse(y_real.numpy(), modelo(x_prueba, covariables_prueba).numpy())
+        aumentos = {}
+        for fase, indices in indices_por_fase.items():
+            ocluido = occlude_phase(x_prueba, indices, valor_referencia)
+            aumentos[fase] = float(rmse(y_real.numpy(), modelo(ocluido, covariables_prueba).numpy()) - rmse_base)
+    return aumentos
