@@ -94,11 +94,13 @@ modelos:
     epocas_maximas: {valor: null, estado: por_decidir_piloto, fuente: "se fija con la curva de pérdida del piloto"}
     paciencia: {valor: 10, estado: propuesto, fuente: "TrainingConfig"}
   imputacion_residual_de_celdas_vacias: {valor: "mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos", estado: propuesto, fuente: "4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones"}
+  estandarizacion_del_objetivo: {valor: "z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha", estado: propuesto, fuente: "los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000)"}
   estandarizacion: {valor: "z-score por variable y fase, ajustado solo con el entrenamiento del pliegue", estado: fijado_por_tesis, fuente: "4.12.2"}
 
 variable_objetivo:
   metrica_confirmatoria: {valor: "RMSE sobre el rendimiento reconstruido en kg/ha", estado: fijado_por_tesis, fuente: "4.11 y 4.13"}
   representacion_de_modelado: {valor: null, estado: por_decidir_piloto, fuente: "4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas"}
+  historia_minima_para_tendencia_campanas: {valor: 5, estado: por_decidir_piloto, fuente: "target_transform.HISTORIA_MINIMA_CAMPANAS. Con menos campañas B2 cae a la media provincial y coincide con B1 (verificado en la corrida técnica: B1 = B2 = 202 kg/ha con 3 campañas). Con 5 campañas de entrenamiento la primera campaña externa tiene exactamente 5 puntos por provincia; una tendencia con tan pocos puntos es muy ruidosa"}
   forma_de_la_linea_base_b2: {valor: null, estado: por_decidir_piloto, fuente: "4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas"}
   metricas_complementarias: {valor: [mae, rrmse, r2_fuera_de_muestra], estado: fijado_por_tesis, fuente: "Tabla 9"}
 

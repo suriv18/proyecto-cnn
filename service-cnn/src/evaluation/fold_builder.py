@@ -66,6 +66,9 @@ class FoldData:
     obs_train: pd.DataFrame
     X_train_crudo: np.ndarray
     Z_train_crudo: np.ndarray
+    # entradas de la prueba sin estandarizar (las usa B3, que necesita el NDVI máximo real);
+    # son entradas, no la verdad: no hay fuga.
+    X_test_crudo: np.ndarray
 
     @property
     def y_anomalia_train(self) -> np.ndarray:
@@ -173,7 +176,7 @@ def _hacer_pliego(
         provincia_train=o_tr["provincia_id"].to_numpy(), provincia_test=o_te["provincia_id"].to_numpy(),
         campana_train=o_tr["campana_id"].to_numpy(), campana_test=o_te["campana_id"].to_numpy(),
         baseline_train=b_tr, baseline_test=b_te, n_sin_historia_test=n_sin, preprocesador=prep,
-        obs_train=o_tr, X_train_crudo=X[idx_train], Z_train_crudo=Z[idx_train],
+        obs_train=o_tr, X_train_crudo=X[idx_train], Z_train_crudo=Z[idx_train], X_test_crudo=X[idx_test],
     )
 
 

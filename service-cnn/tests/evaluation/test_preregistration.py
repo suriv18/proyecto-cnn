@@ -70,6 +70,23 @@ class TestCoherenciaConElCodigo:
         assert any("semillas" in d for d in check_consistency_with_code(alterado))
 
 
+class TestHistoriaMinimaDeLaLineaBase:
+    """B2 solo usa tendencia lineal con un mínimo de campañas de historia; con menos
+    cae a la media provincial y coincide con B1. El mínimo debe estar registrado."""
+
+    def test_el_registro_coincide_con_la_constante_del_codigo(self, prereg):
+        assert check_consistency_with_code(prereg) == []
+
+    def test_detecta_una_historia_minima_distinta_del_codigo(self, prereg):
+        alterado = copy.deepcopy(prereg)
+        alterado["variable_objetivo"]["historia_minima_para_tendencia_campanas"]["valor"] = 3
+
+        assert any("historia mínima" in d for d in check_consistency_with_code(alterado))
+
+    def test_lo_decide_el_piloto(self, prereg):
+        assert "variable_objetivo.historia_minima_para_tendencia_campanas" in pending_decisions(prereg)["por_decidir_piloto"]
+
+
 class TestDecisionesPendientes:
     def test_lista_lo_que_requiere_al_asesor(self, prereg):
         pendientes = pending_decisions(prereg)

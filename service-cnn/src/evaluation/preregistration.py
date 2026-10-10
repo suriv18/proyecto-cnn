@@ -95,6 +95,7 @@ def check_consistency_with_code(prereg: dict) -> list[str]:
     from src.explainability import agronomic_concordance as concordancia
     from src.explainability import stability
     from src.models.tuning import PRESUPUESTO_TRIALS_POR_MODELO
+    from src.features.target_transform import HISTORIA_MINIMA_CAMPANAS
     from src.preprocessing.preprocessing_pipeline import CLASIFICACIONES_EXCLUIDAS_POR_DEFECTO
 
     discrepancias: list[str] = []
@@ -138,6 +139,12 @@ def check_consistency_with_code(prereg: dict) -> list[str]:
         discrepancias.append(
             f"clasificaciones excluidas: registro {sorted(excluidas)} frente a código "
             f"{sorted(CLASIFICACIONES_EXCLUIDAS_POR_DEFECTO)}"
+        )
+
+    historia = _valor(prereg, "variable_objetivo", "historia_minima_para_tendencia_campanas")
+    if historia != HISTORIA_MINIMA_CAMPANAS:
+        discrepancias.append(
+            f"historia mínima para la tendencia de B2: registro {historia} frente a código {HISTORIA_MINIMA_CAMPANAS}"
         )
 
     semillas = ("validacion", "semillas")

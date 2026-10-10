@@ -67,7 +67,7 @@ Las reglas se **fijan antes de ejecutar** y se copian al informe del piloto. Nin
 | P2 | **Referencias** | RMSE de B1, B2 y B3 por pliego (kg/ha) | Solo descriptivo: da la escala del error |
 | P3 | **Costo** | Tiempo por *trial* de cada modelo (5 trials en P-B); proyección del confirmatorio | Si la proyección supera el presupuesto de cómputo disponible, se reducen las épocas máximas o el costo por trial; **nunca** el número de trials (se perdería la igualdad entre modelos) |
 | P4 | **Representación (D1)** | RMSE en kg/ha reconstruido, nivel frente a anomalía, promediado en los pliegos P-A y P-B y en los cinco modelos | Se elige la representación con menor RMSE medio; si la diferencia relativa es < 2 %, se elige **nivel** (más simple) |
-| P5 | **Línea base B2 (D2)** | RMSE de B2 con (a) tendencia lineal y (b) media de las 3 últimas campañas | Menor RMSE medio en P-A y P-B; empate (< 2 %): lineal. Con menos de 5 campañas de historia se usa la media (regla ya implementada) |
+| P5 | **Línea base B2 y su historia mínima (D2)** | RMSE de B2 con (a) la media provincial, (b) tendencia lineal con un mínimo de 4 campañas y (c) la media de las 3 últimas campañas, en P-B (4 campañas de historia) | **Rediseñado (2026-10-10):** con menos de 5 campañas B2 cae a la media y coincide con B1, de modo que el piloto no puede evaluar la tendencia con la regla actual (verificado: B1 = B2 = 202 kg/ha con 3 campañas). Menor RMSE medio; **empate (< 2 %): media**, por ser la más estable con 4–5 puntos por provincia. El mínimo de historia queda registrado en E5 (`historia_minima_para_tendencia_campanas`, hoy 5) |
 | P6 | **Variabilidad por semilla** | 10 semillas de CNN-1D, Random Forest y XGBoost en P-B: mediana, rango intercuartil | Informativo: se reporta el error estándar de la mediana; las 10 réplicas ya están fijadas por la tesis |
 | P7 | **Entrenamiento de la CNN (D3–D5)** | (a) *early stopping* con la partición aleatoria actual frente a (b) la última campaña del entrenamiento con restauración de la mejor época | Se adopta (b) salvo que no converja; las épocas máximas se fijan en 1,5 × el percentil 95 de la mejor época observada, redondeado |
 | P8 | **SHAP (D7–D9)** | Precisión local de `DeepExplainer` (suma de valores SHAP + valor base frente a la predicción) y acuerdo con `KernelExplainer` en 50 observaciones | La tolerancia se fija como el 5 % de la desviación estándar de la salida de entrenamiento; si algún caso la supera, se usa **KernelExplainer** en el confirmatorio. El acuerdo entre explicadores se reporta como correlación de Spearman de las contribuciones por fase |
@@ -96,7 +96,7 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 | T1 | Guarda de campañas del piloto (`pilot_campaigns`, `assert_only_allowed_campaigns`) — **hecha** | S | — |
 | T2 | Constructor de pliegos desde `data/processed` (origen móvil, preprocesamiento ajustado solo con el entrenamiento, imputación residual) — **hecha** (`src/evaluation/fold_builder.py`: pliegos externos e internos, `load_pilot_dataset` que descarta las campañas no permitidas al leer; 21 pruebas) | M | T1 |
 | T3 | Cerrar G1 y G2 en `train_cnn1d` (partición temporal, restaurar mejor época) — **hecha** (`grupos_temporales`, `restaurar_mejor_epoca`; 8 pruebas) | M | — |
-| T4 | Ejecutor por pliego: ajuste de los 5 modelos con presupuesto equiparado, validación interna de origen móvil y semillas | L | T2, T3 |
+| T4 | Ejecutor por pliego: ajuste de los 5 modelos con presupuesto equiparado, validación interna de origen móvil y semillas — **hecha** (`src/evaluation/experiment_runner.py`: adaptadores de los 5 modelos, `tune_model`, `benchmark_predictions` B1–B3, `run_fold`, `rmse_per_campaign`; 26 pruebas) | L | T2, T3 |
 | T5 | Agregación por campaña y conexión con `evaluate_non_inferiority` / `evaluate_superiority` | M | T4 |
 | T6 | Paso de SHAP con verificación de precisión local y contingencia a KernelExplainer | M | T4 |
 | T7 | `scripts/run_pilot.py` (P0–P11) y plantilla del informe del piloto | M | T1–T6 |
@@ -123,3 +123,23 @@ Según la regla del tablero, no se codifica una fase hasta cerrar la anterior sa
 ## 9. Qué NO se hace en el piloto
 
 No se cargan campañas posteriores a 2020; no se contrastan HE1/HE2; no se ajustan los umbrales de HE2 ni el margen δ; no se elige el modelo ganador; no se modifica la máscara agrícola.
+
+## 10. Resultados de la corrida técnica (2026-10-10, **no vinculantes**)
+
+Corrida de desarrollo sobre datos reales **solo de 2016–2019** (la menor ventana plausible, §2): un pliego (prueba 2019, 182 obs. de entrenamiento, 62 de prueba) y un pliego interno (valida 2018 con 122 obs.). No fija ningún parámetro de E5; el piloto oficial se repite cuando el asesor cierre el gate.
+
+**Costo (P3).** 30 trials para los 5 modelos y 10 semillas en los 3 estocásticos proyectan **≈ 0,5 h** para todo el confirmatorio (5 pliegos externos, una representación): CNN-1D ≈ 13 min, Random Forest ≈ 11 min, XGBoost ≈ 3 min, Elastic-Net y SVR < 1 min. El presupuesto de 30 trials **no necesita recortarse** y hay margen para ampliarlo si el piloto lo justifica (siempre igual para los 5 modelos).
+
+**Adelanto de P4 (un solo pliego; ilustrativo).** RMSE en kg/ha sobre la campaña 2019 (desviación estándar del rendimiento de prueba: 446):
+
+| Modelo | Nivel | Anomalía |
+|---|---|---|
+| B1 / B2 (media provincial) | 202 | 202 |
+| SVR | 322 | 203 |
+| Random Forest | 389 | 202 |
+| Elastic-Net | 395 | 202 |
+| XGBoost | 425 | 213 |
+| CNN-1D | 450 | 199 |
+| B3 (regresión con NDVI máximo) | 466 | 466 |
+
+Lectura prudente: (i) **en nivel todos los modelos son peores que la línea base**, porque ninguno recibe la identidad de la provincia y el 90 % de la varianza es entre provincias; (ii) **en anomalía los modelos quedan prácticamente en B2** (199–213), coherente con las correlaciones débiles dentro de la provincia del E3 (|r| ≤ 0,28); la regla de P4 elegiría la anomalía; (iii) B1 y B2 coinciden por la regla de historia mínima (P5 rediseñado); (iv) con un solo pliego **no** puede concluirse nada sobre HE1; estos números solo dimensionan la dificultad: superar a B2 exigirá una señal interanual que hoy es modesta.

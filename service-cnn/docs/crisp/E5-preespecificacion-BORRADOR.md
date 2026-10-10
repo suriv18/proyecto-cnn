@@ -4,15 +4,15 @@
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **74 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **76 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
 | Estado | Parámetros |
 |---|---|
 | `por_decidir_asesor` | 8 |
-| `por_decidir_piloto` | 9 |
-| `propuesto` | 15 |
+| `por_decidir_piloto` | 10 |
+| `propuesto` | 16 |
 
 ### Requieren al asesor
 
@@ -32,6 +32,7 @@ Contiene **74 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 - `modelos.entrenamiento_cnn1d.restaurar_mejor_epoca` — sí · _BRECHA G2: el código devuelve el modelo de la última época_
 - `modelos.entrenamiento_cnn1d.epocas_maximas` — _sin definir_ · _se fija con la curva de pérdida del piloto_
 - `variable_objetivo.representacion_de_modelado` — _sin definir_ · _4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas_
+- `variable_objetivo.historia_minima_para_tendencia_campanas` — 5 · _target_transform.HISTORIA_MINIMA_CAMPANAS. Con menos campañas B2 cae a la media provincial y coincide con B1 (verificado en la corrida técnica: B1 = B2 = 202 kg/ha con 3 campañas). Con 5 campañas de entrenamiento la primera campaña externa tiene exactamente 5 puntos por provincia; una tendencia con tan pocos puntos es muy ruidosa_
 - `variable_objetivo.forma_de_la_linea_base_b2` — _sin definir_ · _4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas_
 - `interpretabilidad.variante_de_shap` — deep_explainer · _4.15; contingencia: KernelExplainer si falla la precisión local_
 - `interpretabilidad.escala_de_salida_explicada` — la de la representación de modelado elegida · _4.15_
@@ -51,6 +52,7 @@ Contiene **74 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 - `modelos.presupuesto_de_trials_por_modelo` — 30 · _src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo_
 - `modelos.entrenamiento_cnn1d.paciencia` — 10 · _TrainingConfig_
 - `modelos.imputacion_residual_de_celdas_vacias` — mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos · _4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones_
+- `modelos.estandarizacion_del_objetivo` — z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha · _los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000)_
 - `interpretabilidad.conjunto_de_referencia` — muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija · _4.15; solo entrenamiento_
 - `interpretabilidad.tratamiento_de_predictores_correlacionados` — sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto · _2.3.2 (Aas et al., 2021), 4.15_
 - `interpretabilidad.oclusion.valor_de_referencia` — media del conjunto de referencia por variable · _4.15_
@@ -134,6 +136,7 @@ Contiene **74 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `entrenamiento_cnn1d.epocas_maximas` | _sin definir_ | `por_decidir_piloto` | se fija con la curva de pérdida del piloto |
 | `entrenamiento_cnn1d.paciencia` | 10 | `propuesto` | TrainingConfig |
 | `imputacion_residual_de_celdas_vacias` | mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos | `propuesto` | 4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones |
+| `estandarizacion_del_objetivo` | z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha | `propuesto` | los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000) |
 | `estandarizacion` | z-score por variable y fase, ajustado solo con el entrenamiento del pliegue | `fijado_por_tesis` | 4.12.2 |
 
 ### variable_objetivo
@@ -142,6 +145,7 @@ Contiene **74 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|---|---|
 | `metrica_confirmatoria` | RMSE sobre el rendimiento reconstruido en kg/ha | `fijado_por_tesis` | 4.11 y 4.13 |
 | `representacion_de_modelado` | _sin definir_ | `por_decidir_piloto` | 4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas |
+| `historia_minima_para_tendencia_campanas` | 5 | `por_decidir_piloto` | target_transform.HISTORIA_MINIMA_CAMPANAS. Con menos campañas B2 cae a la media provincial y coincide con B1 (verificado en la corrida técnica: B1 = B2 = 202 kg/ha con 3 campañas). Con 5 campañas de entrenamiento la primera campaña externa tiene exactamente 5 puntos por provincia; una tendencia con tan pocos puntos es muy ruidosa |
 | `forma_de_la_linea_base_b2` | _sin definir_ | `por_decidir_piloto` | 4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas |
 | `metricas_complementarias` | mae, rrmse, r2_fuera_de_muestra | `fijado_por_tesis` | Tabla 9 |
 
