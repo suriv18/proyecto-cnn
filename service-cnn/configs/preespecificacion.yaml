@@ -49,25 +49,25 @@ hipotesis:
   hipotesis_general_conjuntiva: {valor: true, estado: fijado_por_tesis, fuente: "3.1"}
 
 datos:
-  periodo_de_campanas: {valor: "2016-2025", estado: por_decidir_asesor, fuente: "enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml"}
+  periodo_de_campanas: {valor: "2016-2025", estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml"}
   clasificaciones_excluidas: {valor: [costa_riego, selva], estado: propuesto, fuente: "4.7, criterio de exclusión 4"}
-  provincias_de_transicion: {valor: incluidas_y_marcadas, estado: por_decidir_asesor, fuente: "4.5.3; E3 §7 (evidencia SISAGRI por distrito)"}
+  provincias_de_transicion: {valor: incluidas_y_marcadas, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)"}
   exclusion_por_altitud_del_cultivo: {valor: false, estado: propuesto, fuente: "E3 §7: la altitud del cultivo no es la de la quinua"}
-  ciclos_fuera_de_la_ventana_de_extraccion: {valor: excluir, estado: por_decidir_asesor, fuente: "4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer"}
+  ciclos_fuera_de_la_ventana_de_extraccion: {valor: excluir, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer"}
   valores_extremos_del_rendimiento: {valor: "se marcan, no se eliminan", estado: fijado_por_tesis, fuente: "4.7 criterio de exclusión 3"}
   criterio_de_inclusion_por_completitud: {valor: ">= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan", estado: propuesto, fuente: "4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571)"}
   imputacion_de_ndvi_max_dias_de_arrastre: {valor: 16, estado: propuesto, fuente: "4.7; un compuesto MODIS; solo observaciones previas (sin fuga)"}
   horizonte_principal_dias_antes_de_cosecha: {valor: 30, estado: fijado_por_tesis, fuente: "1.5, 4.10.4"}
   horizonte_secundario: {valor: cierre_de_floracion, estado: fijado_por_tesis, fuente: "1.5, 4.10.4 (si la cobertura lo permite)"}
   umbrales_de_la_mascara:
-    altitud_minima_m: {valor: 2500, estado: por_decidir_asesor, fuente: "data/manifest/mascara_agricola.yaml (provisional)"}
-    altitud_maxima_m: {valor: 4000, estado: por_decidir_asesor, fuente: "ídem; E3 §7"}
-    pendiente_maxima_grados: {valor: 14.04, estado: por_decidir_asesor, fuente: "ídem (D.S. 005-2022-MIDAGRI)"}
-    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
+    altitud_minima_m: {valor: 2500, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)"}
+    altitud_maxima_m: {valor: 4000, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7"}
+    pendiente_maxima_grados: {valor: 14.04, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)"}
+    amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Debe recalibrarse solo con 2016-2019 (la campaña 2020 pasa a ser externa). percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
 
 validacion:
   esquema_confirmatorio: {valor: origen_movil, estado: fijado_por_tesis, fuente: "4.12.1"}
-  ventana_inicial_de_entrenamiento_campanas: {valor: 5, estado: por_decidir_asesor, fuente: "4.12.1; deja 5 campañas externas (2021-2025); el piloto informa pero no decide con campañas externas"}
+  ventana_inicial_de_entrenamiento_campanas: {valor: 4, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016"}
   esquema_complementario_loco: {valor: "dejar una campaña fuera (secundario)", estado: fijado_por_tesis, fuente: "4.12.1"}
   esquema_de_robustez_espacial: {valor: "dejar un departamento fuera (sensibilidad)", estado: fijado_por_tesis, fuente: "4.12.1"}
   validacion_interna:

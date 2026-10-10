@@ -16,14 +16,14 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 ### Requieren al asesor
 
-- `datos.periodo_de_campanas` — 2016-2025 · _enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml_
-- `datos.provincias_de_transicion` — incluidas_y_marcadas · _4.5.3; E3 §7 (evidencia SISAGRI por distrito)_
-- `datos.ciclos_fuera_de_la_ventana_de_extraccion` — excluir · _4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer_
-- `datos.umbrales_de_la_mascara.altitud_minima_m` — 2500 · _data/manifest/mascara_agricola.yaml (provisional)_
-- `datos.umbrales_de_la_mascara.altitud_maxima_m` — 4000 · _ídem; E3 §7_
-- `datos.umbrales_de_la_mascara.pendiente_maxima_grados` — 14.04 · _ídem (D.S. 005-2022-MIDAGRI)_
-- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
-- `validacion.ventana_inicial_de_entrenamiento_campanas` — 5 · _4.12.1; deja 5 campañas externas (2021-2025); el piloto informa pero no decide con campañas externas_
+- `datos.periodo_de_campanas` — 2016-2025 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml_
+- `datos.provincias_de_transicion` — incluidas_y_marcadas · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)_
+- `datos.ciclos_fuera_de_la_ventana_de_extraccion` — excluir · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer_
+- `datos.umbrales_de_la_mascara.altitud_minima_m` — 2500 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)_
+- `datos.umbrales_de_la_mascara.altitud_maxima_m` — 4000 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7_
+- `datos.umbrales_de_la_mascara.pendiente_maxima_grados` — 14.04 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)_
+- `datos.umbrales_de_la_mascara.amplitud_ndvi_minima` — 0.323 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Debe recalibrarse solo con 2016-2019 (la campaña 2020 pasa a ser externa). percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)_
+- `validacion.ventana_inicial_de_entrenamiento_campanas` — 4 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016_
 
 ### Las decide el ensayo piloto (sin campañas externas)
 
@@ -91,27 +91,27 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
-| `periodo_de_campanas` | 2016-2025 | `por_decidir_asesor` | enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml |
+| `periodo_de_campanas` | 2016-2025 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml |
 | `clasificaciones_excluidas` | costa_riego, selva | `propuesto` | 4.7, criterio de exclusión 4 |
-| `provincias_de_transicion` | incluidas_y_marcadas | `por_decidir_asesor` | 4.5.3; E3 §7 (evidencia SISAGRI por distrito) |
+| `provincias_de_transicion` | incluidas_y_marcadas | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito) |
 | `exclusion_por_altitud_del_cultivo` | no | `propuesto` | E3 §7: la altitud del cultivo no es la de la quinua |
-| `ciclos_fuera_de_la_ventana_de_extraccion` | excluir | `por_decidir_asesor` | 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer |
+| `ciclos_fuera_de_la_ventana_de_extraccion` | excluir | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer |
 | `valores_extremos_del_rendimiento` | se marcan, no se eliminan | `fijado_por_tesis` | 4.7 criterio de exclusión 3 |
 | `criterio_de_inclusion_por_completitud` | >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan | `propuesto` | 4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571) |
 | `imputacion_de_ndvi_max_dias_de_arrastre` | 16 | `propuesto` | 4.7; un compuesto MODIS; solo observaciones previas (sin fuga) |
 | `horizonte_principal_dias_antes_de_cosecha` | 30 | `fijado_por_tesis` | 1.5, 4.10.4 |
 | `horizonte_secundario` | cierre_de_floracion | `fijado_por_tesis` | 1.5, 4.10.4 (si la cobertura lo permite) |
-| `umbrales_de_la_mascara.altitud_minima_m` | 2500 | `por_decidir_asesor` | data/manifest/mascara_agricola.yaml (provisional) |
-| `umbrales_de_la_mascara.altitud_maxima_m` | 4000 | `por_decidir_asesor` | ídem; E3 §7 |
-| `umbrales_de_la_mascara.pendiente_maxima_grados` | 14.04 | `por_decidir_asesor` | ídem (D.S. 005-2022-MIDAGRI) |
-| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
+| `umbrales_de_la_mascara.altitud_minima_m` | 2500 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional) |
+| `umbrales_de_la_mascara.altitud_maxima_m` | 4000 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7 |
+| `umbrales_de_la_mascara.pendiente_maxima_grados` | 14.04 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI) |
+| `umbrales_de_la_mascara.amplitud_ndvi_minima` | 0.323 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Debe recalibrarse solo con 2016-2019 (la campaña 2020 pasa a ser externa). percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7) |
 
 ### validacion
 
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
 | `esquema_confirmatorio` | origen_movil | `fijado_por_tesis` | 4.12.1 |
-| `ventana_inicial_de_entrenamiento_campanas` | 5 | `por_decidir_asesor` | 4.12.1; deja 5 campañas externas (2021-2025); el piloto informa pero no decide con campañas externas |
+| `ventana_inicial_de_entrenamiento_campanas` | 4 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 6 campañas externas (2020-2025): con 5 el p mínimo de Wilcoxon es 1/32=0.031 y no resiste Holm con 2 contrastes; con 6 es 1/64=0.016 |
 | `esquema_complementario_loco` | dejar una campaña fuera (secundario) | `fijado_por_tesis` | 4.12.1 |
 | `esquema_de_robustez_espacial` | dejar un departamento fuera (sensibilidad) | `fijado_por_tesis` | 4.12.1 |
 | `validacion_interna.esquema` | origen_movil_dentro_del_entrenamiento | `propuesto` | 4.12.2: orden temporal y solo campañas anteriores |
