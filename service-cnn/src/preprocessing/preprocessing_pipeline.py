@@ -83,6 +83,7 @@ class RawDatosImplausiblesError(ValueError):
 @dataclass
 class ProcessedDataset:
     X: np.ndarray
+    X_imputado: np.ndarray
     observaciones: pd.DataFrame
     fenologia: pd.DataFrame
     diccionario: pd.DataFrame
@@ -242,6 +243,7 @@ def build_processed_dataset(
     clasificaciones_excluidas: Iterable[str] = CLASIFICACIONES_EXCLUIDAS_POR_DEFECTO,
     altitud_mediana_cultivo_por_provincia: Optional[dict[str, float]] = None,
     rango_altitudinal: Optional[tuple[float, float]] = None,
+    max_dias_arrastre_ndvi: int = 0,
 ) -> ProcessedDataset:
     """Construye el conjunto de datos procesado (tensor V×T + objetivo).
 
@@ -271,6 +273,10 @@ def build_processed_dataset(
             fuera del rango de la máscara (4.5.3). Una provincia sin dato no
             se excluye.
         rango_altitudinal: `(min, max)` en metros, el de la máscara agrícola.
+        max_dias_arrastre_ndvi: imputación limitada del NDVI sin fuga (4.7):
+            las celdas vacías toman la última observación previa a lo sumo
+            este número de días antes (16 = un compuesto MODIS). 0 = sin
+            imputación. Las celdas imputadas quedan en `X_imputado`.
 
     Returns:
         `ProcessedDataset`. Las observaciones descartadas quedan en
@@ -357,10 +363,12 @@ def build_processed_dataset(
         fenologia_alineada=fenologia,
         orden_variables=orden_variables,
         orden_fases=orden_fases,
+        max_dias_arrastre=max_dias_arrastre_ndvi,
     )
 
     filas_validas = []
     arreglos = []
+    arreglos_imputados = []
     alineacion = fenologia.drop_duplicates(["provincia_id", "campana_id"]).set_index(
         ["provincia_id", "campana_id"]
     )
@@ -386,6 +394,7 @@ def build_processed_dataset(
             }
         )
         arreglos.append(t["tensor"])
+        arreglos_imputados.append(t["imputadas"])
 
     observaciones = pd.DataFrame(
         filas_validas,
@@ -399,6 +408,11 @@ def build_processed_dataset(
         if arreglos
         else np.empty((0, len(orden_variables), len(orden_fases)))
     )
+    X_imputado = (
+        np.stack(arreglos_imputados)
+        if arreglos_imputados
+        else np.zeros((0, len(orden_variables), len(orden_fases)), dtype=bool)
+    )
     df_exclusiones = pd.DataFrame(
         exclusiones, columns=["provincia_id", "campana_id", "motivo", "detalle"]
     )
@@ -411,6 +425,8 @@ def build_processed_dataset(
         "dias_antes_de_cosecha": dias_antes_de_cosecha,
         "clasificaciones_excluidas": clasificaciones_excluidas,
         "rango_altitudinal": None if rango_altitudinal is None else list(rango_altitudinal),
+        "max_dias_arrastre_ndvi": int(max_dias_arrastre_ndvi),
+        "celdas_imputadas": int(X_imputado.sum()),
         "orden_variables": list(orden_variables),
         "orden_fases": orden_fases,
         "n_observaciones": int(len(observaciones)),
@@ -422,6 +438,7 @@ def build_processed_dataset(
     }
     return ProcessedDataset(
         X=X,
+        X_imputado=X_imputado,
         observaciones=observaciones,
         fenologia=fenologia,
         diccionario=_diccionario(list(orden_variables)),
@@ -435,7 +452,7 @@ def save_processed_dataset(dataset: ProcessedDataset, directorio: str | Path) ->
     `exclusiones.csv`, `diccionario_variables.csv` y `metadata.json`."""
     directorio = Path(directorio)
     directorio.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(directorio / "tensores.npz", X=dataset.X)
+    np.savez_compressed(directorio / "tensores.npz", X=dataset.X, imputado=dataset.X_imputado)
     dataset.observaciones.to_parquet(directorio / "observaciones.parquet", index=False)
     dataset.fenologia.to_parquet(directorio / "fenologia.parquet", index=False)
     dataset.exclusiones.to_csv(directorio / "exclusiones.csv", index=False)

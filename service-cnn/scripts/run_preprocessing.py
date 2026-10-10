@@ -140,6 +140,16 @@ def main() -> None:
     parser.add_argument("--permitir-sin-mascara", action="store_true")
     parser.add_argument("--dias-antes-de-cosecha", type=int, default=None)
     parser.add_argument(
+        "--max-dias-arrastre-ndvi",
+        type=int,
+        default=16,
+        help=(
+            "Imputación limitada de NDVI sin fuga (4.7): una celda vacía toma la "
+            "última observación previa a lo sumo N días antes (16 = un compuesto "
+            "MODIS). 0 la desactiva."
+        ),
+    )
+    parser.add_argument(
         "--clasificaciones-excluidas",
         nargs="*",
         default=["costa_riego", "selva"],
@@ -208,6 +218,7 @@ def main() -> None:
         dias_antes_de_cosecha=args.dias_antes_de_cosecha,
         clasificacion_por_provincia=dict(zip(provincias["provincia_id"], provincias["clasificacion"])),
         clasificaciones_excluidas=args.clasificaciones_excluidas,
+        max_dias_arrastre_ndvi=args.max_dias_arrastre_ndvi,
         altitud_mediana_cultivo_por_provincia=altitud_cultivo,
         rango_altitudinal=(2500, 4000) if args.excluir_por_altitud else None,
     )

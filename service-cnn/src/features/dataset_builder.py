@@ -14,6 +14,7 @@ reducer (`"ndvi_mean"`, `"ndvi_max"`); sin sufijo se usa el reducer principal
 """
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from src.features.tensor_builder import (
@@ -58,11 +59,47 @@ def _orden_de_fases_del_lote(fenologia_alineada: pd.DataFrame) -> list[str]:
     return orden
 
 
+def _arrastrar_ultima_observacion(
+    agregada: pd.DataFrame,
+    fases: pd.DataFrame,
+    serie_variable: pd.DataFrame,
+    columna: str,
+    max_dias: int,
+) -> pd.DataFrame:
+    """Rellena las fases vacías con la última observación previa (imputación limitada).
+
+    Sección 4.7 (interpolación limitada) sin fuga: para cada fase sin valor se
+    toma la observación válida más reciente con `fecha <= fin` de la fase y a
+    lo sumo `max_dias` antes de ese fin. Nunca se usan observaciones
+    posteriores, así que no se viola el horizonte de pronóstico (4.10.4).
+
+    Devuelve `agregada` con `valor_agregado` completado y la columna booleana
+    `imputada`.
+    """
+    resultado = agregada.copy()
+    resultado["imputada"] = False
+    if max_dias <= 0:
+        return resultado
+
+    serie = serie_variable.assign(_f=pd.to_datetime(serie_variable["fecha"])).dropna(subset=[columna])
+    for i, fila in resultado.iterrows():
+        if pd.notna(fila["valor_agregado"]):
+            continue
+        fin = pd.Timestamp(fases.loc[fases["fase"] == fila["fase"], "fin"].iloc[0])
+        previas = serie[(serie["_f"] <= fin) & (serie["_f"] >= fin - pd.Timedelta(days=max_dias))]
+        if previas.empty:
+            continue
+        resultado.at[i, "valor_agregado"] = previas.sort_values("_f")[columna].iloc[-1]
+        resultado.at[i, "imputada"] = True
+    return resultado
+
+
 def build_all_observation_tensors(
     series_crudas: pd.DataFrame,
     fenologia_alineada: pd.DataFrame,
     orden_variables: list[str],
     orden_fases: list[str] | None = None,
+    max_dias_arrastre: int = 0,
 ) -> list[dict]:
     """Construye el tensor V×T de cada provincia-campaña presente en `fenologia_alineada`.
 
@@ -77,10 +114,16 @@ def build_all_observation_tensors(
         orden_fases: columnas del tensor. Por defecto, el orden cronológico
             común a todo el lote. Una fase ausente en una observación (ej.
             excluida por el horizonte, sección 4.10.4) queda como NaN.
+        max_dias_arrastre: si es > 0, las celdas vacías de las variables con
+            varios reducers (NDVI: compuestos de 16 días) se completan con la
+            última observación previa, a lo sumo este número de días antes del
+            fin de la fase (ver `_arrastrar_ultima_observacion`). 0 = sin
+            imputación.
 
     Returns:
         Un dict por provincia-campaña con `provincia_id`, `campana_id`,
-        `tensor` (array V×T) y `error`. Si falta por completo una variable, el
+        `tensor` (array V×T), `imputadas` (array booleano V×T, True en las
+        celdas rellenadas por arrastre) y `error`. Si falta por completo una variable, el
         tensor es `None` y `error` describe cuál, sin descartar el resto del
         lote.
     """
@@ -110,6 +153,12 @@ def build_all_observation_tensors(
             )
             valor = [c for c in agregada.columns if c.startswith("valor_agregado")][0]
             agregada = agregada.rename(columns={valor: "valor_agregado"})
+            if get_collection_spec(variable).reducers:
+                agregada = _arrastrar_ultima_observacion(
+                    agregada, fases, serie_variable, columna, max_dias_arrastre
+                )
+            else:
+                agregada["imputada"] = False
             agregada["variable"] = entrada
             agregadas.append(agregada)
 
@@ -119,15 +168,23 @@ def build_all_observation_tensors(
                 raise ObservacionIncompletaError(
                     f"Ninguna de las variables {orden_variables} tiene observaciones."
                 )
+            todas = pd.concat(agregadas, ignore_index=True)
             tensor = build_observation_tensor(
-                series_agregadas=pd.concat(agregadas, ignore_index=True),
+                series_agregadas=todas,
+                orden_variables=orden_variables,
+                orden_fases=orden_fases,
+            )
+            banderas = build_observation_tensor(
+                series_agregadas=todas.assign(valor_agregado=todas["imputada"].astype(float)),
                 orden_variables=orden_variables,
                 orden_fases=orden_fases,
             )
         except ObservacionIncompletaError as exc:
-            resultados.append({**base, "tensor": None, "error": str(exc)})
+            resultados.append({**base, "tensor": None, "imputadas": None, "error": str(exc)})
             continue
 
-        resultados.append({**base, "tensor": tensor, "error": None})
+        resultados.append(
+            {**base, "tensor": tensor, "imputadas": np.nan_to_num(banderas) > 0.5, "error": None}
+        )
 
     return resultados

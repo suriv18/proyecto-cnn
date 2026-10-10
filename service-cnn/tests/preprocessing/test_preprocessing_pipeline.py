@@ -293,6 +293,24 @@ class TestCoberturaDeLaVentana:
         assert "ciclo_fuera_de_ventana_de_extraccion" not in set(ds.exclusiones["motivo"])
 
 
+class TestArrastreDeNdvi:
+    def test_sin_arrastre_no_hay_celdas_imputadas(self):
+        ds = _construir()
+
+        assert ds.X_imputado.shape == ds.X.shape
+        assert not ds.X_imputado.any()
+        assert ds.metadata["max_dias_arrastre_ndvi"] == 0
+        assert ds.metadata["celdas_imputadas"] == 0
+
+    def test_el_guardado_incluye_la_mascara_de_imputacion(self, tmp_path):
+        ds = _construir()
+
+        save_processed_dataset(ds, tmp_path)
+
+        datos = np.load(tmp_path / "tensores.npz")
+        assert datos["imputado"].shape == datos["X"].shape
+
+
 class TestSaveProcessedDataset:
     def test_escribe_los_cuatro_artefactos_y_se_puede_releer(self, tmp_path):
         ds = _construir()

@@ -220,3 +220,87 @@ class TestBuildAllObservationTensors:
         )
         provincias = {r["provincia_id"] for r in resultado}
         assert provincias == {"AZANGARO", "LAMPA"}
+
+
+def _ndvi(fechas_y_valores: dict[str, tuple[float, float]]) -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {"provincia_id": "AZANGARO", "fecha": f, "valor_mean": m, "valor_max": mx,
+             "variable": "ndvi", "campana_id": 2021}
+            for f, (m, mx) in fechas_y_valores.items()
+        ]
+    )
+
+
+@pytest.fixture
+def fenologia_corta() -> pd.DataFrame:
+    """emergencia (3 días, sin compuesto MODIS propio) y desarrollo (12 días)."""
+    return pd.DataFrame(
+        [
+            {"provincia_id": "AZANGARO", "campana_id": 2021, "fase": "emergencia",
+             "inicio": date(2020, 10, 6), "fin": date(2020, 10, 8)},
+            {"provincia_id": "AZANGARO", "campana_id": 2021, "fase": "desarrollo_vegetativo",
+             "inicio": date(2020, 10, 9), "fin": date(2020, 10, 20)},
+        ]
+    )
+
+
+class TestArrastreLimitadoDeNdvi:
+    """Imputación limitada (sección 4.7) SIN fuga: una celda vacía toma la última
+    observación previa al fin de su fase, a lo sumo `max_dias` antes. Nunca usa
+    observaciones posteriores (regla anti-fuga del horizonte, 4.10.4)."""
+
+    def _construir(self, series, fenologia, max_dias=16):
+        return build_all_observation_tensors(
+            series_crudas=series,
+            fenologia_alineada=fenologia,
+            orden_variables=["ndvi_mean", "ndvi_max"],
+            max_dias_arrastre=max_dias,
+        )[0]
+
+    def test_rellena_la_fase_vacia_con_la_ultima_observacion_previa(self, fenologia_corta):
+        series = _ndvi({"2020-10-01": (0.2, 0.3), "2020-10-17": (0.5, 0.6)})
+
+        r = self._construir(series, fenologia_corta)
+
+        assert r["tensor"][0, 0] == pytest.approx(0.2)  # ndvi_mean, emergencia
+        assert r["tensor"][1, 0] == pytest.approx(0.3)  # ndvi_max, emergencia
+        assert r["imputadas"][0, 0] and r["imputadas"][1, 0]
+
+    def test_no_altera_las_fases_que_ya_tienen_observacion(self, fenologia_corta):
+        series = _ndvi({"2020-10-01": (0.2, 0.3), "2020-10-17": (0.5, 0.6)})
+
+        r = self._construir(series, fenologia_corta)
+
+        assert r["tensor"][0, 1] == pytest.approx(0.5)  # desarrollo, observación propia
+        assert not r["imputadas"][0, 1]
+
+    def test_no_usa_observaciones_posteriores_al_fin_de_la_fase(self, fenologia_corta):
+        series = _ndvi({"2020-10-17": (0.5, 0.6)})  # solo hay una observación FUTURA
+
+        r = self._construir(series, fenologia_corta)
+
+        assert np.isnan(r["tensor"][0, 0])
+        assert not r["imputadas"][0, 0]
+
+    def test_no_rellena_si_la_observacion_previa_es_demasiado_antigua(self, fenologia_corta):
+        series = _ndvi({"2020-09-10": (0.2, 0.3), "2020-10-17": (0.5, 0.6)})  # 28 días antes
+
+        r = self._construir(series, fenologia_corta, max_dias=16)
+
+        assert np.isnan(r["tensor"][0, 0])
+
+    def test_sin_arrastre_el_comportamiento_es_el_anterior(self, fenologia_corta):
+        series = _ndvi({"2020-10-01": (0.2, 0.3), "2020-10-17": (0.5, 0.6)})
+
+        r = self._construir(series, fenologia_corta, max_dias=0)
+
+        assert np.isnan(r["tensor"][0, 0])
+        assert not r["imputadas"].any()
+
+    def test_ignora_las_observaciones_nulas_por_mascara_o_calidad(self, fenologia_corta):
+        series = _ndvi({"2020-10-03": (np.nan, np.nan), "2020-10-01": (0.2, 0.3)})
+
+        r = self._construir(series, fenologia_corta)
+
+        assert r["tensor"][0, 0] == pytest.approx(0.2)  # salta la nula y toma la válida previa
