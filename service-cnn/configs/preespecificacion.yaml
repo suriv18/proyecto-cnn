@@ -87,6 +87,7 @@ modelos:
   presupuesto_de_trials_por_modelo: {valor: 30, estado: propuesto, fuente: "src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo"}
   muestreador_de_hiperparametros: {valor: tpe, estado: fijado_por_tesis, fuente: "4.12.3 (Optuna, Sabo et al. 2023)"}
   espacios_de_busqueda: {valor: "configs/hyperparams.yaml", estado: por_decidir_piloto, fuente: "4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador"}
+  submuestreo_de_xgboost: {valor: "subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda", estado: por_decidir_piloto, fuente: "con los valores por defecto XGBoost es determinista y las 10 semillas de 4.12.4 serían idénticas (corrida técnica, P6); el piloto oficial lo confirma"}
   entrenamiento_cnn1d:
     optimizador: {valor: adam, estado: fijado, fuente: "src/models/cnn1d_trainer.py"}
     early_stopping_particion: {valor: "temporal: la última campaña del entrenamiento", estado: por_decidir_piloto, fuente: "BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal)"}

@@ -21,6 +21,9 @@ xgboost:
   n_estimators: [int, 50, 500]
   max_depth: [int, 2, 10]
   learning_rate: [float, 0.001, 0.3]
+  # Submuestreo: sin él XGBoost es determinista y las 10 semillas (4.12.4) serían idénticas.
+  subsample: [float, 0.6, 1.0]
+  colsample_bytree: [float, 0.6, 1.0]
 
 svr:
   C: [float, 0.01, 100.0]

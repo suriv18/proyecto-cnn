@@ -4,14 +4,14 @@
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **77 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
 | Estado | Parámetros |
 |---|---|
 | `por_decidir_asesor` | 8 |
-| `por_decidir_piloto` | 10 |
+| `por_decidir_piloto` | 11 |
 | `propuesto` | 17 |
 
 ### Requieren al asesor
@@ -28,6 +28,7 @@ Contiene **77 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 ### Las decide el ensayo piloto (sin campañas externas)
 
 - `modelos.espacios_de_busqueda` — configs/hyperparams.yaml · _4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador_
+- `modelos.submuestreo_de_xgboost` — subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda · _con los valores por defecto XGBoost es determinista y las 10 semillas de 4.12.4 serían idénticas (corrida técnica, P6); el piloto oficial lo confirma_
 - `modelos.entrenamiento_cnn1d.early_stopping_particion` — temporal: la última campaña del entrenamiento · _BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal)_
 - `modelos.entrenamiento_cnn1d.restaurar_mejor_epoca` — sí · _BRECHA G2: el código devuelve el modelo de la última época_
 - `modelos.entrenamiento_cnn1d.epocas_maximas` — _sin definir_ · _se fija con la curva de pérdida del piloto_
@@ -131,6 +132,7 @@ Contiene **77 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `presupuesto_de_trials_por_modelo` | 30 | `propuesto` | src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo |
 | `muestreador_de_hiperparametros` | tpe | `fijado_por_tesis` | 4.12.3 (Optuna, Sabo et al. 2023) |
 | `espacios_de_busqueda` | configs/hyperparams.yaml | `por_decidir_piloto` | 4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador |
+| `submuestreo_de_xgboost` | subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda | `por_decidir_piloto` | con los valores por defecto XGBoost es determinista y las 10 semillas de 4.12.4 serían idénticas (corrida técnica, P6); el piloto oficial lo confirma |
 | `entrenamiento_cnn1d.optimizador` | adam | `fijado` | src/models/cnn1d_trainer.py |
 | `entrenamiento_cnn1d.early_stopping_particion` | temporal: la última campaña del entrenamiento | `por_decidir_piloto` | BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal) |
 | `entrenamiento_cnn1d.restaurar_mejor_epoca` | sí | `por_decidir_piloto` | BRECHA G2: el código devuelve el modelo de la última época |
