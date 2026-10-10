@@ -54,7 +54,7 @@ code { font: 0.86em var(--mono); background: var(--accent-soft); padding: 1px 5p
     <span class="eyebrow">Tesis de maestría · UNMSM · 2026-10-10</span>
     <h1>Resumen para el asesor</h1>
     <p class="lede">Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana, reorganizado bajo CRISP-ML(Q) y DSRM.</p>
-    <p class="ask"><strong>Lo que pido:</strong> cerrar las <strong>3 decisiones</strong> de la sección 3 (el autor ya confirmó el periodo 2016–2025 y los cuatro umbrales de la máscara; solo requieren su revisión) para aprobar el gate de F2 y ejecutar el piloto oficial, y responder 6 consultas de diseño (sección 4). La más importante es la reformulación de HE1 y HE2, ya redactada en la tesis v3. Todo lo provisional está marcado y es reversible.</p>
+    <p class="ask"><strong>Lo que pido:</strong> revisar las <strong>8 decisiones</strong> de la sección 3, que el autor ya confirmó con el análisis del proyecto, para aprobar el gate de F2 y ejecutar el piloto oficial, y responder 6 consultas de diseño (sección 4). La más importante es la reformulación de HE1 y HE2, ya redactada en la tesis v3. Todo está marcado como confirmado por el autor y es reversible si usted lo corrige.</p>
   </header>
 
   <section>
@@ -110,13 +110,13 @@ code { font: 0.86em var(--mono); background: var(--accent-soft); padding: 1px 5p
       <thead><tr><th class="n">#</th><th>Decisión</th><th>Propuesta actual (provisional)</th><th>Qué está en juego</th></tr></thead>
       <tbody>
         <tr><td class="n">1</td><td>Periodo de estudio</td><td><strong>2016–2025, confirmado por el autor</strong>; el asesor lo revisa (enmienda H1: no hay fuente provincial anterior a 2015)</td><td>Cuántas campañas hay para entrenar y probar</td></tr>
-        <tr><td class="n">2</td><td>Provincias de transición</td><td>Incluidas y marcadas; se analizan con y sin ellas como sensibilidad (evidencia SISAGRI por distrito, E3 §7)</td><td>Qué provincias quedan en el universo</td></tr>
-        <tr><td class="n">3</td><td>Ciclos fuera de la ventana de extracción</td><td>Se excluyen: 29 observaciones, ciclos de calendario mayo–junio en Arequipa y La Libertad</td><td>Pérdida de cobertura en esos departamentos</td></tr>
+        <tr><td class="n">2</td><td>Provincias de transición</td><td><strong>Incluidas y marcadas, confirmado por el autor</strong>; se analizan con y sin ellas como sensibilidad (evidencia SISAGRI por distrito, E3 §7)</td><td>Qué provincias quedan en el universo</td></tr>
+        <tr><td class="n">3</td><td>Ciclos fuera de la ventana de extracción</td><td><strong>Se excluyen, confirmado por el autor</strong>: 29 observaciones, ciclos de calendario mayo–junio en Arequipa y La Libertad</td><td>Pérdida de cobertura en esos departamentos</td></tr>
         <tr><td class="n">4</td><td>Altitud mínima de la máscara agrícola</td><td class="n"><strong>2500 m, confirmada por el autor</strong></td><td rowspan="4">Qué superficie se considera cultivo de quinua</td></tr>
         <tr><td class="n">5</td><td>Altitud máxima</td><td class="n"><strong>4000 m, confirmada por el autor</strong></td></tr>
         <tr><td class="n">6</td><td>Pendiente máxima</td><td class="n"><strong>14,04°, confirmada por el autor</strong> (D.S. 005-2022-MIDAGRI)</td></tr>
         <tr><td class="n">7</td><td>Amplitud mínima de NDVI</td><td class="n"><strong>percentil 5 de 2016–2020, todas de entrenamiento: 0,323, confirmado por el autor</strong>. Es el umbral más sensible; se reporta sensibilidad en p1 y p10</td></tr>
-        <tr><td class="n">8</td><td>Ventana inicial de entrenamiento</td><td>5 campañas, que dejan 5 externas (2021–2025). Se evaluó 4 (6 externas) y se descartó: HE1b exigiría 6 de 6 y B2 con tendencia necesita al menos 5 campañas de historia</td><td>Poder de los contrastes: con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031, alcanzable al nivel 0,05</td></tr>
+        <tr><td class="n">8</td><td>Ventana inicial de entrenamiento</td><td><strong>5 campañas, que dejan 5 externas (2021–2025), confirmado por el autor.</strong> Se evaluó 4 (6 externas) y se descartó: HE1b exigiría 6 de 6 y B2 con tendencia necesita al menos 5 campañas de historia</td><td>Poder de los contrastes: con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031, alcanzable al nivel 0,05</td></tr>
       </tbody>
     </table></div>
   </section>

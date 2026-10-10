@@ -2,7 +2,7 @@
 
 Tesis: *Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana* (UNMSM). Reorganizada bajo CRISP-ML(Q) + DSRM. Fecha: 2026-10-10.
 
-**Lo que pido:** cerrar las **3 decisiones** de la sección 3 (el autor ya confirmó el periodo 2016–2025 y los cuatro umbrales de la máscara; solo requieren su revisión) para poder aprobar el gate de F2 y ejecutar el piloto oficial. Hasta entonces todo lo provisional está marcado como tal y es reversible. Además, 6 consultas de diseño (sección 4). La más importante es la reformulación de HE1 y HE2, ya redactada en la tesis v3 (`docs/Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`).
+**Lo que pido:** revisar las **8 decisiones** de la sección 3, que el autor ya confirmó con el análisis del proyecto, para poder aprobar el gate de F2 y ejecutar el piloto oficial. Todo está marcado como confirmado por el autor y es reversible si usted lo corrige. Además, 6 consultas de diseño (sección 4). La más importante es la reformulación de HE1 y HE2, ya redactada en la tesis v3 (`docs/Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`).
 
 ## 1. Estado
 
@@ -39,13 +39,13 @@ Corrida de desarrollo con datos reales de **solo 2016–2019** (un pliego, prueb
 | # | Decisión | Propuesta actual (provisional) | Qué está en juego |
 |---|---|---|---|
 | 1 | Periodo de estudio | **2016–2025, confirmado por el autor**; el asesor lo revisa (enmienda H1: no hay fuente provincial anterior a 2015) | Define cuántas campañas hay para entrenar y probar |
-| 2 | Provincias de transición | Incluidas y marcadas (se analizan con y sin ellas como sensibilidad; evidencia SISAGRI por distrito en E3 §7) | Qué provincias quedan dentro del universo |
-| 3 | Ciclos fuera de la ventana de extracción | Se excluyen (29 observaciones; ciclos calendario mayo–junio en Arequipa y La Libertad) | Pérdida de cobertura en esos departamentos |
+| 2 | Provincias de transición | **Incluidas y marcadas, confirmado por el autor** (se analizan con y sin ellas como sensibilidad; evidencia SISAGRI por distrito en E3 §7) | Qué provincias quedan dentro del universo |
+| 3 | Ciclos fuera de la ventana de extracción | **Se excluyen, confirmado por el autor** (29 observaciones; ciclos calendario mayo–junio en Arequipa y La Libertad) | Pérdida de cobertura en esos departamentos |
 | 4 | Altitud mínima de la máscara agrícola | **2500 m, confirmada por el autor** | Qué superficie se considera cultivo de quinua |
 | 5 | Altitud máxima | **4000 m, confirmada por el autor** | Ídem |
 | 6 | Pendiente máxima | **14,04°, confirmada por el autor** (D.S. 005-2022-MIDAGRI) | Ídem |
 | 7 | Amplitud mínima de NDVI | **percentil 5 de 2016–2020, todas de entrenamiento: 0,323, confirmado por el autor** (sesgo regional en Arequipa y Puno; sensibilidad en p1 y p10) | Ídem; es el umbral más sensible |
-| 8 | Ventana inicial de entrenamiento | 5 campañas → quedan 5 externas (2021–2025). Se evaluó 4 (6 externas) y se descartó: HE1b exigiría 6 de 6 y B2 con tendencia necesita ≥ 5 campañas de historia | Poder de los contrastes: con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031, alcanzable al nivel 0,05 |
+| 8 | Ventana inicial de entrenamiento | **5 campañas → quedan 5 externas (2021–2025), confirmado por el autor.** Se evaluó 4 (6 externas) y se descartó: HE1b exigiría 6 de 6 y B2 con tendencia necesita ≥ 5 campañas de historia | Poder de los contrastes: con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031, alcanzable al nivel 0,05 |
 
 ## 4. Consultas de diseño
 

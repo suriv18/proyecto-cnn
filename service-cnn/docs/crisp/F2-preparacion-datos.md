@@ -60,3 +60,8 @@
 - **E2** (conjunto de datos y diccionario de variables): **entregado en versión exploratoria (2026-10-10)** — `data/processed/` (`tensores.npz`, `observaciones.parquet`, `diccionario_variables.csv`, `exclusiones.csv`, `metadata.json`). Incluye las covariables estática (altitud media de la superficie agrícola) y dinámica (proporción de quinua) del tensor (4.10.3). Falta regenerarlo con la ventana de entrenamiento definitiva y los umbrales aprobados.
 - **E3** (informe de depuración y EDA): **entregado (2026-10-10)** — `docs/crisp/E3-informe-depuracion-eda.md` (6 figuras en `docs/crisp/E3/figuras/`), generado por `scripts/build_e3_report.py` (reproducible; relaciones predictor–rendimiento solo con campañas de entrenamiento).
 - **Gate F2**: abierto. Falta: (1) aprobación del asesor de las decisiones provisionales (umbrales de la máscara, percentil de amplitud, provincias de transición, ventana de extracción/calendario, ventana inicial de entrenamiento; ver E3 §7); (2) conectar el respaldo departamental por pliego en F3; (3) `dvc repro preprocess` reproducible de extremo a extremo y E2 regenerado con los datos aprobados.
+
+## Actualización 2026-10-10: decisiones del gate confirmadas por el autor
+
+Las 8 decisiones del gate (periodo 2016–2025, provincias de transición, ciclos fuera de la ventana, los cuatro umbrales de la máscara y la ventana inicial de 5 campañas) las confirmó el autor con el análisis del proyecto y están en `fijado_por_tesis` en E5 (0 pendientes del asesor). **El gate de F2 sigue formalmente abierto hasta que el asesor las revise.** Si el asesor cambia alguna, el piloto oficial y E5 deben repetirse; el cambio con más impacto sería la ventana inicial, porque define las campañas externas.
+

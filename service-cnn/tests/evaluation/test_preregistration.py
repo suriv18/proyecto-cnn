@@ -90,16 +90,29 @@ class TestHistoriaMinimaDeLaLineaBase:
 
 class TestDecisionesPendientes:
     def test_lista_lo_que_requiere_al_asesor(self, prereg):
-        pendientes = pending_decisions(prereg)
+        alterado = copy.deepcopy(prereg)
+        alterado["datos"]["provincias_de_transicion"]["estado"] = "por_decidir_asesor"
 
-        assert "datos.provincias_de_transicion" in pendientes["por_decidir_asesor"]
-        assert "validacion.ventana_inicial_de_entrenamiento_campanas" in pendientes["por_decidir_asesor"]
+        assert "datos.provincias_de_transicion" in pending_decisions(alterado)["por_decidir_asesor"]
+
+    def test_las_ocho_decisiones_del_gate_de_f2_las_confirmo_el_autor(self, prereg):
+        parametros = dict(iter_parameters(prereg))
+        gate = [
+            "datos.periodo_de_campanas", "datos.provincias_de_transicion", "datos.ciclos_fuera_de_la_ventana_de_extraccion",
+            "datos.umbrales_de_la_mascara.altitud_minima_m", "datos.umbrales_de_la_mascara.altitud_maxima_m",
+            "datos.umbrales_de_la_mascara.pendiente_maxima_grados", "datos.umbrales_de_la_mascara.amplitud_ndvi_minima",
+            "validacion.ventana_inicial_de_entrenamiento_campanas",
+        ]
+
+        assert [r for r in gate if parametros[r]["estado"] != "fijado_por_tesis"] == []
+        assert pending_decisions(prereg)["por_decidir_asesor"] == []
 
     def test_el_periodo_ya_no_requiere_al_asesor_porque_lo_confirmo_el_autor(self, prereg):
         pendientes = pending_decisions(prereg)
 
         assert "datos.periodo_de_campanas" not in pendientes["por_decidir_asesor"]
         assert dict(iter_parameters(prereg))["datos.periodo_de_campanas"]["valor"] == "2016-2025"
+        assert dict(iter_parameters(prereg))["validacion.ventana_inicial_de_entrenamiento_campanas"]["valor"] == 5
 
     def test_lista_lo_que_decide_el_piloto(self, prereg):
         pendientes = pending_decisions(prereg)
@@ -115,7 +128,7 @@ class TestDecisionesPendientes:
 
 class TestCongelamiento:
     def test_no_se_puede_congelar_con_decisiones_pendientes(self, prereg):
-        with pytest.raises(PreregistrationNotReadyError, match="por_decidir_asesor"):
+        with pytest.raises(PreregistrationNotReadyError, match="por_decidir_piloto"):
             assert_can_freeze(prereg)
 
     def test_tampoco_se_puede_congelar_con_valores_sin_definir_aunque_todo_este_fijado(self, prereg):
@@ -142,5 +155,5 @@ class TestRenderizado:
 
         assert "BORRADOR" in texto
         assert "Decisiones pendientes" in texto
-        assert "datos.provincias_de_transicion" in texto
+        assert "variable_objetivo.representacion_de_modelado" in texto
         assert "fijado_por_tesis" in texto

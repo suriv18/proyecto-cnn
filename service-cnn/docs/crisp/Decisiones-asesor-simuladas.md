@@ -11,13 +11,13 @@ Fecha: 2026-10-10. Criterio general: decidir lo que se pueda **antes de ver las 
 | # | Parámetro | Decisión | Cambio |
 |---|---|---|---|
 | 1 | Periodo | **2016–2025** (10 campañas). **Confirmado por el autor (2026-10-10).** La enmienda H1 ya está en la tesis v3 | No |
-| 2 | Provincias de transición | **Incluidas y marcadas**; resultados principales con ellas y sensibilidad sin ellas | No |
-| 3 | Ciclos fuera de la ventana de extracción | **Excluir** (29 observaciones, 3,6 % de 800); no re-extraer. Informar la cobertura por departamento | No |
+| 2 | Provincias de transición | **Incluidas y marcadas**; resultados principales con ellas y sensibilidad sin ellas. **Confirmado por el autor (2026-10-10)** | No |
+| 3 | Ciclos fuera de la ventana de extracción | **Excluir** (29 observaciones, 3,6 % de 800); no re-extraer. Informar la cobertura por departamento. **Confirmado por el autor (2026-10-10)** | No |
 | 4 | Altitud mínima | **2500 m.** Confirmada por el autor (2026-10-10) | No |
 | 5 | Altitud máxima | **4000 m.** Confirmada por el autor (2026-10-10) | No |
 | 6 | Pendiente máxima | **14,04°** (D.S. 005-2022-MIDAGRI). Confirmada por el autor (2026-10-10) | No |
 | 7 | Amplitud mínima de NDVI | **Percentil 5 = 0,323** (2016–2020, todas de entrenamiento), con sensibilidad en p1 y p10. **Confirmado por el autor (2026-10-10)** | No |
-| 8 | Ventana inicial de entrenamiento | **5 campañas** (2016–2020); **5 externas** (2021–2025). Se evaluó 4 y se descartó (ver corrección) | No (se revierte la propuesta intermedia de 4) |
+| 8 | Ventana inicial de entrenamiento | **5 campañas** (2016–2020); **5 externas** (2021–2025). Se evaluó 4 y se descartó (ver corrección). **Confirmado por el autor (2026-10-10)** | No (se revierte la propuesta intermedia de 4) |
 
 ## Razones
 

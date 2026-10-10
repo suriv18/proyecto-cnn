@@ -10,15 +10,12 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 | Estado | Parámetros |
 |---|---|
-| `por_decidir_asesor` | 3 |
+| `por_decidir_asesor` | 0 |
 | `por_decidir_piloto` | 11 |
 | `propuesto` | 18 |
 
 ### Requieren al asesor
 
-- `datos.provincias_de_transicion` — incluidas_y_marcadas · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)_
-- `datos.ciclos_fuera_de_la_ventana_de_extraccion` — excluir · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer_
-- `validacion.ventana_inicial_de_entrenamiento_campanas` — 5 · _Recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas_
 
 ### Las decide el ensayo piloto (sin campañas externas)
 
@@ -92,9 +89,9 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 |---|---|---|---|
 | `periodo_de_campanas` | 2016-2025 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10). Enmienda H1: no existe fuente provincial de rendimiento anterior a 2015 (data/manifest/midagri_sisagri.yaml); el asesor la revisa |
 | `clasificaciones_excluidas` | costa_riego, selva | `propuesto` | 4.7, criterio de exclusión 4 |
-| `provincias_de_transicion` | incluidas_y_marcadas | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito) |
+| `provincias_de_transicion` | incluidas_y_marcadas | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.5.3; E3 §7 (evidencia SISAGRI por distrito) |
 | `exclusion_por_altitud_del_cultivo` | no | `propuesto` | E3 §7: la altitud del cultivo no es la de la quinua |
-| `ciclos_fuera_de_la_ventana_de_extraccion` | excluir | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer |
+| `ciclos_fuera_de_la_ventana_de_extraccion` | excluir | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer |
 | `valores_extremos_del_rendimiento` | se marcan, no se eliminan | `fijado_por_tesis` | 4.7 criterio de exclusión 3 |
 | `criterio_de_inclusion_por_completitud` | >= 80 % de celdas válidas por observación (601 de 601 la cumplen); las celdas vacías residuales se imputan con la mediana de entrenamiento y se marcan | `propuesto` | 4.7 (interpretación operacional de «pasos válidos»: celdas V×T); alternativa de sensibilidad: solo el tensor completo (571) |
 | `imputacion_de_ndvi_max_dias_de_arrastre` | 16 | `propuesto` | 4.7; un compuesto MODIS; solo observaciones previas (sin fuga) |
@@ -110,7 +107,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
 | `esquema_confirmatorio` | origen_movil | `fijado_por_tesis` | 4.12.1 |
-| `ventana_inicial_de_entrenamiento_campanas` | 5 | `por_decidir_asesor` | Recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas |
+| `ventana_inicial_de_entrenamiento_campanas` | 5 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10); el asesor lo revisa. 4.12.1; deja 5 campañas externas (2021-2025); se evaluó 4 (6 externas) y se descartó: HE1b pasaría a exigir 6 de 6, B2 con tendencia necesita ≥ 5 campañas de historia y obligaría a recalibrar la máscara; el piloto informa pero no decide con campañas externas |
 | `esquema_complementario_loco` | dejar una campaña fuera (secundario) | `fijado_por_tesis` | 4.12.1 |
 | `esquema_de_robustez_espacial` | dejar un departamento fuera (sensibilidad) | `fijado_por_tesis` | 4.12.1 |
 | `validacion_interna.esquema` | origen_movil_dentro_del_entrenamiento | `propuesto` | 4.12.2: orden temporal y solo campañas anteriores |
