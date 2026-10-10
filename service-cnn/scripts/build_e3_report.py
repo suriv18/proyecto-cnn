@@ -266,6 +266,7 @@ def main() -> None:
     ap.add_argument("--raw-antiguo", type=Path, default=Path("data/raw/gee_series_crudo_esquema_ndvi_antiguo.parquet"))
     ap.add_argument("--provincias", type=Path, default=Path("configs/provincias.csv"))
     ap.add_argument("--altitud", type=Path, default=Path("configs/altitud_cultivo_por_provincia.csv"))
+    ap.add_argument("--area-cultivo", type=Path, default=Path("configs/area_cultivo_por_provincia.csv"))
     ap.add_argument("--mascara", type=Path, default=Path("data/manifest/mascara_agricola.yaml"))
     ap.add_argument("--calibracion", type=Path, default=Path("reports/calibracion_mascara_amplitud.json"))
     ap.add_argument("--sisagri-cache", type=Path, default=Path("data/interim/sisagri_quinua_8deptos.parquet"))
@@ -325,6 +326,46 @@ def main() -> None:
     # ---------------- predictores (solo entrenamiento)
     nivel, anom_c, n_corr = correlaciones(X[es_entren], y_e.to_numpy(), ent["provincia_id"].to_numpy())
     fig_correlaciones(nivel, anom_c, vars_, fases, figdir / "f6_correlaciones.png")
+
+    # ---------------- covariables (solo entrenamiento para las relaciones)
+    t_cov, texto_repr, texto_colin = "", "", "—"
+    if "prop_quinua" in obs.columns and obs["prop_quinua"].notna().any():
+        e_cov = obs[es_entren]
+        filas = []
+        for col, tipo, unidad in (("altitud_media_m", "Estática (provincia)", "m"), ("prop_quinua", "Dinámica (provincia-campaña)", "—")):
+            s = obs[col].dropna()
+            sub = e_cov.dropna(subset=[col])
+            rho = stats.spearmanr(sub[col], sub["rendimiento_kg_ha"]).statistic
+            dec = 0 if col == "altitud_media_m" else 3
+            filas.append([col, tipo, unidad, fmt(s.min(), dec), fmt(s.median(), dec), fmt(s.max(), dec), fmt(rho, 2)])
+        # señal interanual de la covariable dinámica: centrar por provincia
+        dentro = e_cov.dropna(subset=["prop_quinua"]).copy()
+        dentro["x_c"] = dentro["prop_quinua"] - dentro.groupby("provincia_id")["prop_quinua"].transform("mean")
+        dentro["y_c"] = dentro["rendimiento_kg_ha"] - dentro.groupby("provincia_id")["rendimiento_kg_ha"].transform("mean")
+        rho_dentro = stats.spearmanr(dentro["x_c"], dentro["y_c"]).statistic
+        t_cov = md_tabla(pd.DataFrame(filas, columns=["Covariable", "Tipo", "Unidad", "Mín.", "Mediana", "Máx.", "Spearman con rendimiento (entrenamiento)"]))
+        texto_cov_dentro = fmt(rho_dentro, 2)
+        # colinealidad de la altitud con las variables climáticas (media de las fases, solo entrenamiento)
+        Xe, alt_e = X[es_entren], obs.loc[es_entren, "altitud_media_m"].to_numpy()
+        colin = {}
+        for nombre, i in (("temperatura mínima", 2), ("radiación solar", 3), ("temperatura máxima", 1), ("precipitación", 0)):
+            media_fases = np.nanmean(Xe[:, i, :], axis=1)
+            colin[nombre] = float(stats.spearmanr(alt_e, media_fases).statistic)
+        texto_colin = "; ".join(f"{k} {fmt(v, 2)}" for k, v in colin.items())
+        if args.area_cultivo.exists():
+            area = pd.read_csv(args.area_cultivo)
+            m_obs = obs.merge(area[["provincia_id", "area_cultivo_ha", "frac_area_en_mascara"]], on="provincia_id", how="left")
+            baja = m_obs[m_obs["frac_area_en_mascara"] < 0.5]
+            texto_repr = (
+                f"**Representatividad de la máscara (por área, WorldCover + SRTM):** en {baja['provincia_id'].nunique()} provincias "
+                f"({fmt(len(baja), 0)} observaciones, {fmt(100 * len(baja) / len(obs), 0)} %) la máscara retiene menos de la mitad del "
+                f"área de cultivo ({', '.join(sorted(p.title() for p in baja['provincia_id'].unique()))}); en ellas el NDVI describe una fracción "
+                f"menor de lo que mide el rendimiento. Se propone usar `frac_area_en_mascara` como estrato en el análisis de sensibilidad."
+            )
+        else:
+            texto_repr = ""
+    else:
+        texto_cov_dentro = "—"
 
     # ---------------- tablas
     rangos = []
@@ -534,6 +575,16 @@ La serie por campaña es descriptiva e incluye todas las campañas; no se usó p
 - **En anomalía** (centrando por provincia, que es lo que realmente debe predecir un modelo frente a B2), las más fuertes son: {fuerte(anom_c)}. Valores bajos indican que la señal interanual de cada predictor es modesta con n = {fmt(int(n_corr.max()), 0)} observaciones de entrenamiento.
 - Las correlaciones son **descriptivas** y no implican causalidad; los valores SHAP medirán la contribución predictiva, no el efecto causal (sección 1.6).
 
+### 6.1 Covariables del tensor (sección 4.10.3)
+
+Se concatenan **después del bloque convolucional**; no forman parte del tensor V×T (`Z`, N × 2, en `tensores.npz`).
+
+{t_cov}
+
+- La **altitud media de la superficie agrícola** se calcula solo con el cultivo que pasa la máscara (altitud y pendiente), la misma superficie sobre la que se mide el NDVI. Su correlación negativa con el rendimiento refleja que las provincias más altas rinden menos. Está **moderadamente correlacionada con el clima**: correlación de Spearman de la altitud media con la media por fase de {texto_colin}. Por eso su aporte propio debe evaluarse en la ablación y no asumirse.
+- La **proporción sembrada con quinua** es la superficie sembrada en la campaña dividida por el área de cultivo de la provincia (ESA WorldCover 2021, supuesto estático). Nunca supera 1 ({fmt(meta.get('prop_quinua_mayor_que_uno', 0), 0)} casos), lo que indica coherencia entre SISAGRI y WorldCover. Dentro de cada provincia su correlación con el rendimiento es de **{texto_cov_dentro}**: la variación interanual de la proporción sembrada no explica por sí sola el rendimiento, y su valor está sobre todo en distinguir el peso relativo de la quinua entre provincias.
+- {texto_repr}
+
 ## 7. Decisiones provisionales y pendientes con el asesor
 
 Se tomaron con la mejor evidencia disponible y son **reversibles**; ninguna se considera definitiva hasta la aprobación del asesor.
@@ -550,7 +601,7 @@ Se tomaron con la mejor evidencia disponible y son **reversibles**; ninguna se c
 |---|---|---|---|
 | Percentil de amplitud NDVI | p5 = {fmt(umbrales['amplitud_ndvi_min'], 3)} | Ver tabla: el mismo umbral excluye más cultivo en Arequipa y Puno que en Cusco | p1 casi sin sesgo pero filtro casi nulo; exige re-extraer el NDVI (~3,5 h) |
 | Provincias de transición | Incluidas y marcadas ({fmt(int((obs.clasificacion == 'transicion').sum()), 0)} obs) | La Mar y Huanta son valles interandinos productores; Carabaya produce en zona alta (abajo) | Excluirlas y reportar la sensibilidad |
-| Exclusión por altitud del cultivo | **No** se excluye (`--excluir-por-altitud` desactivado) | La altitud del cultivo no es la de la quinua (abajo) | Usar `altitud_cultivo_por_provincia.csv` como estrato de sensibilidad |
+| Exclusión por altitud del cultivo | **No** se excluye (`--excluir-por-altitud` desactivado) | La altitud del cultivo no es la de la quinua (abajo) | Usar `frac_area_en_mascara` (`area_cultivo_por_provincia.csv`) como estrato de sensibilidad |
 | Ventana de extracción y calendario | Se excluyen {fmt(n_ventana, 0)} obs con ciclo fuera de ventana | Siembras de mayo-junio (Arequipa, La Libertad) cosechan en sept-dic | Ampliar la ventana a diciembre y re-extraer (~2 h); Arequipa recuperaría casi todo |
 | Ventana inicial de entrenamiento | {len(entren_camp)} campañas ({entren_camp[0]}–{entren_camp[-1]}) | Deja {len(set(obs.campana_id) - set(entren_camp))} campañas externas; el menor valor p del Wilcoxon unilateral con n = 5 es 1/32 ≈ 0,031 | Ventana de 4: 6 campañas externas y menos entrenamiento inicial |
 
@@ -574,12 +625,13 @@ La quinua de Castilla se produce en la sierra (Pampacolca y Viraco) y no en la p
 ```
 python scripts/run_ingestion.py --gee-project-id cnn-sentinel      # series crudas (requiere GEE autenticado)
 python scripts/calibrate_mask_amplitude.py                          # umbral de amplitud NDVI
-python scripts/derive_altitud_cultivo.py                            # altitud del cultivo por provincia
+python scripts/derive_altitud_cultivo.py                            # altitud del cultivo por provincia y covariable estática
+python scripts/derive_area_cultivo.py                               # área de cultivo por provincia (requiere GEE)
 python scripts/run_preprocessing.py --archivo-sisagri <SISAGRI.xlsx> --exploratorio --dias-antes-de-cosecha 30
 python scripts/build_e3_report.py                                   # este informe
 ```
 
-Limitaciones: el conjunto es observacional y retrospectivo; el rendimiento oficial puede tener error de medición; la máscara no distingue quinua de otros cultivos (se controla con la covariable de proporción de quinua, aún pendiente de incorporar al tensor junto con la altitud media de la superficie agrícola).
+Limitaciones: el conjunto es observacional y retrospectivo; el rendimiento oficial puede tener error de medición; la máscara no distingue quinua de otros cultivos (se controla con la covariable de proporción de quinua y el análisis de sensibilidad por estratos de representatividad); el área de cultivo es de 2021 y se asume estática para las 10 campañas.
 """
     args.salida.parent.mkdir(parents=True, exist_ok=True)
     args.salida.write_text(md, encoding="utf-8", newline="\n")

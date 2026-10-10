@@ -311,6 +311,51 @@ class TestArrastreDeNdvi:
         assert datos["imputado"].shape == datos["X"].shape
 
 
+class TestCovariables:
+    ALT = {"AZANGARO": 3850.0, "CHUCUITO": 3830.0}
+    AREA = {"AZANGARO": 80000.0, "CHUCUITO": 40000.0}
+
+    def test_sin_covariables_z_queda_vacia(self):
+        ds = _construir()
+
+        assert ds.Z.shape == (3, 0)
+        assert ds.metadata["covariables"] == []
+
+    def test_agrega_una_columna_estatica_y_una_dinamica(self):
+        ds = _construir(altitud_media_por_provincia=self.ALT, area_cultivo_ha_por_provincia=self.AREA)
+
+        assert ds.Z.shape == (3, 2)
+        assert ds.metadata["covariables"] == ["altitud_media_m", "prop_quinua"]
+        assert set(ds.observaciones.columns) >= {"altitud_media_m", "prop_quinua"}
+
+    def test_las_filas_de_z_siguen_el_orden_de_las_observaciones(self):
+        ds = _construir(altitud_media_por_provincia=self.ALT, area_cultivo_ha_por_provincia=self.AREA)
+
+        chucuito = ds.observaciones.index[ds.observaciones.provincia_id == "CHUCUITO"][0]
+        assert ds.Z[chucuito, 0] == 3830.0
+
+    def test_el_diccionario_declara_los_roles_de_las_covariables(self):
+        ds = _construir(altitud_media_por_provincia=self.ALT, area_cultivo_ha_por_provincia=self.AREA)
+
+        roles = dict(zip(ds.diccionario["nombre"], ds.diccionario["rol"]))
+        assert roles["altitud_media_m"] == "estatica"
+        assert roles["prop_quinua"] == "dinamica"
+        assert roles["precipitacion"] == "secuencial"
+
+    def test_el_guardado_incluye_z(self, tmp_path):
+        ds = _construir(altitud_media_por_provincia=self.ALT, area_cultivo_ha_por_provincia=self.AREA)
+
+        save_processed_dataset(ds, tmp_path)
+
+        assert np.load(tmp_path / "tensores.npz")["Z"].shape == (3, 2)
+
+    def test_registra_cuantas_proporciones_superan_uno(self):
+        ds = _construir(altitud_media_por_provincia=self.ALT,
+                        area_cultivo_ha_por_provincia={"AZANGARO": 1000.0, "CHUCUITO": 40000.0})
+
+        assert ds.metadata["prop_quinua_mayor_que_uno"] >= 1
+
+
 class TestSaveProcessedDataset:
     def test_escribe_los_cuatro_artefactos_y_se_puede_releer(self, tmp_path):
         ds = _construir()

@@ -197,3 +197,33 @@ def summarize_cropland_altitude(
         frac_en_rango=lambda s: float(s.between(altitud_min_m, altitud_max_m).mean()),
     )
     return resumen.reset_index()
+
+
+def summarize_agricultural_surface_altitude(
+    celdas: pd.DataFrame,
+    altitud_min_m: float,
+    altitud_max_m: float,
+    pendiente_max_grados: float,
+) -> pd.DataFrame:
+    """Altitud MEDIA de la superficie agrícola de cada provincia (covariable estática, 4.10.3).
+
+    «Superficie agrícola» es el cultivo que pasa los criterios de altitud y
+    pendiente de la máscara: la misma superficie sobre la que se calcula el NDVI.
+    A diferencia de `summarize_cropland_altitude` (todo el cultivo, mediana, para
+    diagnóstico), esta es la covariable que entra al modelo.
+
+    Args:
+        celdas: columnas `provincia_id`, `celda_id`, `cobertura_suelo`,
+            `altitud_m`, `pendiente_grados`. Una celda repetida entre campañas
+            se cuenta una vez.
+
+    Returns:
+        DataFrame con `provincia_id`, `n_celdas` y `altitud_media_m`.
+    """
+    cultivo = celdas[celdas["cobertura_suelo"].isin(_COBERTURAS_AGRICOLAS)].drop_duplicates("celda_id")
+    en_mascara = cultivo[
+        cultivo["altitud_m"].between(altitud_min_m, altitud_max_m)
+        & (cultivo["pendiente_grados"] <= pendiente_max_grados)
+    ]
+    resumen = en_mascara.groupby("provincia_id")["altitud_m"].agg(n_celdas="count", altitud_media_m="mean")
+    return resumen.reset_index()

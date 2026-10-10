@@ -13,7 +13,7 @@ Cada fase tiene una ficha con: requisitos y métricas de calidad, riesgos, tarea
 | Ficha | Fase | Actividades del cronograma | Ventana | Entregables / hitos | Estado | Gate |
 |---|---|---|---|---|---|---|
 | [F1](F1-comprension-negocio-datos.md) | Comprensión del negocio y de los datos | 1, 2 | jul-2026 → ago-2026 (act. 2 hasta mar-2027) | H1, E1 | Parcial | **Abierto** |
-| [F2](F2-preparacion-datos.md) | Preparación de datos | 3, 4, 5 | ago-2026 → oct-2026 | E2 (exploratorio), **E3 entregado** | ~85 % (código y datos; falta aprobación del asesor y covariables) | **Abierto** |
+| [F2](F2-preparacion-datos.md) | Preparación de datos | 3, 4, 5 | ago-2026 → oct-2026 | E2 (exploratorio), **E3 entregado** | ~90 % (código y datos completos; falta la aprobación del asesor) | **Abierto** |
 | [F3](F3-modelado.md) | Modelado | 6, 7 | oct-2026 → nov-2026 | E4, H2, E5 | Código con datos sintéticos | Bloqueado por F2 |
 | [F4](F4-evaluacion.md) | Evaluación | 8, 9 | nov-2026 → dic-2026 | E6 | Código con datos sintéticos | Bloqueado por F3 |
 | [F5](F5-empaquetado-reproducible.md) | Despliegue (empaquetado reproducible) | 11 | abr-2027 → jun-2027 | E8 | Parcial (DVC, manifiestos) | Futuro |

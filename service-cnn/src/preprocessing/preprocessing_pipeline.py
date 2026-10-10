@@ -29,6 +29,7 @@ from typing import Iterable, Optional
 import numpy as np
 import pandas as pd
 
+from src.features.covariates import COVARIABLES, ROLES, build_covariates
 from src.features.dataset_builder import build_all_observation_tensors, resolve_variable
 from src.features.tensor_builder import build_variable_dictionary
 from src.ingestion.gee_config import get_collection_spec
@@ -84,6 +85,7 @@ class RawDatosImplausiblesError(ValueError):
 class ProcessedDataset:
     X: np.ndarray
     X_imputado: np.ndarray
+    Z: np.ndarray
     observaciones: pd.DataFrame
     fenologia: pd.DataFrame
     diccionario: pd.DataFrame
@@ -213,7 +215,7 @@ def _separar_ciclos_fuera_de_la_serie(
     return fenologia, exclusiones
 
 
-def _diccionario(orden_variables: list[str]) -> pd.DataFrame:
+def _diccionario(orden_variables: list[str], con_covariables: bool = False) -> pd.DataFrame:
     entradas = []
     for entrada in orden_variables:
         variable, columna, regla = resolve_variable(entrada)
@@ -227,6 +229,15 @@ def _diccionario(orden_variables: list[str]) -> pd.DataFrame:
                 "rol": "secuencial",
             }
         )
+    if con_covariables:
+        entradas += [
+            {"nombre": "altitud_media_m", "unidad": "m", "fuente": "ESA WorldCover v200 (clase 40) + SRTM",
+             "transformacion": "media de la altitud del cultivo que pasa la máscara agrícola (por provincia)",
+             "rol": ROLES["altitud_media_m"]},
+            {"nombre": "prop_quinua", "unidad": "adimensional", "fuente": "SIEA-MIDAGRI (siembra) / ESA WorldCover (área de cultivo)",
+             "transformacion": "superficie sembrada con quinua en la campaña / área de cultivo de la provincia",
+             "rol": ROLES["prop_quinua"]},
+        ]
     return build_variable_dictionary(entradas)
 
 
@@ -244,6 +255,8 @@ def build_processed_dataset(
     altitud_mediana_cultivo_por_provincia: Optional[dict[str, float]] = None,
     rango_altitudinal: Optional[tuple[float, float]] = None,
     max_dias_arrastre_ndvi: int = 0,
+    altitud_media_por_provincia: Optional[dict[str, float]] = None,
+    area_cultivo_ha_por_provincia: Optional[dict[str, float]] = None,
 ) -> ProcessedDataset:
     """Construye el conjunto de datos procesado (tensor V×T + objetivo).
 
@@ -277,6 +290,10 @@ def build_processed_dataset(
             las celdas vacías toman la última observación previa a lo sumo
             este número de días antes (16 = un compuesto MODIS). 0 = sin
             imputación. Las celdas imputadas quedan en `X_imputado`.
+        altitud_media_por_provincia, area_cultivo_ha_por_provincia: tablas para las
+            covariables estática y dinámica (`features.covariates`); con ambas se
+            añaden `altitud_media_m` y `prop_quinua` a `Z` (N × 2). Sin ellas `Z`
+            queda con 0 columnas.
 
     Returns:
         `ProcessedDataset`. Las observaciones descartadas quedan en
@@ -408,6 +425,17 @@ def build_processed_dataset(
         if arreglos
         else np.empty((0, len(orden_variables), len(orden_fases)))
     )
+    usa_covariables = bool(altitud_media_por_provincia) and bool(area_cultivo_ha_por_provincia)
+    if usa_covariables:
+        cov = build_covariates(
+            observaciones, siembra_mensual, altitud_media_por_provincia, area_cultivo_ha_por_provincia
+        )
+        observaciones = observaciones.join(cov)
+        Z = cov[COVARIABLES].to_numpy(dtype=float)
+        n_prop_mayor_uno = int((cov["prop_quinua"] > 1).sum())
+    else:
+        Z = np.zeros((len(observaciones), 0))
+        n_prop_mayor_uno = 0
     X_imputado = (
         np.stack(arreglos_imputados)
         if arreglos_imputados
@@ -427,6 +455,8 @@ def build_processed_dataset(
         "rango_altitudinal": None if rango_altitudinal is None else list(rango_altitudinal),
         "max_dias_arrastre_ndvi": int(max_dias_arrastre_ndvi),
         "celdas_imputadas": int(X_imputado.sum()),
+        "covariables": list(COVARIABLES) if usa_covariables else [],
+        "prop_quinua_mayor_que_uno": n_prop_mayor_uno,
         "orden_variables": list(orden_variables),
         "orden_fases": orden_fases,
         "n_observaciones": int(len(observaciones)),
@@ -439,9 +469,10 @@ def build_processed_dataset(
     return ProcessedDataset(
         X=X,
         X_imputado=X_imputado,
+        Z=Z,
         observaciones=observaciones,
         fenologia=fenologia,
-        diccionario=_diccionario(list(orden_variables)),
+        diccionario=_diccionario(list(orden_variables), usa_covariables),
         exclusiones=df_exclusiones,
         metadata=metadata,
     )
@@ -452,7 +483,7 @@ def save_processed_dataset(dataset: ProcessedDataset, directorio: str | Path) ->
     `exclusiones.csv`, `diccionario_variables.csv` y `metadata.json`."""
     directorio = Path(directorio)
     directorio.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(directorio / "tensores.npz", X=dataset.X, imputado=dataset.X_imputado)
+    np.savez_compressed(directorio / "tensores.npz", X=dataset.X, imputado=dataset.X_imputado, Z=dataset.Z)
     dataset.observaciones.to_parquet(directorio / "observaciones.parquet", index=False)
     dataset.fenologia.to_parquet(directorio / "fenologia.parquet", index=False)
     dataset.exclusiones.to_csv(directorio / "exclusiones.csv", index=False)

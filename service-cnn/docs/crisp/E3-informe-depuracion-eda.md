@@ -2,7 +2,7 @@
 
 **Fase CRISP-ML(Q):** F2 · Preparación de datos (actividades 3-5 del cronograma) · **Entregable:** E3
 **Proyecto:** Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana
-**Generado:** 2026-10-10 · **Commit:** `79bff23` · **Estado del conjunto:** `exploratorio = true` (no válido aún para la evaluación definitiva)
+**Generado:** 2026-10-10 · **Commit:** `5a250f7` · **Estado del conjunto:** `exploratorio = true` (no válido aún para la evaluación definitiva)
 
 > Este informe se regenera con `python scripts/build_e3_report.py`; ninguna cifra se transcribe a mano.
 > Las relaciones predictor–rendimiento y la distribución del objetivo usan **solo las campañas de entrenamiento
@@ -22,8 +22,8 @@
 | Artefacto | Ruta | sha256 (16 primeros) |
 |---|---|---|
 | Series crudas GEE | data/raw/gee_series_crudo.parquet | 6e7a991a53c8eba2… |
-| Tensores V×T | data/processed/tensores.npz | 425c7e2387176656… |
-| Observaciones | data/processed/observaciones.parquet | 3b0708df9b68cf3e… |
+| Tensores V×T | data/processed/tensores.npz | 3a44df550568e9af… |
+| Observaciones | data/processed/observaciones.parquet | f3b787f3b91eaf6e… |
 
 Fuentes: SIEA-MIDAGRI (rendimiento y siembra, `SISAGRI.xlsx`); CHIRPS v2.0 (precipitación); ERA5-Land DAILY_AGGR (temperaturas y radiación); MODIS MOD13Q1 V061 (NDVI, 250 m) sobre la máscara agrícola (ESA WorldCover v200 2021 + SRTM). Procedencia por variable, hashes y el incidente de extracción: `data/manifest/gee_series_climaticas_espectrales.yaml`.
 
@@ -151,6 +151,19 @@ La serie por campaña es descriptiva e incluye todas las campañas; no se usó p
 - **En anomalía** (centrando por provincia, que es lo que realmente debe predecir un modelo frente a B2), las más fuertes son: radiación solar en emergencia (-0,28); temp. máxima en emergencia (-0,17); temp. mínima en desarrollo (0,16). Valores bajos indican que la señal interanual de cada predictor es modesta con n = 302 observaciones de entrenamiento.
 - Las correlaciones son **descriptivas** y no implican causalidad; los valores SHAP medirán la contribución predictiva, no el efecto causal (sección 1.6).
 
+### 6.1 Covariables del tensor (sección 4.10.3)
+
+Se concatenan **después del bloque convolucional**; no forman parte del tensor V×T (`Z`, N × 2, en `tensores.npz`).
+
+| Covariable | Tipo | Unidad | Mín. | Mediana | Máx. | Spearman con rendimiento (entrenamiento) |
+|---|---|---|---|---|---|---|
+| altitud_media_m | Estática (provincia) | m | 2 856 | 3 469 | 3 932 | -0,35 |
+| prop_quinua | Dinámica (provincia-campaña) | — | 0,000 | 0,045 | 0,339 | -0,06 |
+
+- La **altitud media de la superficie agrícola** se calcula solo con el cultivo que pasa la máscara (altitud y pendiente), la misma superficie sobre la que se mide el NDVI. Su correlación negativa con el rendimiento refleja que las provincias más altas rinden menos. Está **moderadamente correlacionada con el clima**: correlación de Spearman de la altitud media con la media por fase de temperatura mínima -0,40; radiación solar 0,35; temperatura máxima -0,34; precipitación -0,07. Por eso su aporte propio debe evaluarse en la ablación y no asumirse.
+- La **proporción sembrada con quinua** es la superficie sembrada en la campaña dividida por el área de cultivo de la provincia (ESA WorldCover 2021, supuesto estático). Nunca supera 1 (0 casos), lo que indica coherencia entre SISAGRI y WorldCover. Dentro de cada provincia su correlación con el rendimiento es de **0,01**: la variación interanual de la proporción sembrada no explica por sí sola el rendimiento, y su valor está sobre todo en distinguir el peso relativo de la quinua entre provincias.
+- **Representatividad de la máscara (por área, WorldCover + SRTM):** en 4 provincias (16 observaciones, 3 %) la máscara retiene menos de la mitad del área de cultivo (Bolivar, Carabaya, Gran Chimu, Sandia); en ellas el NDVI describe una fracción menor de lo que mide el rendimiento. Se propone usar `frac_area_en_mascara` como estrato en el análisis de sensibilidad.
+
 ## 7. Decisiones provisionales y pendientes con el asesor
 
 Se tomaron con la mejor evidencia disponible y son **reversibles**; ninguna se considera definitiva hasta la aprobación del asesor.
@@ -176,7 +189,7 @@ Se tomaron con la mejor evidencia disponible y son **reversibles**; ninguna se c
 |---|---|---|---|
 | Percentil de amplitud NDVI | p5 = 0,323 | Ver tabla: el mismo umbral excluye más cultivo en Arequipa y Puno que en Cusco | p1 casi sin sesgo pero filtro casi nulo; exige re-extraer el NDVI (~3,5 h) |
 | Provincias de transición | Incluidas y marcadas (31 obs) | La Mar y Huanta son valles interandinos productores; Carabaya produce en zona alta (abajo) | Excluirlas y reportar la sensibilidad |
-| Exclusión por altitud del cultivo | **No** se excluye (`--excluir-por-altitud` desactivado) | La altitud del cultivo no es la de la quinua (abajo) | Usar `altitud_cultivo_por_provincia.csv` como estrato de sensibilidad |
+| Exclusión por altitud del cultivo | **No** se excluye (`--excluir-por-altitud` desactivado) | La altitud del cultivo no es la de la quinua (abajo) | Usar `frac_area_en_mascara` (`area_cultivo_por_provincia.csv`) como estrato de sensibilidad |
 | Ventana de extracción y calendario | Se excluyen 29 obs con ciclo fuera de ventana | Siembras de mayo-junio (Arequipa, La Libertad) cosechan en sept-dic | Ampliar la ventana a diciembre y re-extraer (~2 h); Arequipa recuperaría casi todo |
 | Ventana inicial de entrenamiento | 5 campañas (2016–2020) | Deja 5 campañas externas; el menor valor p del Wilcoxon unilateral con n = 5 es 1/32 ≈ 0,031 | Ventana de 4: 6 campañas externas y menos entrenamiento inicial |
 
@@ -203,9 +216,10 @@ La quinua de Castilla se produce en la sierra (Pampacolca y Viraco) y no en la p
 ```
 python scripts/run_ingestion.py --gee-project-id cnn-sentinel      # series crudas (requiere GEE autenticado)
 python scripts/calibrate_mask_amplitude.py                          # umbral de amplitud NDVI
-python scripts/derive_altitud_cultivo.py                            # altitud del cultivo por provincia
+python scripts/derive_altitud_cultivo.py                            # altitud del cultivo por provincia y covariable estática
+python scripts/derive_area_cultivo.py                               # área de cultivo por provincia (requiere GEE)
 python scripts/run_preprocessing.py --archivo-sisagri <SISAGRI.xlsx> --exploratorio --dias-antes-de-cosecha 30
 python scripts/build_e3_report.py                                   # este informe
 ```
 
-Limitaciones: el conjunto es observacional y retrospectivo; el rendimiento oficial puede tener error de medición; la máscara no distingue quinua de otros cultivos (se controla con la covariable de proporción de quinua, aún pendiente de incorporar al tensor junto con la altitud media de la superficie agrícola).
+Limitaciones: el conjunto es observacional y retrospectivo; el rendimiento oficial puede tener error de medición; la máscara no distingue quinua de otros cultivos (se controla con la covariable de proporción de quinua y el análisis de sensibilidad por estratos de representatividad); el área de cultivo es de 2021 y se asume estática para las 10 campañas.

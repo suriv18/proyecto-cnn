@@ -131,6 +131,13 @@ def main() -> None:
             "cultivo, no la de la quinua; úsese para el análisis de sensibilidad."
         ),
     )
+    parser.add_argument("--altitud-media-csv", type=Path, default=Path("configs/altitud_media_superficie_agricola.csv"))
+    parser.add_argument("--area-cultivo-csv", type=Path, default=Path("configs/area_cultivo_por_provincia.csv"))
+    parser.add_argument(
+        "--sin-covariables",
+        action="store_true",
+        help="No añade las covariables estática y dinámica (4.10.3); Z queda vacía.",
+    )
     parser.add_argument(
         "--altitud-cultivo-csv",
         type=Path,
@@ -208,6 +215,21 @@ def main() -> None:
         tabla_altitud = pd.read_csv(args.altitud_cultivo_csv)
         altitud_cultivo = dict(zip(tabla_altitud["provincia_id"], tabla_altitud["altitud_mediana_m"]))
 
+    altitud_media = area_cultivo = None
+    if not args.sin_covariables:
+        for ruta in (args.altitud_media_csv, args.area_cultivo_csv):
+            if not ruta.exists():
+                print(
+                    f"PREPROCESAMIENTO NO LISTO: falta {ruta}. Genérelo con scripts/derive_altitud_cultivo.py "
+                    "y scripts/derive_area_cultivo.py, o use --sin-covariables.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+        t_alt = pd.read_csv(args.altitud_media_csv)
+        t_area = pd.read_csv(args.area_cultivo_csv)
+        altitud_media = dict(zip(t_alt["provincia_id"], t_alt["altitud_media_m"]))
+        area_cultivo = dict(zip(t_area["provincia_id"], t_area["area_cultivo_ha"]))
+
     dataset = build_processed_dataset(
         series_crudas=series_crudas,
         siembra_mensual=siembra_mensual,
@@ -219,6 +241,8 @@ def main() -> None:
         clasificacion_por_provincia=dict(zip(provincias["provincia_id"], provincias["clasificacion"])),
         clasificaciones_excluidas=args.clasificaciones_excluidas,
         max_dias_arrastre_ndvi=args.max_dias_arrastre_ndvi,
+        altitud_media_por_provincia=altitud_media,
+        area_cultivo_ha_por_provincia=area_cultivo,
         altitud_mediana_cultivo_por_provincia=altitud_cultivo,
         rango_altitudinal=(2500, 4000) if args.excluir_por_altitud else None,
     )

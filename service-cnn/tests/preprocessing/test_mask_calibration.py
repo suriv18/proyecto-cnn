@@ -8,7 +8,11 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from src.preprocessing.mask import summarize_amplitude_calibration, summarize_cropland_altitude
+from src.preprocessing.mask import (
+    summarize_agricultural_surface_altitude,
+    summarize_amplitude_calibration,
+    summarize_cropland_altitude,
+)
 
 
 def _tabla() -> pd.DataFrame:
@@ -107,3 +111,31 @@ class TestSummarizeCroplandAltitude:
         r = summarize_cropland_altitude(celdas, altitud_min_m=2500, altitud_max_m=4000).set_index("provincia_id")
 
         assert r.loc["LA MAR", "n_celdas"] == 3
+
+
+class TestSummarizeAgriculturalSurfaceAltitude:
+    """Covariable estática (4.10.3): altitud MEDIA de la superficie agrícola, es
+    decir, del cultivo que pasa los criterios de altitud y pendiente de la
+    máscara (la superficie sobre la que se calcula el NDVI)."""
+
+    @staticmethod
+    def _celdas():
+        filas = [
+            dict(provincia_id="LA MAR", celda_id="a", cobertura_suelo="cultivo", altitud_m=3000, pendiente_grados=5),
+            dict(provincia_id="LA MAR", celda_id="b", cobertura_suelo="cultivo", altitud_m=3400, pendiente_grados=8),
+            dict(provincia_id="LA MAR", celda_id="c", cobertura_suelo="cultivo", altitud_m=4500, pendiente_grados=5),   # sobre la altitud máxima
+            dict(provincia_id="LA MAR", celda_id="d", cobertura_suelo="cultivo", altitud_m=3200, pendiente_grados=30),  # demasiado empinada
+            dict(provincia_id="LA MAR", celda_id="e", cobertura_suelo="no_cultivo", altitud_m=3100, pendiente_grados=5),
+        ]
+        return pd.DataFrame(filas)
+
+    def test_promedia_solo_las_celdas_que_pasan_la_mascara(self):
+        r = summarize_agricultural_surface_altitude(self._celdas(), 2500, 4000, 14.04).set_index("provincia_id")
+
+        assert r.loc["LA MAR", "altitud_media_m"] == 3200  # media de 3000 y 3400
+        assert r.loc["LA MAR", "n_celdas"] == 2
+
+    def test_cuenta_una_sola_vez_una_celda_repetida_entre_campanas(self):
+        r = summarize_agricultural_surface_altitude(pd.concat([self._celdas(), self._celdas()]), 2500, 4000, 14.04)
+
+        assert r["n_celdas"].iloc[0] == 2
