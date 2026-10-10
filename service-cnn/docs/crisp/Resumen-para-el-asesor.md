@@ -2,7 +2,7 @@
 
 Tesis: *Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana* (UNMSM). Reorganizada bajo CRISP-ML(Q) + DSRM. Fecha: 2026-10-10.
 
-**Lo que pido:** cerrar las **8 decisiones** de la sección 3 para poder aprobar el gate de F2 y ejecutar el piloto oficial. Hasta entonces todo lo provisional está marcado como tal y es reversible. Además, 5 consultas de diseño (sección 4), dos de ellas sobre cómo contrastar HE2.
+**Lo que pido:** cerrar las **8 decisiones** de la sección 3 para poder aprobar el gate de F2 y ejecutar el piloto oficial. Hasta entonces todo lo provisional está marcado como tal y es reversible. Además, 6 consultas de diseño (sección 4). La más importante es la reformulación de HE1 y HE2, ya redactada en la tesis v3 (`docs/Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`).
 
 ## 1. Estado
 
@@ -18,6 +18,7 @@ Tesis: *Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de qui
 - Tensor: 6 variables (precipitación, temperatura máxima y mínima, radiación solar, NDVI medio y máximo) × 5 fases BBCH, más altitud media y proporción de quinua como covariables.
 - Fuentes: ESA WorldCover (cultivos), SRTM (pendiente), MODIS MOD13Q1 (NDVI), CHIRPS, ERA5-Land, SISAGRI (rendimiento).
 - Control de fugas: todo lo que aprende (imputación, estandarización, línea base, fenología de respaldo) se ajusta solo con el entrenamiento; validación de origen móvil; las campañas externas no se cargan en el piloto (prueba de fuga por permutación: **pasa** en los 5 modelos). Suite de tests: 598 pasan.
+- **Tesis v3:** parte de la base WMSR (con la enmienda del periodo), incorpora el título y la metodología CRISP-ML(Q) y reajusta la formulación: el modelo es la CNN-1D y SHAP es la herramienta de interpretabilidad. Hipótesis, contrastes, operacionalización y matriz de consistencia quedan alineados con lo que se ejecuta. 119 cambios, revisables lado a lado en la página de cambios.
 - Implementado desde la última versión: referencia B4 (persistencia), corrección de Holm, valores p propuestos para los 3 criterios de HE2, `evaluate_he2` y oclusión de cada fase.
 - Informe de depuración y EDA: `docs/crisp/E3-informe-depuracion-eda.md`. Pre-registro en borrador: `docs/crisp/E5-preespecificacion-BORRADOR.md`. Plan y resultados del piloto: `docs/crisp/F3-plan-del-piloto.md`.
 
@@ -53,6 +54,7 @@ Corrida de desarrollo con datos reales de **solo 2016–2019** (un pliego, prueb
 3. **Espacios de búsqueda.** El piloto marcó parámetros en el borde (dropout de la CNN, cuyo rango [0,001; 0,01] es casi cero; alpha de Elastic-Net; C de SVR). ¿Se amplían, siempre igual para los 5 modelos, antes de congelar E5?
 4. **Valores p de HE2.** La tesis (3.3.5) aplica Holm a estabilidad, fidelidad y concordancia, pero esos criterios eran reglas con umbral y no tenían valor p. Propuse: permutación de las fases dentro de cada campaña (estabilidad), aleatorización exacta por rangos (fidelidad) y binomial exacta (concordancia). Se conservan los umbrales W ≥ 0,70 y J ≥ 0,50 como criterio de magnitud. Con 5 campañas externas, HE2 solo se respalda si concordancia acierta 5 de 5 (p = 0,0102) y la fase de mayor contribución es la más dañina al ocluirla en las 5 (p = 0,0003). ¿Se aprueba esta definición?
 5. **Control de la fidelidad.** 3.3.4 usa una sola fase de control. Con 5 campañas el p mínimo sería 1/32 = 0,031, que nunca pasa Holm con 3 contrastes (umbral 0,0167). Propuse comparar la fase de mayor contribución contra las 4 restantes, todas de igual duración. ¿Se acepta, o se mantiene el control único sabiendo que HE2 no podría respaldarse? Además, el umbral J ≥ 0,50 se cumple por azar el 22 % de las veces (Jaccard medio al azar = 0,46), por lo que el valor p es el criterio informativo.
+6. **Reformulación de HE1 y HE2 (tesis v3).** HE1 pasa a no inferioridad frente a XGBoost y frente a la mejor línea base provincial B* (la mejor entre B2 y la persistencia), con una regla exacta de signos; la superioridad pasa a ser un análisis exploratorio con skill score. HE2 usa la concordancia agronómica como criterio primario, con fidelidad y estabilidad secundarias y Holm entre ellas. Motivo: con 5 campañas externas la superioridad sobre B2 exigiría ganar las 5, y en el ensayo la CNN-1D no se distingue de B2 ni de la persistencia. ¿Se aprueba, o se mantiene la superioridad frente a B2 como criterio confirmatorio?
 
 ## 5. Qué ocurre después de su respuesta
 
