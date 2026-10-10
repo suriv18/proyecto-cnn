@@ -41,7 +41,7 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 ### Propuestos, a revisar y fijar
 
-- `hipotesis.n_bootstrap` — 10000 · _con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta_
+- `hipotesis.n_bootstrap` — 10000 · _con 5 externas solo había 5^5 = 3125 remuestreos distintos; con 6 (ventana propuesta de 4) hay 6^6 = 46 656, y 10 000 es suficiente_
 - `hipotesis.semilla_bootstrap` — 2026 · _reproducibilidad_
 - `datos.clasificaciones_excluidas` — costa_riego, selva · _4.7, criterio de exclusión 4_
 - `datos.exclusion_por_altitud_del_cultivo` — no · _E3 §7: la altitud del cultivo no es la de la quinua_
@@ -74,7 +74,7 @@ Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `estadistico_he1a` | mediana de q_f = RMSE(CNN-1D)/RMSE(XGBoost) - 1; H0: mediana >= 0.05 | `fijado_por_tesis` | 3.3.1 |
 | `estadistico_he1b` | mediana de Δ_f = RMSE(CNN-1D) - RMSE(B2); H0: mediana >= 0 | `fijado_por_tesis` | 3.3.2 |
 | `intervalo_de_confianza` | límite superior unilateral al 95 % por bootstrap de bloques de campaña | `fijado_por_tesis` | 4.14 |
-| `n_bootstrap` | 10000 | `propuesto` | con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta |
+| `n_bootstrap` | 10000 | `propuesto` | con 5 externas solo había 5^5 = 3125 remuestreos distintos; con 6 (ventana propuesta de 4) hay 6^6 = 46 656, y 10 000 es suficiente |
 | `semilla_bootstrap` | 2026 | `propuesto` | reproducibilidad |
 | `contraste_de_apoyo` | Wilcoxon pareado unilateral, Hodges-Lehmann y correlación biserial de rangos | `fijado_por_tesis` | 3.3.1 y 4.14 |
 | `he1_se_respalda_si` | se cumplen HE1a y HE1b | `fijado_por_tesis` | 3.3.2 |

@@ -33,7 +33,7 @@ hipotesis:
   estadistico_he1a: {valor: "mediana de q_f = RMSE(CNN-1D)/RMSE(XGBoost) - 1; H0: mediana >= 0.05", estado: fijado_por_tesis, fuente: "3.3.1"}
   estadistico_he1b: {valor: "mediana de Δ_f = RMSE(CNN-1D) - RMSE(B2); H0: mediana >= 0", estado: fijado_por_tesis, fuente: "3.3.2"}
   intervalo_de_confianza: {valor: "límite superior unilateral al 95 % por bootstrap de bloques de campaña", estado: fijado_por_tesis, fuente: "4.14"}
-  n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 campañas externas solo hay 5^5 = 3125 remuestreos distintos; más de 10 000 no aporta"}
+  n_bootstrap: {valor: 10000, estado: propuesto, fuente: "con 5 externas solo había 5^5 = 3125 remuestreos distintos; con 6 (ventana propuesta de 4) hay 6^6 = 46 656, y 10 000 es suficiente"}
   semilla_bootstrap: {valor: 2026, estado: propuesto, fuente: "reproducibilidad"}
   contraste_de_apoyo: {valor: "Wilcoxon pareado unilateral, Hodges-Lehmann y correlación biserial de rangos", estado: fijado_por_tesis, fuente: "3.3.1 y 4.14"}
   he1_se_respalda_si: {valor: "se cumplen HE1a y HE1b", estado: fijado_por_tesis, fuente: "3.3.2"}

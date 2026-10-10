@@ -31,7 +31,7 @@ Además informa, sin decidir, la **ventana inicial de entrenamiento** (`por_deci
 > la ventana; (b) la **corrida técnica** de desarrollo (no vinculante) usa solo **2016–2019**, la menor ventana plausible,
 > y no lee 2020 en ningún caso. Con esa ventana mínima el piloto técnico tiene un único pliego (prueba 2019).
 
-- **Datos del piloto:** únicamente las campañas **2016–2020**: **302 observaciones elegibles** (60, 62, 60, 62 y 58 por campaña; 25 con alguna celda vacía que se imputa con la mediana de entrenamiento). Las campañas 2021–2025 no se cargan, no se grafican y no se usan para ninguna decisión.
+- **Datos del piloto:** únicamente las campañas **2016–2020**: **302 observaciones elegibles** (60, 62, 60, 62 y 58 por campaña; 25 con alguna celda vacía que se imputa con la mediana de entrenamiento). Las campañas 2021–2025 no se cargan, no se grafican y no se usan para ninguna decisión. *(Actualización 2026-10-10: si el asesor ratifica la ventana de 4, el piloto oficial usa solo 2016–2019 y 2020 pasa a ser externa; la corrida técnica ya usa 2016–2019.)*
 - **Control técnico (tarea T1, hecha: `src/evaluation/pilot_guard.py`):** una guarda que lanza `CampanaExternaError` si algún componente del piloto recibe una campaña fuera de las `ventana_inicial` primeras, y que registra en el informe del piloto las campañas efectivamente leídas. Sin esta guarda no se ejecuta el piloto sobre datos reales.
 - **Salvedad:** el informe E3 ya muestra la serie de rendimiento por campaña con las 10 campañas (descriptiva, para describir los datos). Eso no influye en ninguna decisión del piloto, pero queda declarado.
 
