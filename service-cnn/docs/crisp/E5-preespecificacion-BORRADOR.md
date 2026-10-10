@@ -10,13 +10,12 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 | Estado | Parámetros |
 |---|---|
-| `por_decidir_asesor` | 8 |
+| `por_decidir_asesor` | 7 |
 | `por_decidir_piloto` | 11 |
 | `propuesto` | 18 |
 
 ### Requieren al asesor
 
-- `datos.periodo_de_campanas` — 2016-2025 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml_
 - `datos.provincias_de_transicion` — incluidas_y_marcadas · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)_
 - `datos.ciclos_fuera_de_la_ventana_de_extraccion` — excluir · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.7 criterio 2; alternativa: ampliar la ventana a diciembre y re-extraer_
 - `datos.umbrales_de_la_mascara.altitud_minima_m` — 2500 · _Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)_
@@ -95,7 +94,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
-| `periodo_de_campanas` | 2016-2025 | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml |
+| `periodo_de_campanas` | 2016-2025 | `fijado_por_tesis` | Confirmado por el autor (2026-10-10). Enmienda H1: no existe fuente provincial de rendimiento anterior a 2015 (data/manifest/midagri_sisagri.yaml); el asesor la revisa |
 | `clasificaciones_excluidas` | costa_riego, selva | `propuesto` | 4.7, criterio de exclusión 4 |
 | `provincias_de_transicion` | incluidas_y_marcadas | `por_decidir_asesor` | Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito) |
 | `exclusion_por_altitud_del_cultivo` | no | `propuesto` | E3 §7: la altitud del cultivo no es la de la quinua |

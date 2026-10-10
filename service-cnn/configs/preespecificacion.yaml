@@ -52,7 +52,7 @@ hipotesis:
   hipotesis_general_conjuntiva: {valor: true, estado: fijado_por_tesis, fuente: "3.1"}
 
 datos:
-  periodo_de_campanas: {valor: "2016-2025", estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Enmienda H1 (2006-2024 -> 2016-2025), estado PROPUESTA en data/manifest/midagri_sisagri.yaml"}
+  periodo_de_campanas: {valor: "2016-2025", estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10). Enmienda H1: no existe fuente provincial de rendimiento anterior a 2015 (data/manifest/midagri_sisagri.yaml); el asesor la revisa"}
   clasificaciones_excluidas: {valor: [costa_riego, selva], estado: propuesto, fuente: "4.7, criterio de exclusión 4"}
   provincias_de_transicion: {valor: incluidas_y_marcadas, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. 4.5.3; E3 §7 (evidencia SISAGRI por distrito)"}
   exclusion_por_altitud_del_cultivo: {valor: false, estado: propuesto, fuente: "E3 §7: la altitud del cultivo no es la de la quinua"}

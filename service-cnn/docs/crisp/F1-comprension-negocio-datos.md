@@ -49,3 +49,5 @@
 ## Criterio de gate H1
 
 Se cierra cuando: Q-F1-1…Q-F1-5 y Q-F1-7 cumplidos, E1 canónico publicado con N5 calculado, enmienda aprobada por el asesor y reflejada en el docx, y registro de literatura conservado. **Condición de continuidad**: si la cobertura no alcanza, enmienda metodológica antes de entrenar (Tabla 6).
+
+**Actualización 2026-10-10:** el autor confirmó el periodo 2016–2025 (R-F1-1/C-F1-1). La enmienda ya está reflejada en la tesis v3 (`docs/Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`) y en E5 (`fijado_por_tesis`). Para cerrar el gate H1 solo falta la revisión del asesor.

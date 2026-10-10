@@ -10,7 +10,7 @@ Fecha: 2026-10-10. Criterio general: decidir lo que se pueda **antes de ver las 
 
 | # | Parámetro | Decisión | Cambio |
 |---|---|---|---|
-| 1 | Periodo | **2016–2025** (10 campañas). Formalizar la enmienda H1 en el documento de tesis | No |
+| 1 | Periodo | **2016–2025** (10 campañas). **Confirmado por el autor (2026-10-10).** La enmienda H1 ya está en la tesis v3 | No |
 | 2 | Provincias de transición | **Incluidas y marcadas**; resultados principales con ellas y sensibilidad sin ellas | No |
 | 3 | Ciclos fuera de la ventana de extracción | **Excluir** (29 observaciones, 3,6 % de 800); no re-extraer. Informar la cobertura por departamento | No |
 | 4 | Altitud mínima | **2500 m** | No |
