@@ -63,9 +63,9 @@ datos:
   horizonte_principal_dias_antes_de_cosecha: {valor: 30, estado: fijado_por_tesis, fuente: "1.5, 4.10.4"}
   horizonte_secundario: {valor: cierre_de_floracion, estado: fijado_por_tesis, fuente: "1.5, 4.10.4 (si la cobertura lo permite)"}
   umbrales_de_la_mascara:
-    altitud_minima_m: {valor: 2500, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. data/manifest/mascara_agricola.yaml (provisional)"}
-    altitud_maxima_m: {valor: 4000, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem; E3 §7"}
-    pendiente_maxima_grados: {valor: 14.04, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. ídem (D.S. 005-2022-MIDAGRI)"}
+    altitud_minima_m: {valor: 2500, estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10); el asesor lo revisa. data/manifest/mascara_agricola.yaml (provisional)"}
+    altitud_maxima_m: {valor: 4000, estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10); el asesor lo revisa. ídem; E3 §7"}
+    pendiente_maxima_grados: {valor: 14.04, estado: fijado_por_tesis, fuente: "Confirmado por el autor (2026-10-10); el asesor lo revisa. ídem (D.S. 005-2022-MIDAGRI)"}
     amplitud_ndvi_minima: {valor: 0.323, estado: por_decidir_asesor, fuente: "Recomendación firme en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md); falta ratificación real. Calibrado con 2016-2020, que son todas de entrenamiento con ventana 5. percentil 5 de las campañas 2016-2020; sesgo regional en Arequipa y Puno (E3 §7)"}
 
 validacion:
