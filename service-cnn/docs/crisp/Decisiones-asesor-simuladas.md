@@ -28,6 +28,14 @@ Fecha: 2026-10-10. Criterio general: decidir lo que se pueda **antes de ver las 
 5. **Amplitud de NDVI.** El percentil 5 es un criterio, no un valor mágico. Se congela el percentil y se reporta p1 y p10. Con ventana 4, la campaña 2020 pasa a ser externa, así que el umbral (hoy 0,323, calibrado con 2016–2020) debe recalcularse solo con 2016–2019 antes del piloto oficial. Tarea abierta, no ejecutada.
 6. **Ventana.** Con 5 externas el p mínimo de Wilcoxon es 1/32 = 0,031, que no sobrevive a Holm con 2 contrastes (0,05/2 = 0,025). Con 6 externas es 1/64 = 0,016. El piloto técnico indicó además que más campañas de entrenamiento no mejoran el error (P10, un pliego), de modo que sacrificar una de entrenamiento cuesta poco. **Contrapartida:** HE1b por bootstrap pasa a exigir que la CNN gane las 6 campañas (con 5 exigía 5 de 5, verificado con `evaluate_superiority`), de modo que ganar poder en Wilcoxon no hace más fácil confirmar HE1b. Además la corrección de Holm figura en la tesis (3.3.5) pero **no está implementada en el código**: la familia exacta de contrastes debe definirse e implementarse antes de congelar.
 
+## CORRECCIÓN (2026-10-10, al implementar Holm): el argumento de la decisión 8 estaba mal
+
+La razón nº 6 decía que con 5 externas el p mínimo de Wilcoxon (1/32) «no sobrevive a Holm con 2 contrastes». **Es incorrecto.** Revisado el E5 (3.3.5):
+- **HE1a y HE1b forman una conjunción** (HE1 se respalda si se cumplen ambas): cada una se contrasta al nivel 0,05 sin corrección. Con 5 externas, 1/32 = 0,031 < 0,05 es alcanzable.
+- **Holm solo corresponde a la familia de HE2** (estabilidad, fidelidad, concordancia), y esos tres criterios hoy son **reglas con umbral, sin valor p**; no hay nada que corregir hasta que se defina un p para cada uno.
+
+Lo que queda a favor de la ventana de 4 es poco (un bloque más para el bootstrap y p mínimo 1/64). Lo que queda en contra es más: HE1b exige 6 de 6 en vez de 5 de 5 (más difícil si la CNN solo iguala a B2, como en el piloto técnico), B2 con tendencia lineal necesita ≥ 5 campañas de historia y con ventana 4 la primera campaña externa (2020) cae a la media, y obliga a recalibrar la máscara. **La decisión 8 queda abierta; con este argumento corregido recomendaría volver a la ventana de 5.** No se revierte en los archivos hasta que el tesista lo confirme.
+
 ## Consultas de diseño
 
 | Consulta | Decisión |
