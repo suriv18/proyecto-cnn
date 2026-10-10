@@ -19,10 +19,10 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-HISTORIA_MINIMA_CAMPANAS = 5
+HISTORIA_MINIMA_CAMPANAS = 4
 """Número mínimo de campañas de entrenamiento para ajustar una tendencia
 lineal confiable; por debajo de este umbral se usa la regla de respaldo (media
-simple). Valor a confirmar/ajustar en el ensayo piloto (H2, sección 4.11)."""
+simple). Fijado en 4 por el piloto oficial (forma `lineal_min4`: con 2020 como prueba la tendencia lineal dio 193,8 kg/ha frente a 231,1 de la media)."""
 
 
 @dataclass(frozen=True)

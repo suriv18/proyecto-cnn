@@ -11,7 +11,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | Estado | Parámetros |
 |---|---|
 | `por_decidir_asesor` | 0 |
-| `por_decidir_piloto` | 11 |
+| `por_decidir_piloto` | 0 |
 | `propuesto` | 18 |
 
 ### Requieren al asesor
@@ -19,17 +19,6 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 ### Las decide el ensayo piloto (sin campañas externas)
 
-- `modelos.espacios_de_busqueda` — configs/hyperparams.yaml · _4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador_
-- `modelos.submuestreo_de_xgboost` — subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda · _con los valores por defecto XGBoost es determinista y las 10 semillas de 4.12.4 serían idénticas (corrida técnica, P6); el piloto oficial lo confirma_
-- `modelos.entrenamiento_cnn1d.early_stopping_particion` — temporal: la última campaña del entrenamiento · _BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal)_
-- `modelos.entrenamiento_cnn1d.restaurar_mejor_epoca` — sí · _BRECHA G2: el código devuelve el modelo de la última época_
-- `modelos.entrenamiento_cnn1d.epocas_maximas` — _sin definir_ · _se fija con la curva de pérdida del piloto_
-- `variable_objetivo.representacion_de_modelado` — _sin definir_ · _4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas_
-- `variable_objetivo.historia_minima_para_tendencia_campanas` — 5 · _target_transform.HISTORIA_MINIMA_CAMPANAS. Con menos campañas B2 cae a la media provincial y coincide con B1 (verificado en la corrida técnica: B1 = B2 = 202 kg/ha con 3 campañas). Con 5 campañas de entrenamiento la primera campaña externa tiene exactamente 5 puntos por provincia; una tendencia con tan pocos puntos es muy ruidosa_
-- `variable_objetivo.forma_de_la_linea_base_b2` — _sin definir_ · _4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas_
-- `interpretabilidad.variante_de_shap` — deep_explainer · _4.15; contingencia: KernelExplainer si falla la precisión local_
-- `interpretabilidad.escala_de_salida_explicada` — la de la representación de modelado elegida · _4.15_
-- `interpretabilidad.tolerancia_de_precision_local` — _sin definir_ · _se calibra en el piloto como fracción de la desviación estándar de la salida_
 
 ### Propuestos, a revisar y fijar
 
@@ -128,12 +117,12 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `benchmark_secundario_persistencia` | B4 | `propuesto` | recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza |
 | `presupuesto_de_trials_por_modelo` | 30 | `propuesto` | src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo |
 | `muestreador_de_hiperparametros` | tpe | `fijado_por_tesis` | 4.12.3 (Optuna, Sabo et al. 2023) |
-| `espacios_de_busqueda` | configs/hyperparams.yaml | `por_decidir_piloto` | 4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador |
-| `submuestreo_de_xgboost` | subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda | `por_decidir_piloto` | con los valores por defecto XGBoost es determinista y las 10 semillas de 4.12.4 serían idénticas (corrida técnica, P6); el piloto oficial lo confirma |
+| `espacios_de_busqueda` | configs/hyperparams.yaml (versión de la ronda 2 del piloto oficial) | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): se ensancharon una sola vez alpha (Elastic-Net) y C (SVR) una década, y el dropout de la CNN a [0, 0,5]; tras la ronda 2 persisten ensayos en el borde inferior de alpha, C y filtros_capa1, y en el superior de subsample (tope natural 1,0), porque el mejor ajuste es casi la línea base; no se ensancha más y queda como limitación |
+| `submuestreo_de_xgboost` | subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): con submuestreo las 10 semillas de XGBoost varían (error estándar 0,8 a 1,3 kg/ha) |
 | `entrenamiento_cnn1d.optimizador` | adam | `fijado` | src/models/cnn1d_trainer.py |
-| `entrenamiento_cnn1d.early_stopping_particion` | temporal: la última campaña del entrenamiento | `por_decidir_piloto` | BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal) |
-| `entrenamiento_cnn1d.restaurar_mejor_epoca` | sí | `por_decidir_piloto` | BRECHA G2: el código devuelve el modelo de la última época |
-| `entrenamiento_cnn1d.epocas_maximas` | _sin definir_ | `por_decidir_piloto` | se fija con la curva de pérdida del piloto |
+| `entrenamiento_cnn1d.early_stopping_particion` | temporal: la última campaña del entrenamiento | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G1 cerrada en el código; la partición temporal dio mejor época 10 y RMSE 196,4 frente a 7 y 198,2 de la aleatoria, sin diferencia relevante |
+| `entrenamiento_cnn1d.restaurar_mejor_epoca` | sí | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G2 cerrada en el código (se restaura la mejor época de validación) |
+| `entrenamiento_cnn1d.epocas_maximas` | 47 | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): mejor época mediana 10 con partición temporal; regla de épocas máximas del piloto |
 | `entrenamiento_cnn1d.paciencia` | 10 | `propuesto` | TrainingConfig |
 | `imputacion_residual_de_celdas_vacias` | mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos | `propuesto` | 4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones |
 | `estandarizacion_del_objetivo` | z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha | `propuesto` | los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000) |
@@ -144,19 +133,19 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
 | `metrica_confirmatoria` | RMSE sobre el rendimiento reconstruido en kg/ha | `fijado_por_tesis` | 4.11 y 4.13 |
-| `representacion_de_modelado` | _sin definir_ | `por_decidir_piloto` | 4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas |
-| `historia_minima_para_tendencia_campanas` | 5 | `por_decidir_piloto` | target_transform.HISTORIA_MINIMA_CAMPANAS. Con menos campañas B2 cae a la media provincial y coincide con B1 (verificado en la corrida técnica: B1 = B2 = 202 kg/ha con 3 campañas). Con 5 campañas de entrenamiento la primera campaña externa tiene exactamente 5 puntos por provincia; una tendencia con tan pocos puntos es muy ruidosa |
-| `forma_de_la_linea_base_b2` | _sin definir_ | `por_decidir_piloto` | 4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas |
+| `representacion_de_modelado` | anomalia | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): RMSE 198,2 frente a 394,6 kg/ha en nivel (−49,8 %); regla P4 |
+| `historia_minima_para_tendencia_campanas` | 4 | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): forma lineal_min4: con 2020 como prueba la tendencia lineal da 193,8 kg/ha frente a 231,1 de la media; target_transform.HISTORIA_MINIMA_CAMPANAS = 4 |
+| `forma_de_la_linea_base_b2` | tendencia lineal por provincia con al menos 4 campañas de entrenamiento; con menos, media provincial | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): regla P5 (lineal_min4) |
 | `metricas_complementarias` | mae, rrmse, r2_fuera_de_muestra | `fijado_por_tesis` | Tabla 9 |
 
 ### interpretabilidad
 
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
-| `variante_de_shap` | deep_explainer | `por_decidir_piloto` | 4.15; contingencia: KernelExplainer si falla la precisión local |
-| `escala_de_salida_explicada` | la de la representación de modelado elegida | `por_decidir_piloto` | 4.15 |
+| `variante_de_shap` | deep_explainer | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): error de precisión local 0,0000 frente a una tolerancia de 0,0139; contingencia KernelExplainer con l1_reg = 0; acuerdo por fase con Kernel ρ = 0,90 |
+| `escala_de_salida_explicada` | anomalía respecto de B2, estandarizada con la media y la desviación del entrenamiento del pliego | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): coherente con la representación elegida |
 | `conjunto_de_referencia` | muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija | `propuesto` | 4.15; solo entrenamiento |
-| `tolerancia_de_precision_local` | _sin definir_ | `por_decidir_piloto` | se calibra en el piloto como fracción de la desviación estándar de la salida |
+| `tolerancia_de_precision_local` | 0.05 | `fijado` | Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): fracción de la desviación estándar de la salida del modelo sobre el fondo de referencia (tolerancia 0,0139 en el piloto; DeepExplainer con error 0,0000) |
 | `tratamiento_de_predictores_correlacionados` | sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto | `propuesto` | 2.3.2 (Aas et al., 2021), 4.15 |
 | `kernel_explainer_regularizacion` | l1_reg = 0 (sin regularización L1) | `propuesto` | piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95 |
 | `agregacion` | por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad | `fijado_por_tesis` | 4.15 |

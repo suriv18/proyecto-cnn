@@ -124,3 +124,30 @@ class TestToAnomaly:
         (2006-2013) usada para ajustar, verificando el contrato de la función."""
         campanas_usadas_en_ajuste = set(historia_suficiente["campana_id"])
         assert 2014 not in campanas_usadas_en_ajuste
+
+
+class TestHistoriaMinimaDelPiloto:
+    """El piloto oficial eligió la tendencia lineal con al menos 4 campañas (forma `lineal_min4`)."""
+
+    @staticmethod
+    def _historia(n: int) -> pd.DataFrame:
+        return pd.DataFrame({
+            "provincia_id": ["PUN-AZA"] * n,
+            "campana_id": list(range(2016, 2016 + n)),
+            "rendimiento_kg_ha": [600.0 + 20.0 * i for i in range(n)],
+        })
+
+    def test_la_historia_minima_es_cuatro_campanas(self):
+        assert HISTORIA_MINIMA_CAMPANAS == 4
+
+    def test_con_cuatro_campanas_ajusta_la_tendencia_lineal(self):
+        baseline = fit_provincial_baseline(self._historia(4), "PUN-AZA")
+
+        assert baseline.pendiente == pytest.approx(20.0, abs=1e-6)
+
+    def test_con_tres_campanas_usa_la_media(self):
+        baseline = fit_provincial_baseline(self._historia(3), "PUN-AZA")
+
+        assert baseline.pendiente == 0.0
+        assert baseline.intercepto == pytest.approx(620.0)
+

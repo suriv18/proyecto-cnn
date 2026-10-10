@@ -163,3 +163,9 @@ Lectura prudente: (i) **en nivel todos los modelos son peores que la línea base
 - p de fidelidad 0,76 y de concordancia 0,64; ninguno rechaza y HE2 no se respalda. Con 2 campañas el p mínimo posible de concordancia es 0,16, así que el ensayo solo comprueba que la cadena funciona y su costo, no la hipótesis.
 
 *(Actualización con HE2 definitivo.)* Con las reglas de la tesis v3 el ensayo técnico da: concordancia (primaria) p = 0,64 y HE2 no se respalda; estabilidad y fidelidad (secundarias) no se rechazan; la proporción de contribución en floración + llenado es 0,43, apenas sobre el 0,40 del azar. Es coherente con un modelo que apenas usa la información de las fases.
+
+## 11. Piloto oficial (2026-10-10, vinculante)
+
+Ejecutado con el gate de F2 confirmado por el autor y ventana 5 (campañas 2016–2020; pruebas del piloto: 2019 y 2020). Informe completo en `docs/crisp/Piloto-oficial-informe.md`. Cerró los 11 parámetros `por_decidir_piloto` de E5: representación = anomalía; B2 = tendencia lineal con ≥ 4 campañas (`HISTORIA_MINIMA_CAMPANAS = 4`); partición temporal del early stopping con restauración de la mejor época; 47 épocas máximas; DeepExplainer con tolerancia de 0,05 de la desviación de la salida; submuestreo de XGBoost confirmado; espacios de búsqueda congelados tras una sola ampliación (`alpha`, `C`, dropout). La prueba de fuga pasa en los 5 modelos.
+
+Hallazgo para la discusión: sin tendencia en la línea base los modelos fallaban en 2020 (RMSE 231 a 235) y con ella igualan a B2 (188 a 196 frente a 194); la persistencia (B4, 172) sigue siendo la referencia más difícil. Persisten ensayos en el borde de `alpha`, `C`, `filtros_capa1` y `subsample`: el mejor ajuste es casi la línea base. Queda declarado como limitación.

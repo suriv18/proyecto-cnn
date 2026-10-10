@@ -10,7 +10,7 @@
 # — consumido por src.models.tuning.sugerir_hiperparametro.
 
 elastic_net:
-  alpha: [float, 0.001, 10.0]
+  alpha: [float, 0.0001, 10.0]  # piloto oficial: 67 % de los ensayos en el borde inferior (0,001); ampliado una década
   l1_ratio: [float, 0.0, 1.0]
 
 random_forest:
@@ -26,13 +26,13 @@ xgboost:
   colsample_bytree: [float, 0.6, 1.0]
 
 svr:
-  C: [float, 0.01, 100.0]
+  C: [float, 0.001, 100.0]  # piloto oficial: 83 % de los ensayos en el borde inferior (0,01); ampliado una década
   epsilon: [float, 0.001, 1.0]
 
 cnn1d:
   filtros_capa1: [int, 5, 15]
   filtros_capa2: [int, 5, 15]
-  dropout: [float, 0.001, 0.01]
+  dropout: [float, 0.0, 0.5]  # el rango anterior (0,001-0,01) equivalía a no usar dropout; criterio de diseño de 4.12.3
   tasa_aprendizaje: [float, 0.0001, 0.01]
 
 # Duración en días de cada fase BBCH de la quinua (sección 4.10.2), a partir

@@ -84,8 +84,10 @@ class TestHistoriaMinimaDeLaLineaBase:
 
         assert any("historia mínima" in d for d in check_consistency_with_code(alterado))
 
-    def test_lo_decide_el_piloto(self, prereg):
-        assert "variable_objetivo.historia_minima_para_tendencia_campanas" in pending_decisions(prereg)["por_decidir_piloto"]
+    def test_la_historia_minima_la_fijo_el_piloto_oficial_en_cuatro_campanas(self, prereg):
+        parametro = dict(iter_parameters(prereg))["variable_objetivo.historia_minima_para_tendencia_campanas"]
+
+        assert parametro["estado"] == "fijado" and parametro["valor"] == 4
 
 
 class TestDecisionesPendientes:
@@ -115,10 +117,18 @@ class TestDecisionesPendientes:
         assert dict(iter_parameters(prereg))["validacion.ventana_inicial_de_entrenamiento_campanas"]["valor"] == 5
 
     def test_lista_lo_que_decide_el_piloto(self, prereg):
-        pendientes = pending_decisions(prereg)
+        alterado = copy.deepcopy(prereg)
+        alterado["variable_objetivo"]["representacion_de_modelado"]["estado"] = "por_decidir_piloto"
 
-        assert "variable_objetivo.representacion_de_modelado" in pendientes["por_decidir_piloto"]
-        assert "modelos.entrenamiento_cnn1d.early_stopping_particion" in pendientes["por_decidir_piloto"]
+        assert "variable_objetivo.representacion_de_modelado" in pending_decisions(alterado)["por_decidir_piloto"]
+
+    def test_el_piloto_oficial_cerro_sus_once_parametros(self, prereg):
+        parametros = dict(iter_parameters(prereg))
+
+        assert pending_decisions(prereg)["por_decidir_piloto"] == []
+        assert parametros["variable_objetivo.representacion_de_modelado"]["valor"] == "anomalia"
+        assert parametros["modelos.entrenamiento_cnn1d.epocas_maximas"]["valor"] == 47
+        assert parametros["interpretabilidad.variante_de_shap"]["valor"] == "deep_explainer"
 
     def test_no_incluye_lo_ya_fijado_por_la_tesis(self, prereg):
         todos = [r for lista in pending_decisions(prereg).values() for r in lista]
@@ -128,7 +138,7 @@ class TestDecisionesPendientes:
 
 class TestCongelamiento:
     def test_no_se_puede_congelar_con_decisiones_pendientes(self, prereg):
-        with pytest.raises(PreregistrationNotReadyError, match="por_decidir_piloto"):
+        with pytest.raises(PreregistrationNotReadyError, match="propuesto"):
             assert_can_freeze(prereg)
 
     def test_tampoco_se_puede_congelar_con_valores_sin_definir_aunque_todo_este_fijado(self, prereg):
@@ -144,7 +154,7 @@ class TestCongelamiento:
         fijar({k: v for k, v in listo.items() if k != "metadatos"})
         for seccion in [k for k in listo if k != "metadatos"]:
             fijar(listo[seccion])
-        # los valores aún en `null` también impiden congelar
+        listo["modelos"]["entrenamiento_cnn1d"]["epocas_maximas"]["valor"] = None  # un valor sin definir impide congelar
         with pytest.raises(PreregistrationNotReadyError, match="sin valor"):
             assert_can_freeze(listo)
 
@@ -155,5 +165,5 @@ class TestRenderizado:
 
         assert "BORRADOR" in texto
         assert "Decisiones pendientes" in texto
-        assert "variable_objetivo.representacion_de_modelado" in texto
+        assert "modelos.presupuesto_de_trials_por_modelo" in texto
         assert "fijado_por_tesis" in texto

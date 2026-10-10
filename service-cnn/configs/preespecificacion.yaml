@@ -90,13 +90,13 @@ modelos:
   benchmark_secundario_persistencia: {valor: B4, estado: propuesto, fuente: "recomendación en rol de asesor (docs/crisp/Decisiones-asesor-simuladas.md): repite la última campaña de entrenamiento de la provincia; descriptivo, fuera de la familia de Holm; no se optimiza"}
   presupuesto_de_trials_por_modelo: {valor: 30, estado: propuesto, fuente: "src/models/tuning.py; igual para los 5 modelos (4.12.3); el piloto confirma el costo"}
   muestreador_de_hiperparametros: {valor: tpe, estado: fijado_por_tesis, fuente: "4.12.3 (Optuna, Sabo et al. 2023)"}
-  espacios_de_busqueda: {valor: "configs/hyperparams.yaml", estado: por_decidir_piloto, fuente: "4.12.3: se publican y congelan antes de la evaluación; hoy son un marcador"}
-  submuestreo_de_xgboost: {valor: "subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda", estado: por_decidir_piloto, fuente: "con los valores por defecto XGBoost es determinista y las 10 semillas de 4.12.4 serían idénticas (corrida técnica, P6); el piloto oficial lo confirma"}
+  espacios_de_busqueda: {valor: "configs/hyperparams.yaml (versión de la ronda 2 del piloto oficial)", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): se ensancharon una sola vez alpha (Elastic-Net) y C (SVR) una década, y el dropout de la CNN a [0, 0,5]; tras la ronda 2 persisten ensayos en el borde inferior de alpha, C y filtros_capa1, y en el superior de subsample (tope natural 1,0), porque el mejor ajuste es casi la línea base; no se ensancha más y queda como limitación"}
+  submuestreo_de_xgboost: {valor: "subsample y colsample_bytree en [0.6, 1.0] dentro del espacio de búsqueda", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): con submuestreo las 10 semillas de XGBoost varían (error estándar 0,8 a 1,3 kg/ha)"}
   entrenamiento_cnn1d:
     optimizador: {valor: adam, estado: fijado, fuente: "src/models/cnn1d_trainer.py"}
-    early_stopping_particion: {valor: "temporal: la última campaña del entrenamiento", estado: por_decidir_piloto, fuente: "BRECHA G1: el código usa una partición ALEATORIA del 20 % (4.12.2 exige temporal)"}
-    restaurar_mejor_epoca: {valor: true, estado: por_decidir_piloto, fuente: "BRECHA G2: el código devuelve el modelo de la última época"}
-    epocas_maximas: {valor: null, estado: por_decidir_piloto, fuente: "se fija con la curva de pérdida del piloto"}
+    early_stopping_particion: {valor: "temporal: la última campaña del entrenamiento", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G1 cerrada en el código; la partición temporal dio mejor época 10 y RMSE 196,4 frente a 7 y 198,2 de la aleatoria, sin diferencia relevante"}
+    restaurar_mejor_epoca: {valor: true, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): brecha G2 cerrada en el código (se restaura la mejor época de validación)"}
+    epocas_maximas: {valor: 47, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): mejor época mediana 10 con partición temporal; regla de épocas máximas del piloto"}
     paciencia: {valor: 10, estado: propuesto, fuente: "TrainingConfig"}
   imputacion_residual_de_celdas_vacias: {valor: "mediana de las campañas de entrenamiento por variable y fase, para los 5 modelos", estado: propuesto, fuente: "4.12.2; la misma información para todos (Tabla 8); afecta al 5 % de las observaciones"}
   estandarizacion_del_objetivo: {valor: "z-score con la media y la desviación del entrenamiento del pliego, para los 5 modelos; las predicciones se invierten a kg/ha", estado: propuesto, fuente: "los espacios de búsqueda (epsilon de SVR, C, alpha) suponen un objetivo estandarizado; el rendimiento está en kg/ha (~1 000)"}
@@ -104,16 +104,16 @@ modelos:
 
 variable_objetivo:
   metrica_confirmatoria: {valor: "RMSE sobre el rendimiento reconstruido en kg/ha", estado: fijado_por_tesis, fuente: "4.11 y 4.13"}
-  representacion_de_modelado: {valor: null, estado: por_decidir_piloto, fuente: "4.11: nivel o anomalía respecto de la línea base provincial; se elige sin campañas externas"}
-  historia_minima_para_tendencia_campanas: {valor: 5, estado: por_decidir_piloto, fuente: "target_transform.HISTORIA_MINIMA_CAMPANAS. Con menos campañas B2 cae a la media provincial y coincide con B1 (verificado en la corrida técnica: B1 = B2 = 202 kg/ha con 3 campañas). Con 5 campañas de entrenamiento la primera campaña externa tiene exactamente 5 puntos por provincia; una tendencia con tan pocos puntos es muy ruidosa"}
-  forma_de_la_linea_base_b2: {valor: null, estado: por_decidir_piloto, fuente: "4.11: lineal o suavizada; respaldo = media si hay menos de 5 campañas"}
+  representacion_de_modelado: {valor: "anomalia", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): RMSE 198,2 frente a 394,6 kg/ha en nivel (−49,8 %); regla P4"}
+  historia_minima_para_tendencia_campanas: {valor: 4, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): forma lineal_min4: con 2020 como prueba la tendencia lineal da 193,8 kg/ha frente a 231,1 de la media; target_transform.HISTORIA_MINIMA_CAMPANAS = 4"}
+  forma_de_la_linea_base_b2: {valor: "tendencia lineal por provincia con al menos 4 campañas de entrenamiento; con menos, media provincial", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): regla P5 (lineal_min4)"}
   metricas_complementarias: {valor: [mae, rrmse, r2_fuera_de_muestra], estado: fijado_por_tesis, fuente: "Tabla 9"}
 
 interpretabilidad:
-  variante_de_shap: {valor: deep_explainer, estado: por_decidir_piloto, fuente: "4.15; contingencia: KernelExplainer si falla la precisión local"}
-  escala_de_salida_explicada: {valor: "la de la representación de modelado elegida", estado: por_decidir_piloto, fuente: "4.15"}
+  variante_de_shap: {valor: "deep_explainer", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): error de precisión local 0,0000 frente a una tolerancia de 0,0139; contingencia KernelExplainer con l1_reg = 0; acuerdo por fase con Kernel ρ = 0,90"}
+  escala_de_salida_explicada: {valor: "anomalía respecto de B2, estandarizada con la media y la desviación del entrenamiento del pliego", estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): coherente con la representación elegida"}
   conjunto_de_referencia: {valor: "muestra aleatoria de hasta 100 observaciones de las campañas de entrenamiento del pliegue, semilla fija", estado: propuesto, fuente: "4.15; solo entrenamiento"}
-  tolerancia_de_precision_local: {valor: null, estado: por_decidir_piloto, fuente: "se calibra en el piloto como fracción de la desviación estándar de la salida"}
+  tolerancia_de_precision_local: {valor: 0.05, estado: fijado, fuente: "Piloto oficial (2026-10-10, ronda 2, campañas 2016-2020): fracción de la desviación estándar de la salida del modelo sobre el fondo de referencia (tolerancia 0,0139 en el piloto; DeepExplainer con error 0,0000)"}
   tratamiento_de_predictores_correlacionados: {valor: "sin supuesto de independencia; se informa la variante y se compara con KernelExplainer en el piloto", estado: propuesto, fuente: "2.3.2 (Aas et al., 2021), 4.15"}
   kernel_explainer_regularizacion: {valor: "l1_reg = 0 (sin regularización L1)", estado: propuesto, fuente: "piloto técnico (no vinculante): con l1_reg=auto el Kernel encoge las atribuciones (suma |SHAP| a 1/2,2 de Deep, correlación 0,87); con 0 la correlación con Deep es 0,95"}
   agregacion: {valor: "por predictor y paso temporal, y por fase; semillas promediadas dentro de cada campaña antes de evaluar estabilidad", estado: fijado_por_tesis, fuente: "4.15"}

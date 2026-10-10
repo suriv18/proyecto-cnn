@@ -324,7 +324,7 @@ Nivel {p4['media_nivel']:.1f} kg/ha · anomalía {p4['media_anomalia']:.1f} kg/h
 
 ## P5 · Forma de B2
 {_tabla(res.p5['tabla'])}
-Decisión: **{p5['decision']}** (empate < 2 % → media).
+Decisión: **{p5['decision']}** (regla: menor RMSE medio; si la diferencia es menor que 2 % se conserva la media).
 
 ## P6 · Variabilidad por semilla
 {_tabla(res.p6)}
