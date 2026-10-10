@@ -39,3 +39,6 @@ Thumbs.db
 /DATA_PERFIL_PRODUCTIVO_CULTIVO.zip
 /DATA_PERFIL_PRODUCTIVO_CULTIVO/
 /DATA_PERFIL_PRODUCTIVO.zip
+
+# uv lo genera con "uv run --with"; este proyecto no lo versiona
+service-cnn/uv.lock
