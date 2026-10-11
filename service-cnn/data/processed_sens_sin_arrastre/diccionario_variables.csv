@@ -1,0 +1,9 @@
+nombre,unidad,fuente,transformacion,rol
+precipitacion,mm,UCSB-CHG/CHIRPS/DAILY (precipitation),sum por fase fenológica (valor),secuencial
+temperatura_maxima,°C,ECMWF/ERA5_LAND/DAILY_AGGR (temperature_2m_max),max por fase fenológica (valor),secuencial
+temperatura_minima,°C,ECMWF/ERA5_LAND/DAILY_AGGR (temperature_2m_min),min por fase fenológica (valor),secuencial
+radiacion_solar,J/m²,ECMWF/ERA5_LAND/DAILY_AGGR (surface_solar_radiation_downwards_sum),sum por fase fenológica (valor),secuencial
+ndvi_mean,adimensional,MODIS/061/MOD13Q1 (NDVI),mean por fase fenológica (valor_mean),secuencial
+ndvi_max,adimensional,MODIS/061/MOD13Q1 (NDVI),max por fase fenológica (valor_max),secuencial
+altitud_media_m,m,ESA WorldCover v200 (clase 40) + SRTM,media de la altitud del cultivo que pasa la máscara agrícola (por provincia),estatica
+prop_quinua,adimensional,SIEA-MIDAGRI (siembra) / ESA WorldCover (área de cultivo),superficie sembrada con quinua en la campaña / área de cultivo de la provincia,dinamica

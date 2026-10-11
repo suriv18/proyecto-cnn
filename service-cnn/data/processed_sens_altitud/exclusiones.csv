@@ -1,0 +1,141 @@
+provincia_id,campana_id,motivo,detalle
+AREQUIPA,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2017,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2018,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2019,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2020,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2021,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2022,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2023,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2024,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2025,fuera_del_ambito_altoandino,clasificacion=costa_riego
+AREQUIPA,2026,fuera_del_ambito_altoandino,clasificacion=costa_riego
+ASCOPE,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CAMANA,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARABAYA,2015,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2016,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2017,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2018,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2019,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2020,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2021,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2022,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2023,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2024,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARABAYA,2025,fuera_del_ambito_altoandino,"altitud mediana del cultivo=4108 m fuera de [2500, 4000]"
+CARAVELI,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2017,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2018,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2019,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2020,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2022,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2023,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2024,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CARAVELI,2025,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CASTILLA,2016,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2017,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2018,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2019,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2020,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2021,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2022,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2023,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2024,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2025,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CASTILLA,2026,fuera_del_ambito_altoandino,"altitud mediana del cultivo=541 m fuera de [2500, 4000]"
+CHEPEN,2018,fuera_del_ambito_altoandino,clasificacion=costa_riego
+CHEPEN,2024,fuera_del_ambito_altoandino,clasificacion=costa_riego
+GRAN CHIMU,2016,fuera_del_ambito_altoandino,"altitud mediana del cultivo=1614 m fuera de [2500, 4000]"
+ISLAY,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+ISLAY,2018,fuera_del_ambito_altoandino,clasificacion=costa_riego
+ISLAY,2021,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2017,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2018,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2019,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2020,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2021,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2022,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2023,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2024,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2025,fuera_del_ambito_altoandino,clasificacion=costa_riego
+PACASMAYO,2026,fuera_del_ambito_altoandino,clasificacion=costa_riego
+TRUJILLO,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+TRUJILLO,2017,fuera_del_ambito_altoandino,clasificacion=costa_riego
+TRUJILLO,2019,fuera_del_ambito_altoandino,clasificacion=costa_riego
+VIRU,2016,fuera_del_ambito_altoandino,clasificacion=costa_riego
+VIRU,2017,fuera_del_ambito_altoandino,clasificacion=costa_riego
+VIRU,2018,fuera_del_ambito_altoandino,clasificacion=costa_riego
+VIRU,2020,fuera_del_ambito_altoandino,clasificacion=costa_riego
+VIRU,2023,fuera_del_ambito_altoandino,clasificacion=costa_riego
+ACOMAYO,2020,ciclo_fuera_de_ventana_de_extraccion,ciclo 2020-06-15..2020-11-21 fuera de la serie 2019-07-01..2020-06-29
+ACOMAYO,2021,ciclo_fuera_de_ventana_de_extraccion,ciclo 2021-05-16..2021-10-22 fuera de la serie 2020-07-01..2021-06-29
+ACOMAYO,2022,ciclo_fuera_de_ventana_de_extraccion,ciclo 2022-03-16..2022-08-22 fuera de la serie 2021-07-01..2022-06-29
+BOLIVAR,2016,ciclo_fuera_de_ventana_de_extraccion,ciclo 2016-03-16..2016-08-22 fuera de la serie 2015-07-01..2016-06-29
+CAYLLOMA,2019,ciclo_fuera_de_ventana_de_extraccion,ciclo 2019-05-16..2019-10-22 fuera de la serie 2018-07-01..2019-06-29
+CAYLLOMA,2020,ciclo_fuera_de_ventana_de_extraccion,ciclo 2020-05-16..2020-10-22 fuera de la serie 2019-07-01..2020-06-29
+CAYLLOMA,2021,ciclo_fuera_de_ventana_de_extraccion,ciclo 2021-06-15..2021-11-21 fuera de la serie 2020-07-01..2021-06-29
+CAYLLOMA,2022,ciclo_fuera_de_ventana_de_extraccion,ciclo 2022-06-15..2022-11-21 fuera de la serie 2021-07-01..2022-06-29
+CAYLLOMA,2024,ciclo_fuera_de_ventana_de_extraccion,ciclo 2024-05-16..2024-10-22 fuera de la serie 2023-07-01..2024-06-29
+CAYLLOMA,2025,ciclo_fuera_de_ventana_de_extraccion,ciclo 2025-06-15..2025-11-21 fuera de la serie 2024-07-01..2025-06-29
+CONDESUYOS,2016,ciclo_fuera_de_ventana_de_extraccion,ciclo 2016-06-15..2016-11-21 fuera de la serie 2015-07-01..2016-06-29
+CONDESUYOS,2020,ciclo_fuera_de_ventana_de_extraccion,ciclo 2020-05-16..2020-10-22 fuera de la serie 2019-07-01..2020-06-29
+CONDESUYOS,2025,ciclo_fuera_de_ventana_de_extraccion,ciclo 2025-06-15..2025-11-21 fuera de la serie 2024-07-01..2025-06-29
+LA UNION,2020,ciclo_fuera_de_ventana_de_extraccion,ciclo 2020-06-15..2020-11-21 fuera de la serie 2019-07-01..2020-06-29
+PATAZ,2017,ciclo_fuera_de_ventana_de_extraccion,ciclo 2017-02-14..2017-07-23 fuera de la serie 2016-07-01..2017-06-29
+SANCHEZ CARRION,2016,ciclo_fuera_de_ventana_de_extraccion,ciclo 2016-02-15..2016-07-23 fuera de la serie 2015-07-01..2016-06-29
+SANCHEZ CARRION,2018,ciclo_fuera_de_ventana_de_extraccion,ciclo 2018-02-14..2018-07-23 fuera de la serie 2017-07-01..2018-06-29
+SANCHEZ CARRION,2020,ciclo_fuera_de_ventana_de_extraccion,ciclo 2020-02-15..2020-07-23 fuera de la serie 2019-07-01..2020-06-29
+SANCHEZ CARRION,2023,ciclo_fuera_de_ventana_de_extraccion,ciclo 2023-02-14..2023-07-23 fuera de la serie 2022-07-01..2023-06-29
+ABANCAY,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+ACOBAMBA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+ACOMAYO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+ANDAHUAYLAS,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+ANGARAES,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+ANTA,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+AZANGARO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+BOLIVAR,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CALCA,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CANAS,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CANCHIS,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CANCHIS,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CANGALLO,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CASTROVIRREYNA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CAYLLOMA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CHUCUITO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CHUMBIVILCAS,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CHUPACA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CHURCAMPA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CONCEPCION,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CONDESUYOS,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+COTABAMBAS,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+CUSCO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+EL COLLAO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+ESPINAR,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+HUANCANE,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+HUANCAVELICA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+HUANCAYO,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+HUANTA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+HUAYTARA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+JAUJA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+JULCAN,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+LA MAR,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+LA UNION,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+LAMPA,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+LUCANAS,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+MELGAR,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+MOHO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+PARURO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+PATAZ,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+PAUCARTAMBO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+PUNO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+QUISPICANCHI,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+QUISPICANCHI,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+SAN ANTONIO DE PUTINA,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+SAN ROMAN,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+SANCHEZ CARRION,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+SANTIAGO DE CHUCO,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+TAYACAJA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+URUBAMBA,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+URUBAMBA,2026,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."
+YUNGUYO,2015,tensor_incompleto,"Ninguna de las variables ['precipitacion', 'temperatura_maxima', 'temperatura_minima', 'radiacion_solar', 'ndvi_mean', 'ndvi_max'] tiene observaciones."

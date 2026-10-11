@@ -1,0 +1,38 @@
+{
+  "exploratorio": true,
+  "campanas_entrenamiento": null,
+  "dias_antes_de_cosecha": 30,
+  "clasificaciones_excluidas": [
+    "costa_riego",
+    "selva"
+  ],
+  "rango_altitudinal": null,
+  "max_dias_arrastre_ndvi": 0,
+  "celdas_imputadas": 0,
+  "covariables": [
+    "altitud_media_m",
+    "prop_quinua"
+  ],
+  "prop_quinua_mayor_que_uno": 0,
+  "orden_variables": [
+    "precipitacion",
+    "temperatura_maxima",
+    "temperatura_minima",
+    "radiacion_solar",
+    "ndvi_mean",
+    "ndvi_max"
+  ],
+  "orden_fases": [
+    "emergencia",
+    "desarrollo_vegetativo",
+    "floracion",
+    "llenado_grano",
+    "madurez"
+  ],
+  "n_observaciones": 601,
+  "n_exclusiones": 129,
+  "fuentes_alineacion": {
+    "primario": 601
+  },
+  "mascara_calibrada": true
+}
