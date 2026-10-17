@@ -18,7 +18,7 @@
 | Q-F4-6 | HE2c concordancia: fase máxima ∈ {floración, llenado de grano} | Parcial | `src/explainability/agronomic_concordance.py` |
 | Q-F4-7 | Sensibilidad: horizonte, nivel vs anomalía, participación de quinua, alineación, fuente climática, campañas extremas | Pendiente | — |
 | Q-F4-8 | Robustez espacial (dejar un departamento fuera) y validación complementaria (dejar una campaña fuera) | Pendiente | — |
-| Q-F4-9 | Orquestación real | **Pendiente** | `run_experiment.py` y `run_shap.py` son placeholders |
+| Q-F4-9 | Orquestación real | **Procedimiento hecho y ensayado (2026-10-17); la corrida oficial sigue pendiente** | `src/evaluation/confirmatory_runner.py` y `scripts/run_confirmatorio.py` (HE1a, HE2c y la hipótesis general sin ajuste manual; parámetros tomados de E5; 22 pruebas). El modo `ensayo` lo ejercita con 2016-2020 sin leer las campañas externas. El modo `oficial` se niega a ejecutarse si E5 no está congelada o no coincide con el código, si la huella de los datos no es la registrada, si el conjunto es exploratorio, si no se confirma explícitamente o si ya hubo una ejecución. `run_experiment.py` y `run_shap.py` siguen siendo placeholders y ya no se usan para esto |
 
 ## Riesgos
 
