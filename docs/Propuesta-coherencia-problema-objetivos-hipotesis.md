@@ -79,6 +79,8 @@ La aplicación aún **no tiene una pantalla que muestre esta cadena**. Se propon
 
 ## 6. Riesgos de diseño que la redacción no resuelve
 
+> Resolución en la sección 7: se declaran, sin trabajo adicional. Las opciones que implican exportar SHAP por semilla o cambiar el criterio de HE2c quedan descartadas.
+
 Estos puntos son decisiones del autor. Los números del piloto son de campañas de entrenamiento y no vinculantes; sirven para ver la forma del problema, no para ajustar el diseño.
 
 **R1. HE1a exige 5 de 5.** Con cinco campañas externas la regla de signos solo se cumple si todas tienen q < 0,05. En el piloto (2019 y 2020) el CNN-1D tuvo q = −5,7 % y +4,7 % frente a XGBoost; −1,0 % y +1,3 % frente a B2; y +0,7 % y **+14,3 %** frente a B4. Una sola campaña con q ≥ 5 % rechaza HE1a. B* se elegirá con la validación interna antes de evaluar 2021-2025; si resulta ser B4, 2020 muestra que persiste un riesgo real.
@@ -93,7 +95,32 @@ Estos puntos son decisiones del autor. Los números del piloto son de campañas 
 
 **R5. El horizonte principal es tardío para decidir.** §1.1 justifica la tesis por la necesidad de anticipar. A 30 días de la cosecha, las decisiones de asistencia técnica ya no pueden actuar sobre la producción, aunque sí sobre acopio y comercialización. En el piloto, el horizonte temprano casi no cambia el error del CNN-1D (RMSE 205,0 frente a 200,4 en 2019; 195,3 frente a 196,4 en 2020), lo que sugiere que las fases tardías aportan poca señal sobre la línea base. *Decisión:* o se justifica el horizonte principal por los usos de decisión poscosecha (acopio, compras públicas), o se promueve el horizonte temprano a confirmatorio. Cualquiera de las dos debe escribirse en §1.1 o §1.5.
 
-## 7. Decisiones tomadas por el autor
+## 7. Simplificación propuesta (para reducir esfuerzo)
+
+**Principio.** Simplificar no es bajar la exigencia. Los criterios que **deciden** (HE1a, HE2c y la conjunción HG) se quedan exactamente como están, con el mismo margen, comparadores y reglas. Lo que se simplifica es todo lo que **no decide nada** y hoy exige pruebas, parámetros y texto.
+
+| Elemento | Hoy | Propuesta | Efecto sobre las decisiones |
+|---|---|---|---|
+| HE1a: regla exacta de signos | Decide | **Se mantiene** | — |
+| HE2c: binomial exacta | Decide | **Se mantiene** | — |
+| HG: conjunción HE1a y HE2c | Decide | **Se mantiene** | — |
+| Contrastes de apoyo de HE1 (Wilcoxon, equivalencia bayesiana, Hodges-Lehmann, correlación biserial) y bootstrap descriptivo | Apoyo, no deciden | Dejan de ser contrastes. Se reporta la mediana de q y el rango por campaña | Ninguno |
+| HE1b: ganancia de habilidad SS | Exploratoria | Se mantiene como cifra descriptiva | Ninguno |
+| HE2a estabilidad (W de Kendall, J corregido) | Secundaria, con valor p por permutación (10 000) | Se reportan W y J como números, sin valor p | Ninguno |
+| HE2b fidelidad por oclusión | Secundaria, con valor p por aleatorización | Se reporta el aumento del RMSE y el rango de la fase máxima, sin valor p | Ninguno |
+| Corrección de Holm y «familia de contrastes» | Corrige 2 contrastes secundarios | **Desaparece**: ya no hay contrastes secundarios | Ninguno |
+
+**Qué se ahorra.** En E5 dejan de hacer falta `n_bootstrap`, `semilla_bootstrap`, `contraste_de_apoyo`, `correccion_por_multiplicidad`, `familia_de_contrastes`, `valor_p_estabilidad` y `valor_p_fidelidad`. En la tesis se acortan §3.3.1, §3.3.3, §3.3.4 y §4.14. No hay que implementar nada nuevo: el código actual ya calcula todo, y simplemente se deja de exigir como contraste.
+
+**Qué se pierde y conviene decir con franqueza.** Estabilidad y fidelidad dejan de tener una afirmación inferencial formal. Con cinco campañas esas pruebas tenían muy poca potencia (en el piloto técnico, los valores p fueron 0,70 y 0,76), de modo que el costo real es pequeño. Pero **este recorte debe justificarse por esa falta de potencia y por simplicidad, no por esos resultados**, y las cifras se siguen reportando completas para que nadie pueda pensar que se retiró una prueba incómoda. Un jurado podría preguntar por qué no hay prueba de estabilidad; la respuesta es que con cinco campañas ninguna prueba puede discriminar.
+
+**Los cuatro riesgos de la sección 6 pasan a declararse, sin trabajo extra:**
+- **R1 (HE1a 5 de 5):** se mantiene y se declara que el desenlace puede ser el rechazo.
+- **R2 (fase máxima casi empatada):** se mantiene HE2c y se agrega una frase en las limitaciones: la fase máxima puede ser frágil cuando la contribución por fase es casi plana. La ventaja sobre la segunda fase ya se reporta (la UI la muestra). **No** hace falta exportar SHAP por semilla.
+- **R3 (conjunción difícil):** se declara en la hipótesis general, como ya propone la sección 4.
+- **R4 (referente agronómico):** se usa la palabra «plausibilidad», como ya hace §4.15.
+
+## 8. Decisiones tomadas por el autor
 
 - **Alcance:** solo redacción. No cambian los criterios, márgenes ni reglas de §3.3 (R1 y R2 quedan como riesgos declarados, no como cambios de diseño).
 - **Horizonte (R5):** se mantiene 30 días antes de la cosecha como principal, y el cierre de floración como secundario. Texto propuesto para §1.5, tras la definición del horizonte:
@@ -102,14 +129,14 @@ Estos puntos son decisiones del autor. Los números del piloto son de campañas 
 
   Esta redacción es coherente con §1.1, que nombra a los actores de acopio, transformación y exportación, y con §1.6, que ya limita el uso a la orientación agregada. Si una parte de la justificación de la tesis se apoya en intervenir sobre el cultivo, debería moverse al horizonte secundario.
 
-## 8. Cambios derivados
+## 9. Cambios derivados
 
 Hecho:
 - `docs/01-analisis-sistema.md` y `docs/02-arquitectura-tecnica.md` ya describen cuatro benchmarks (B1-B4), B*, HE1a frente a XGBoost y B*, y HE1b exploratoria. `docs/02` señala que `hypothesis_tests.py` es un módulo heredado de la v2.
 
 Pendiente (requiere editar el docx o la preespecificación):
 
-1. **Tesis (docx):** §1.2, §1.4, §3.1, §3.2, Anexo 02, Anexo 01 (denominación de Y2), §1.5 (horizonte y «cuatro benchmarks»), §4.3, Tabla 8 (rol de B4) y §3.4 (definición de B*). La incoherencia H9 (`docs/01` y `docs/02`) ya está corregida.
-2. **`configs/preespecificacion.yaml`:** revisar que los textos de `hipotesis` coincidan con la nueva redacción. E5 se regenera con `scripts/render_e5.py`.
+1. **Tesis (docx):** §1.2, §1.4, §3.1, §3.2, Anexo 02, Anexo 01 (denominación de Y2), §1.5 (horizonte y «cuatro benchmarks»), §4.3, Tabla 8 (rol de B4) y §3.4 (definición de B*); si se acepta la simplificación de la sección 7, también §3.3.1, §3.3.3, §3.3.4 y §4.14. La incoherencia H9 (`docs/01` y `docs/02`) ya está corregida.
+2. **`configs/preespecificacion.yaml`:** revisar que los textos de `hipotesis` coincidan con la nueva redacción y, si se acepta la simplificación, retirar los siete parámetros de la sección 7. E5 se regenera con `scripts/render_e5.py`, y `check_consistency_with_code` debe volver a pasar.
 3. **app-quinuaprod:** pantalla «Hipótesis y objetivos», alineada con esta redacción (no se pidió por ahora).
 4. **`app-quinuaprod/docs/enmienda-alcance-ui.md`:** habla de decisiones del asesor; cambiarlo a decisiones abiertas del autor mientras no haya asesor (no se pidió por ahora).
