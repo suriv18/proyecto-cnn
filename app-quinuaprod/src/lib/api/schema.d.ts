@@ -338,7 +338,7 @@ export interface components {
             anomalia: number;
             /** @description Solo si la observación existe y es de una campaña permitida. */
             y_real?: number | null;
-            /** @description Matriz 6x5 de valores SHAP, o null si no se calculó. */
+            /** @description Matriz de valores SHAP, una fila por variable y una columna por fase (el orden de Meta.orden_variables y Meta.orden_fases), en kg/ha de la anomalía. Cada valor es la contribución de esa celda respecto de la media del modelo sobre un fondo de referencia del entrenamiento; describe lo que aprendió el modelo, no una relación causal. No incluye las covariables. Es null si no se calculó (modo observación, o modelo exportado sin fondo). */
             shap?: number[][] | null;
             modelo_version: string;
             vinculante: boolean;

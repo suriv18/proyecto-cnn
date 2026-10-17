@@ -183,12 +183,14 @@ class Repositorio:
         z = np.array([[covariables[c] for c in modelo.tarjeta["covariables"]]], dtype=float)
         anomalias = modelo.predecir_anomalia(np.array([valores], dtype=float), z)[:, 0]
         anomalia = float(statistics.median(anomalias))
+        # SHAP (variables x fases) en kg/ha, solo si el modelo se exportó con fondo de referencia.
+        shap = modelo.explicar(np.array([valores], dtype=float), z)[0].tolist() if modelo.puede_explicar else None
         return {
             "y_pred": y_b2 + anomalia,
             "y_b2": y_b2,
             "anomalia": anomalia,
             "y_real": None,
-            "shap": None,
+            "shap": shap,
             "modelo_version": modelo.version,
             "vinculante": bool(modelo.tarjeta["vinculante"]),
         }

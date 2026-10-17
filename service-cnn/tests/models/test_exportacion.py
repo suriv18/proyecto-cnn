@@ -99,3 +99,39 @@ def test_los_archivos_no_usan_pickle(exportado):
         assert len(p.files) > 0
     with np.load(destino / "preprocesador.npz", allow_pickle=False) as p:
         assert set(p.files) == {"mediana", "media", "desviacion", "z_media", "z_desviacion"}
+
+
+def test_el_fondo_de_shap_sale_del_entrenamiento_y_se_guarda_estandarizado(pliego, exportado):
+    modelo = ModeloCNN1D.cargar(exportado[0])
+    assert modelo.puede_explicar
+    assert modelo.fondo_x.shape[1:] == (6, 5)
+    assert len(modelo.fondo_x) == min(100, len(pliego.X_train))
+    # cada fila del fondo es una fila del entrenamiento ya estandarizado (no de la campaña de prueba)
+    # (se compara con tolerancia: el fondo pasa por float32 al muestrearse)
+    def distancia_minima(fila, conjunto):
+        return float(np.abs(conjunto - fila).max(axis=(1, 2)).min())
+
+    assert all(distancia_minima(f, pliego.X_train) < 1e-5 for f in modelo.fondo_x)
+    assert all(distancia_minima(f, pliego.X_test) > 1e-5 for f in modelo.fondo_x)
+
+
+def test_shap_en_numpy_coincide_con_shap_deep_explainer(pliego, exportado):
+    """El SHAP del servicio (NumPy) reproduce al de la biblioteca `shap` que usa el piloto."""
+    pytest.importorskip("shap")
+    from src.explainability.shap_explainer import explain_with_deep_explainer
+    from src.explainability.shap_numpy import deeplift_semilla
+
+    modelo = ModeloCNN1D.cargar(exportado[0])
+    x_te = torch.tensor(pliego.X_test[:6], dtype=torch.float32)
+    z_te = torch.tensor(pliego.Z_test[:6], dtype=torch.float32)
+    xb = torch.tensor(modelo.fondo_x, dtype=torch.float32)
+    zb = torch.tensor(modelo.fondo_z, dtype=torch.float32)
+    for semilla in range(2):
+        torch_modelo, _, _ = build_adapter("cnn1d", 4).entrenar(HP, pliego, semilla, "anomalia")
+        referencia = explain_with_deep_explainer(torch_modelo, xb, zb, x_te, z_te)
+        propio = deeplift_semilla(
+            modelo.pesos[semilla], x_te.numpy().astype(np.float64), z_te.numpy().astype(np.float64), modelo.fondo_x, modelo.fondo_z
+        )
+        np.testing.assert_allclose(propio.tensor, referencia.valores_secuenciales, rtol=1e-3, atol=1e-5)
+        np.testing.assert_allclose(propio.covariables, referencia.valores_covariables, rtol=1e-3, atol=1e-5)
+        assert propio.base == pytest.approx(float(referencia.valor_base[0]), abs=1e-5)

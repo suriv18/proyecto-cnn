@@ -32,7 +32,7 @@ def pesos_aleatorios(rng: np.random.Generator) -> dict[str, np.ndarray]:
     }
 
 
-def crear_artefacto(destino: Path, vinculante: bool = True, semilla: int = 7) -> Path:
+def crear_artefacto(destino: Path, vinculante: bool = True, semilla: int = 7, con_fondo: bool = True) -> Path:
     rng = np.random.default_rng(semilla)
     arreglos: dict[str, np.ndarray] = {}
     for s in SEMILLAS:
@@ -47,6 +47,8 @@ def crear_artefacto(destino: Path, vinculante: bool = True, semilla: int = 7) ->
         mediana=np.full((V, T), 10.0), media=np.full((V, T), 10.0), desviacion=np.full((V, T), 4.0),
         z_media=np.array([3800.0, 0.1]), z_desviacion=np.array([300.0, 0.05]),
     )
+    if con_fondo:  # fondo de referencia de SHAP, ya estandarizado
+        np.savez_compressed(destino / "fondo.npz", x=rng.normal(0, 1, (7, V, T)), z=rng.normal(0, 1, (7, K)))
     (destino / "lineas_base.json").write_text(
         json.dumps({
             "media_global": 1000.0,

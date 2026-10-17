@@ -34,3 +34,36 @@ def test_la_api_con_tensor_reproduce_la_mediana_del_piloto_en_2020(cliente_real)
         assert r.status_code == 200, r.text
         esperado = cnn[cnn["provincia_id"] == provincia]["y_pred"].median()
         assert r.json()["y_pred"] == pytest.approx(esperado, abs=1e-3), provincia
+
+
+@pytest.mark.skipif(not MODELO.exists(), reason="No hay modelo serializado (scripts/export_modelo.py).")
+def test_el_shap_en_numpy_reproduce_la_contribucion_por_fase_publicada_por_el_piloto():
+    """P8 del piloto oficial: semilla 0, 30 primeras observaciones de prueba y fondo de 100 filas."""
+    pytest.importorskip("pyarrow")
+    import json
+
+    from src.evaluation.fold_builder import build_folds, load_pilot_dataset
+    from src.explainability.shap_aggregation import aggregate_shap_by_phase
+    from src.explainability.shap_numpy import deeplift_semilla
+    from src.models.inferencia import ModeloCNN1D
+
+    if not (PROCESADO / "observaciones.parquet").exists():
+        pytest.skip("No hay data/processed.")
+    resultados = json.loads((RAIZ_REAL / "reports" / "piloto_oficial" / "resultados.json").read_text(encoding="utf-8"))
+    permitidas = resultados["p0"]["campanas_permitidas"]
+    obs, X, Z, _ = load_pilot_dataset(PROCESADO, permitidas)
+    pliego = build_folds(obs, X, Z, 3, permitidas)[-1]
+    fases = json.loads((PROCESADO / "metadata.json").read_text(encoding="utf-8"))["orden_fases"]
+
+    modelo = ModeloCNN1D.cargar(MODELO.parent)
+    n = min(30, len(pliego.y_test))
+    r = deeplift_semilla(modelo.pesos[0], pliego.X_test[:n], pliego.Z_test[:n], modelo.fondo_x, modelo.fondo_z)
+    por_observacion = aggregate_shap_by_phase(r.tensor, fases)
+    propio = {f: float(np.mean([o[f] for o in por_observacion])) for f in fases}
+
+    publicado = resultados["p8"]["contribucion_por_fase"]
+    for fase in fases:
+        assert propio[fase] == pytest.approx(publicado[fase], abs=1e-6), fase
+    assert max(propio, key=propio.get) == resultados["p8"]["fase_maxima"]
+    reconstruida = r.base + r.tensor.sum(axis=(1, 2)) + r.covariables.sum(axis=1)
+    np.testing.assert_allclose(reconstruida, r.salida, atol=1e-9)

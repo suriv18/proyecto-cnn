@@ -46,10 +46,9 @@ def test_el_rendimiento_es_b2_mas_la_mediana_de_las_anomalias(cliente_modelo, ra
     assert cuerpo["y_pred"] == pytest.approx(940.0 + statistics.median(anomalias))
 
 
-def test_no_inventa_el_observado_ni_el_shap_y_declara_el_estado_del_modelo(cliente_modelo):
+def test_no_inventa_el_observado_y_declara_el_estado_del_modelo(cliente_modelo):
     cuerpo = _pedir(cliente_modelo).json()
     assert cuerpo["y_real"] is None
-    assert cuerpo["shap"] is None
     assert cuerpo["modelo_version"] == "cnn1d-abababab"
     assert cuerpo["vinculante"] is False  # viene de la tarjeta del modelo, no de una constante
 
@@ -103,3 +102,27 @@ def test_las_covariables_entran_en_el_orden_de_la_tarjeta(cliente_modelo):
     ).json()["y_pred"]
     assert cambiada != pytest.approx(base)
     assert K == 2
+
+
+def test_con_tensor_devuelve_la_matriz_shap_de_variables_por_fases(cliente_modelo, raiz_con_modelo, contrato):
+    r = _pedir(cliente_modelo)
+    _validar(contrato, contrato["paths"]["/predicciones/inferir"]["post"], r)
+    shap = np.array(r.json()["shap"])
+    assert shap.shape == (V, T)
+    modelo = ModeloCNN1D.cargar(raiz_con_modelo / "models" / "cnn1d_piloto")
+    esperado = modelo.explicar(np.array([TENSOR["valores"]]), np.array([[3800.0, 0.1]]))[0]
+    np.testing.assert_allclose(shap, esperado)
+
+
+def test_sin_fondo_de_referencia_el_shap_es_null_pero_la_prediccion_se_entrega(tmp_path):
+    raiz = construir_raiz(tmp_path)
+    crear_artefacto(raiz / "models" / "cnn1d_piloto", con_fondo=False)
+    r = _pedir(TestClient(create_app(raiz)))
+    assert r.status_code == 200
+    assert r.json()["shap"] is None
+    assert r.json()["y_pred"] > 0
+
+
+def test_en_modo_observacion_el_shap_sigue_siendo_null(cliente_modelo):
+    r = cliente_modelo.post(RUTA, json={"provincia_id": "AAA", "campana": 2019}).json()
+    assert r["shap"] is None

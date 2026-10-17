@@ -2,7 +2,9 @@ import { Chip } from '@/components/Chip'
 import { Dato, Datos } from '@/components/Dato'
 import type { Schemas } from '@/lib/api/client'
 import { ApiError } from '@/lib/api/errors'
+import { useEstadoPiloto } from '@/lib/api/useEstadoPiloto'
 import { formatKgHa } from '@/lib/format'
+import { MapaShap } from './MapaShap'
 
 const conSigno = (v: number) => `${v > 0 ? '+' : ''}${formatKgHa(v)}`
 
@@ -17,6 +19,7 @@ export function ErrorInferencia({ error }: { error: unknown }) {
 }
 
 export function ResultadoInferencia({ r }: { r: Schemas['ResultadoInferencia'] }) {
+  const meta = useEstadoPiloto().data
   return (
     <section aria-label="Resultado de la inferencia" className="mt-6">
       <Datos etiqueta="Valores de la inferencia">
@@ -33,6 +36,7 @@ export function ResultadoInferencia({ r }: { r: Schemas['ResultadoInferencia'] }
         <span>Modelo {r.modelo_version}.</span>
         {!r.shap && <span>El SHAP por celda no está disponible para esta observación.</span>}
       </p>
+      {r.shap && meta && <MapaShap valores={r.shap} variables={meta.orden_variables} fases={meta.orden_fases} />}
     </section>
   )
 }

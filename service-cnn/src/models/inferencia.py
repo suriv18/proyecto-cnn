@@ -76,6 +76,10 @@ class ModeloCNN1D:
     z_media: np.ndarray
     z_desviacion: np.ndarray
     linea_base: LineaBase
+    # Fondo de referencia de SHAP (ya estandarizado): muestra del entrenamiento. None si el modelo se
+    # exportó sin él; entonces `explicar` no está disponible.
+    fondo_x: np.ndarray | None = None
+    fondo_z: np.ndarray | None = None
 
     @classmethod
     def cargar(cls, directorio: Path) -> ModeloCNN1D:
@@ -92,11 +96,16 @@ class ModeloCNN1D:
         with np.load(directorio / "preprocesador.npz") as p:
             prep = {k: p[k] for k in p.files}
         base = json.loads((directorio / "lineas_base.json").read_text(encoding="utf-8"))
+        fondo_x = fondo_z = None
+        if (directorio / "fondo.npz").exists():
+            with np.load(directorio / "fondo.npz") as f:
+                fondo_x, fondo_z = f["x"], f["z"]
         return cls(
             tarjeta=tarjeta, pesos=pesos, y_media=todo["y_media"], y_desviacion=todo["y_desviacion"],
             mediana=prep["mediana"], media=prep["media"], desviacion=prep["desviacion"],
             z_media=prep["z_media"], z_desviacion=prep["z_desviacion"],
             linea_base=LineaBase(base["media_global"], base["provincias"]),
+            fondo_x=fondo_x, fondo_z=fondo_z,
         )
 
     @property
@@ -112,6 +121,18 @@ class ModeloCNN1D:
     def version(self) -> str:
         return f"cnn1d-{self.tarjeta['huella_pesos'][:8]}"
 
+    def _estandarizar(self, x_crudo: np.ndarray, z_crudo: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Valida las formas, imputa las celdas vacías con la mediana del entrenamiento y estandariza."""
+        x = np.asarray(x_crudo, dtype=np.float64)
+        z = np.asarray(z_crudo, dtype=np.float64)
+        v, t = self.forma_tensor
+        if x.ndim != 3 or x.shape[1:] != (v, t):
+            raise ValueError(f"El tensor debe tener forma (N, {v}, {t}); recibido {x.shape}.")
+        if z.ndim != 2 or z.shape != (x.shape[0], self.n_covariables):
+            raise ValueError(f"Las covariables deben tener forma ({x.shape[0]}, {self.n_covariables}); recibido {z.shape}.")
+        x_z = (np.where(np.isnan(x), self.mediana, x) - self.media) / self.desviacion
+        return x_z, (z - self.z_media) / self.z_desviacion
+
     def predecir_anomalia(self, x_crudo: np.ndarray, z_crudo: np.ndarray) -> np.ndarray:
         """Anomalía en kg/ha por semilla: (n_semillas, N).
 
@@ -123,15 +144,33 @@ class ModeloCNN1D:
         Raises:
             ValueError: si las formas no coinciden con las del modelo.
         """
-        x = np.asarray(x_crudo, dtype=np.float64)
-        z = np.asarray(z_crudo, dtype=np.float64)
-        v, t = self.forma_tensor
-        if x.ndim != 3 or x.shape[1:] != (v, t):
-            raise ValueError(f"El tensor debe tener forma (N, {v}, {t}); recibido {x.shape}.")
-        if z.ndim != 2 or z.shape != (x.shape[0], self.n_covariables):
-            raise ValueError(f"Las covariables deben tener forma ({x.shape[0]}, {self.n_covariables}); recibido {z.shape}.")
-        x_z = (np.where(np.isnan(x), self.mediana, x) - self.media) / self.desviacion
-        z_z = (z - self.z_media) / self.z_desviacion
+        x_z, z_z = self._estandarizar(x_crudo, z_crudo)
         return np.stack(
             [_adelante(p, x_z, z_z) * self.y_desviacion[i] + self.y_media[i] for i, p in enumerate(self.pesos)]
         )
+
+    @property
+    def puede_explicar(self) -> bool:
+        return self.fondo_x is not None
+
+    def explicar(self, x_crudo: np.ndarray, z_crudo: np.ndarray) -> np.ndarray:
+        """Valores SHAP del tensor en kg/ha de la anomalía: (N, V, T), promediados entre las semillas.
+
+        Cada valor es la contribución de una variable en una fase a la anomalía de la predicción respecto de
+        la media del modelo sobre el fondo de referencia (muestra del entrenamiento). Describe lo que aprendió
+        el modelo, no una relación causal. Las covariables no forman parte de esta matriz.
+
+        Raises:
+            ValueError: si las formas no coinciden con las del modelo.
+            RuntimeError: si el modelo se exportó sin fondo de referencia.
+        """
+        if self.fondo_x is None or self.fondo_z is None:
+            raise RuntimeError("Este modelo se exportó sin fondo de referencia de SHAP; vuelva a exportarlo.")
+        from src.explainability.shap_numpy import deeplift_semilla  # import local: solo si se pide SHAP
+
+        x_z, z_z = self._estandarizar(x_crudo, z_crudo)
+        por_semilla = [
+            deeplift_semilla(p, x_z, z_z, self.fondo_x, self.fondo_z).tensor * self.y_desviacion[i]
+            for i, p in enumerate(self.pesos)
+        ]
+        return np.mean(por_semilla, axis=0)
