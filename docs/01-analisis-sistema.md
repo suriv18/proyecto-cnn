@@ -1,7 +1,7 @@
 # Análisis del Sistema de Información
 
 **Proyecto:** Modelo interpretable con CNN-1D y SHAP para predecir el rendimiento de quinua en la sierra altoandina del Perú
-**Fuente:** `docs/Proyecto_Tesis_Maestria_UNMSM_WMSR.docx` (Proyecto de Tesis, UNMSM-FISI) y `docs/Cronograma_Proyecto_Tesis_UNMSM_WMSAR.xlsx`
+**Fuente:** `docs/Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx` (Proyecto de Tesis, UNMSM-FISI; versión 3) y `docs/Cronograma_Proyecto_Tesis_UNMSM_WMSAR.xlsx`
 **Autor del análisis:** derivado 1:1 del proyecto de tesis; cada requisito cita su sección/tabla de origen.
 
 ## 0. Naturaleza del sistema
@@ -27,7 +27,7 @@ Cualquier decisión de diseño debe ser trazable a una sección de la tesis. No 
 | Espacial | Provincias con producción registrada de quinua en 8 departamentos altoandinos (Puno, Ayacucho, Apurímac, Arequipa, Junín, Cusco, La Libertad, Huancavelica); 67 provincias preliminares de 80 totales (Tabla 3) |
 | Temporal | Campañas agrícolas 2005/2006 a 2023/2024 (año de cosecha 2006-2024), 19 campañas. **Enmendado** (ver `service-cnn/data/manifest/midagri_sisagri.yaml`, sección `enmienda_metodologica`, propuesta 2026-09-12, pendiente de aprobación del asesor): la fuente tabular vigente de rendimiento (MIDAGRI/SIEA) solo cubre campañas completas 2016-2025 (10 campañas) — no existe fuente oficial tabular para 2006-2015 |
 | Temática | Predicción de rendimiento en kg/ha y atribución de importancia predictiva por variable/fase fenológica. Fuera de alcance: superficie sembrada, precios, evaluación económica |
-| Metodológica | Solo fuentes públicas y de libre acceso; 5 familias de modelos + 3 benchmarks (Tabla 8); sin recolección de datos primarios en campo |
+| Metodológica | Solo fuentes públicas y de libre acceso; 5 familias de modelos + 4 benchmarks, B1-B4 (Tabla 8); sin recolección de datos primarios en campo |
 | Horizonte de pronóstico | 30 días antes de la cosecha esperada (principal); cierre de floración (secundario) |
 
 El sistema **no** es de uso operativo continuo: es una plataforma de investigación de ciclo único (una ejecución definitiva tras el ensayo piloto), con entregables documentales como salida principal, no un servicio en producción.
@@ -59,13 +59,13 @@ Derivados de las Tablas 1, 2, 6, 7, 8, 12 y secciones 4.5-4.15.
 | RF3 | Construir una máscara de superficie agrícola (capa de cobertura de suelo + MDE + fenometría NDVI) para excluir coberturas no cultivadas del cálculo de NDVI | 4.10.1 |
 | RF4 | Alinear fenológicamente las series temporales mediante jerarquía de 3 niveles (fecha modal de siembra → fenometría NDVI → fecha modal departamental de respaldo) | 4.10.2 |
 | RF5 | Construir, por observación provincia-campaña, un tensor V×T (predictores secuenciales × pasos temporales) más covariables estáticas (altitud) y dinámicas (% superficie sembrada con quinua) | 4.10.3 |
-| RF6 | Entrenar 5 modelos ajustables (CNN-1D, Elastic-Net, Random Forest, XGBoost, SVR) bajo presupuesto de tuning de hiperparámetros equiparado, más 3 benchmarks no ajustables (B1 media histórica, B2 línea base con tendencia, B3 regresión con NDVI máximo) | 4.12.3, Tabla 8 |
-| RF7 | Validar temporalmente con origen móvil (esquema confirmatorio principal), leave-one-campaign-out (complementario) y leave-one-department-out (robustez espacial), bajo un diseño de bloques completos pareados donde cada campaña externa (bloque) recibe los 8 tratamientos (5 modelos + 3 benchmarks) bajo idénticas condiciones, replicando modelos estocásticos con 10 semillas | 4.3, 4.12.1, 4.12.4 |
+| RF6 | Entrenar 5 modelos ajustables (CNN-1D, Elastic-Net, Random Forest, XGBoost, SVR) bajo presupuesto de tuning de hiperparámetros equiparado, más 4 benchmarks no ajustables (B1 media histórica provincial, B2 línea base provincial con tendencia, B3 regresión con NDVI máximo, B4 persistencia de la última campaña). B2 y B4 son confirmatorios porque definen B*, la mejor línea base, elegida con la validación interna antes de las campañas externas | 3.3.1, 4.12.3, Tabla 8 |
+| RF7 | Validar temporalmente con origen móvil (esquema confirmatorio principal), leave-one-campaign-out (complementario) y leave-one-department-out (robustez espacial), bajo un diseño de bloques completos pareados donde cada campaña externa (bloque) recibe los 5 niveles del factor algoritmo bajo idénticas condiciones, junto con los 4 benchmarks (B1-B4) como reglas de referencia independientes y no como niveles adicionales del factor, replicando modelos estocásticos con 10 semillas | 4.3, 4.12.1, 4.12.4 |
 | RF8 | Generar explicaciones SHAP post-entrenamiento únicamente sobre observaciones externas de prueba, con variante, conjunto de referencia y manejo de correlación declarados antes de la evaluación definitiva | 4.15 |
 | RF9 | Evaluar la calidad de las explicaciones mediante estabilidad (W de Kendall, índice de Jaccard de fases), fidelidad por oclusión (sin reentrenar) y concordancia agronómica con fases preespecificadas | 3.3.3-3.3.5, 4.15 |
 | RF10 | Registrar la preespecificación fechada (hipótesis, márgenes, umbrales, espacios de búsqueda) antes de la evaluación definitiva (Hito H2), y mantener trazabilidad completa (manifiesto de datos, semillas, versiones, código) | 4.18, Actividad 7 del cronograma |
 | RF11 | Aplicar y documentar todos los criterios de elegibilidad/exclusión de forma preespecificada, sin usar información de campañas externas para depurar datos | 4.7 |
-| RF12 | Calcular y reportar métricas de exactitud (RMSE, MAE, rRMSE, R²) desagregadas por campaña, departamento, horizonte y modelo, y ejecutar los contrastes estadísticos confirmatorios (no inferioridad HE1a/HE1b, estabilidad/fidelidad/concordancia HE2a-c) | 3.3, 4.13, 4.14, Tabla 9 |
+| RF12 | Calcular y reportar métricas de exactitud (RMSE, MAE, rRMSE, R²) desagregadas por campaña, departamento, horizonte y modelo, y ejecutar los contrastes estadísticos confirmatorios (no inferioridad HE1a frente a XGBoost y a B*; ganancia de habilidad HE1b, exploratoria; concordancia HE2c, primaria; estabilidad HE2a y fidelidad HE2b, secundarias) | 3.3, 4.13, 4.14, Tabla 9 |
 | RF13 | Tratar la variable objetivo en dos representaciones (nivel en kg/ha y anomalía respecto de una línea base provincial ajustada solo con entrenamiento), reportando las métricas confirmatorias sobre el rendimiento reconstruido y las de anomalía como análisis complementario | 4.11 |
 
 ## 4. Requisitos no funcionales
@@ -113,7 +113,7 @@ CAMPAÑA (dimensión temporal)
  └── periodo: [año_siembra, año_cosecha]
 
 EJECUCION_EXPERIMENTAL (registro de resultados, no del dominio agrícola)
- ├── modelo: enum {CNN-1D, ElasticNet, RandomForest, XGBoost, SVR, B1, B2, B3}
+ ├── modelo: enum {CNN-1D, ElasticNet, RandomForest, XGBoost, SVR, B1, B2, B3, B4}
  ├── pliegue_temporal, semilla, horizonte
  ├── metricas: {RMSE, MAE, rRMSE, R2}
  └── atribuciones_shap: (predictor, paso_temporal/fase) → valor SHAP
@@ -159,12 +159,12 @@ Relación clave: `PROVINCIA_CAMPAÑA` agrega N registros de `SERIE_TEMPORAL` (un
                         ┌───────────┴───────────┐
                         ▼                       ▼
         [7a. Tuning + entrenamiento    [7b. Cálculo de benchmarks
-         5 modelos, 10 semillas]        B1/B2/B3 (no ajustables)]
+         5 modelos, 10 semillas]        B1-B4 (no ajustables)]
                         │                       │
                         └───────────┬───────────┘
                                     ▼
                   [8. Evaluación predictiva: RMSE/MAE/rRMSE/R²,
-                       contrastes HE1a/HE1b]
+                       contrastes HE1a (confirmatorio) y HE1b (exploratorio)]
                                     │
                                     ▼
                   [9. Explicaciones SHAP sobre conjunto externo]
@@ -189,7 +189,7 @@ Relación clave: `PROVINCIA_CAMPAÑA` agrega N registros de `SERIE_TEMPORAL` (un
 | RNF1, RF13 | 5. Preprocesamiento, análisis exploratorio y tratamiento de la variable objetivo | E3 |
 | RF6 | 6. Diseño e implementación de CNN-1D, comparadores e integración de SHAP | E4 |
 | RF10, RNF6 | 7. Ensayo piloto, variabilidad estocástica y preespecificación | H2 · E5 |
-| RF7, RF12 | 8. Evaluación predictiva: origen móvil, XGBoost, B2, robustez espacial, sensibilidad | Predicciones y métricas por campaña/semilla |
+| RF7, RF12 | 8. Evaluación predictiva: origen móvil, XGBoost, B* (B2 o B4), robustez espacial, sensibilidad | Predicciones y métricas por campaña/semilla |
 | RF8, RF9 | 9. Evaluación SHAP: estabilidad, oclusión, ablación secundaria, concordancia agronómica | E6 |
 | — | 10. Redacción de resultados, discusión y conclusiones | E7 |
 | RNF2, RNF4 | 11. Comunicación: artículo, repositorio, dataset según licencias | E8 |
