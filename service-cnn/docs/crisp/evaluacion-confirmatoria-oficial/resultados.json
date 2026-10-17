@@ -1,0 +1,151 @@
+{
+  "p0": {
+    "modo": "oficial",
+    "vinculante": true,
+    "e5": {
+      "estado_documento": "CONGELADO",
+      "version": "1.1",
+      "fecha_congelamiento": "2026-10-17",
+      "commit_congelamiento": "47c43a7cbf36b7ef6af4cb7030f1191a80c19a46"
+    },
+    "sha256_tensores": "15d7f9446cb3717e72514432efc223bb41d5732a7107a7c30b79b61947ee4f44",
+    "parametros": {
+      "ventana_inicial": 5,
+      "ventana_interna": 2,
+      "n_trials": 30,
+      "n_semillas": 10,
+      "epocas_cnn": 47,
+      "representacion": "anomalia",
+      "margen": 0.05,
+      "alfa": 0.05,
+      "n_fases_principales": 3,
+      "tolerancia_shap": 0.05,
+      "horizonte": "principal"
+    },
+    "campanas_cargadas": [
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "campanas_descartadas_al_cargar": [],
+    "campanas_externas_evaluadas": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "n_observaciones_cargadas": 601,
+    "n_permutaciones_estabilidad": 10000,
+    "fecha": "2026-10-17T23:07:23.930047+00:00"
+  },
+  "b_star": "B4",
+  "rmse_validacion_interna_b": {
+    "B2": 193.82386023258724,
+    "B4": 179.20236445841047
+  },
+  "he1": {
+    "campanas": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "n_campanas": 5,
+    "b_star": "B4",
+    "q_xgboost": [
+      0.035000989148923356,
+      -0.018939247111520063,
+      -0.00846256944434809,
+      -0.007119343243655596,
+      -0.02228421852485618
+    ],
+    "q_bstar": [
+      0.14258341027370403,
+      0.033933188803850545,
+      0.05858038427149026,
+      -0.0171906174042481,
+      -0.03789559026163125
+    ],
+    "no_inferior_a_xgboost": true,
+    "no_inferior_a_bstar": false,
+    "he1a_respaldada": false,
+    "he1_respaldada": false,
+    "nivel_regla_de_signos": 0.03125,
+    "wilcoxon_p_xgboost": 0.03125,
+    "wilcoxon_p_bstar": 0.40625,
+    "prob_posterior_no_inferior_xgboost": 0.9969472407543428,
+    "prob_posterior_no_inferior_bstar": 0.6589487884636895,
+    "prob_posterior_equivalencia_xgboost": 0.9913061425167045,
+    "prob_posterior_equivalencia_bstar": 0.6321398739206835,
+    "diferencia_mediana_frente_a_xgboost_kg_ha": -3.162224472161597,
+    "diferencia_mediana_frente_a_bstar_kg_ha": 7.53784089110178,
+    "ss_por_campana": [
+      -0.3054968494326875,
+      -0.06901783891009883,
+      -0.12059242996437591,
+      0.03408571748175693,
+      0.07435510476198504
+    ],
+    "ss_mediana": -0.06901783891009883,
+    "n_campanas_con_ganancia": 2,
+    "p_signos_ganancia": 0.8125
+  },
+  "he2": {
+    "campanas": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "n_campanas": 5,
+    "fases_maximas": {
+      "2021": "llenado_grano",
+      "2022": "llenado_grano",
+      "2023": "floracion",
+      "2024": "desarrollo_vegetativo",
+      "2025": "emergencia"
+    },
+    "p_concordancia": 0.31744000000000006,
+    "rechaza_concordancia": false,
+    "w_kendall": 0.488,
+    "jaccard_promedio": 0.8,
+    "umbrales_de_estabilidad_cumplidos": false,
+    "p_valores": {
+      "estabilidad": 0.032596740325967405,
+      "fidelidad": 0.56096,
+      "concordancia": 0.31744000000000006
+    },
+    "p_ajustados_secundarios": {
+      "estabilidad": 0.06519348065193481,
+      "fidelidad": 0.56096
+    },
+    "rechazos_secundarios": {
+      "estabilidad": false,
+      "fidelidad": false
+    },
+    "secundarios_cumplidos": false,
+    "proporcion_contribucion_referente": 0.42555515855943693,
+    "proporcion_referente_supera_azar": true,
+    "he2_respaldada": false
+  },
+  "hipotesis_general_respaldada": false,
+  "verificaciones": {
+    "max_diferencia_prediccion_cnn_reentrenada_kg_ha": {
+      "2021": 0.0,
+      "2022": 0.0,
+      "2023": 0.0,
+      "2024": 0.0,
+      "2025": 0.0
+    }
+  }
+}

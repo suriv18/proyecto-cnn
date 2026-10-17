@@ -13,6 +13,8 @@ on:
       - 'service-cnn/tests/explainability/test_shap_numpy.py'
       - 'service-cnn/tests/helpers_modelo.py'
       - 'service-cnn/tests/evaluation/test_e5_congelada.py'
+      - 'service-cnn/tests/evaluation/test_evaluacion_oficial_integridad.py'
+      - 'service-cnn/docs/crisp/evaluacion-confirmatoria-oficial/**'
       - 'service-cnn/src/evaluation/preregistration.py'
       - 'service-cnn/configs/preespecificacion.yaml'
       - 'service-cnn/pyproject.toml'
@@ -28,6 +30,8 @@ on:
       - 'service-cnn/tests/explainability/test_shap_numpy.py'
       - 'service-cnn/tests/helpers_modelo.py'
       - 'service-cnn/tests/evaluation/test_e5_congelada.py'
+      - 'service-cnn/tests/evaluation/test_evaluacion_oficial_integridad.py'
+      - 'service-cnn/docs/crisp/evaluacion-confirmatoria-oficial/**'
       - 'service-cnn/src/evaluation/preregistration.py'
       - 'service-cnn/configs/preespecificacion.yaml'
       - 'service-cnn/pyproject.toml'
@@ -53,4 +57,4 @@ jobs:
       - run: python -m pip install "pandas>=2.2" "pyyaml>=6" "fastapi>=0.115" "httpx>=0.27" "jsonschema>=4.22" "pytest>=8"
       # Los reports/ del piloto no se versionan: las pruebas con datos reales se omiten aquí. El contrato,
       # la regla de campañas externas, los errores y CORS se prueban con datos sintéticos.
-      - run: python -m pytest tests/api tests/models/test_inferencia.py tests/explainability/test_shap_numpy.py tests/evaluation/test_e5_congelada.py -q -rs
+      - run: python -m pytest tests/api tests/models/test_inferencia.py tests/explainability/test_shap_numpy.py tests/evaluation/test_e5_congelada.py tests/evaluation/test_evaluacion_oficial_integridad.py -q -rs
