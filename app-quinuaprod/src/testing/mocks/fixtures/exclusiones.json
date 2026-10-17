@@ -1,0 +1,260 @@
+[
+ {
+  "provincia_id": "AREQUIPA",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "AREQUIPA",
+  "campana": 2017,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "AREQUIPA",
+  "campana": 2018,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "AREQUIPA",
+  "campana": 2019,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "AREQUIPA",
+  "campana": 2020,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "ASCOPE",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CAMANA",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CARAVELI",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CARAVELI",
+  "campana": 2017,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CARAVELI",
+  "campana": 2018,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CARAVELI",
+  "campana": 2019,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CARAVELI",
+  "campana": 2020,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "CHEPEN",
+  "campana": 2018,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "ISLAY",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "ISLAY",
+  "campana": 2018,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "PACASMAYO",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "PACASMAYO",
+  "campana": 2017,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "PACASMAYO",
+  "campana": 2018,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "PACASMAYO",
+  "campana": 2019,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "PACASMAYO",
+  "campana": 2020,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "TRUJILLO",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "TRUJILLO",
+  "campana": 2017,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "TRUJILLO",
+  "campana": 2019,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "VIRU",
+  "campana": 2016,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "VIRU",
+  "campana": 2017,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "VIRU",
+  "campana": 2018,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "VIRU",
+  "campana": 2020,
+  "motivo": "fuera_del_ambito_altoandino",
+  "detalle": "clasificacion=costa_riego"
+ },
+ {
+  "provincia_id": "ACOMAYO",
+  "campana": 2020,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2020-06-15..2020-11-21 fuera de la serie 2019-07-01..2020-06-29"
+ },
+ {
+  "provincia_id": "BOLIVAR",
+  "campana": 2016,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2016-03-16..2016-08-22 fuera de la serie 2015-07-01..2016-06-29"
+ },
+ {
+  "provincia_id": "CASTILLA",
+  "campana": 2016,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2016-04-15..2016-09-21 fuera de la serie 2015-07-01..2016-06-29"
+ },
+ {
+  "provincia_id": "CASTILLA",
+  "campana": 2017,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2017-05-16..2017-10-22 fuera de la serie 2016-07-01..2017-06-29"
+ },
+ {
+  "provincia_id": "CASTILLA",
+  "campana": 2018,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2018-04-15..2018-09-21 fuera de la serie 2017-07-01..2018-06-29"
+ },
+ {
+  "provincia_id": "CASTILLA",
+  "campana": 2019,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2019-06-15..2019-11-21 fuera de la serie 2018-07-01..2019-06-29"
+ },
+ {
+  "provincia_id": "CASTILLA",
+  "campana": 2020,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2020-06-15..2020-11-21 fuera de la serie 2019-07-01..2020-06-29"
+ },
+ {
+  "provincia_id": "CAYLLOMA",
+  "campana": 2019,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2019-05-16..2019-10-22 fuera de la serie 2018-07-01..2019-06-29"
+ },
+ {
+  "provincia_id": "CAYLLOMA",
+  "campana": 2020,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2020-05-16..2020-10-22 fuera de la serie 2019-07-01..2020-06-29"
+ },
+ {
+  "provincia_id": "CONDESUYOS",
+  "campana": 2016,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2016-06-15..2016-11-21 fuera de la serie 2015-07-01..2016-06-29"
+ },
+ {
+  "provincia_id": "CONDESUYOS",
+  "campana": 2020,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2020-05-16..2020-10-22 fuera de la serie 2019-07-01..2020-06-29"
+ },
+ {
+  "provincia_id": "LA UNION",
+  "campana": 2020,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2020-06-15..2020-11-21 fuera de la serie 2019-07-01..2020-06-29"
+ },
+ {
+  "provincia_id": "PATAZ",
+  "campana": 2017,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2017-02-14..2017-07-23 fuera de la serie 2016-07-01..2017-06-29"
+ },
+ {
+  "provincia_id": "SANCHEZ CARRION",
+  "campana": 2016,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2016-02-15..2016-07-23 fuera de la serie 2015-07-01..2016-06-29"
+ },
+ {
+  "provincia_id": "SANCHEZ CARRION",
+  "campana": 2018,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2018-02-14..2018-07-23 fuera de la serie 2017-07-01..2018-06-29"
+ },
+ {
+  "provincia_id": "SANCHEZ CARRION",
+  "campana": 2020,
+  "motivo": "ciclo_fuera_de_ventana_de_extraccion",
+  "detalle": "ciclo 2020-02-15..2020-07-23 fuera de la serie 2019-07-01..2020-06-29"
+ }
+]

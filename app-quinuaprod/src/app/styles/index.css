@@ -1,0 +1,122 @@
+@import '@fontsource-variable/bricolage-grotesque/wght.css';
+@import '@fontsource-variable/public-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import 'tailwindcss';
+
+/* El tema oscuro se activa con la clase `dark` en <html> (ver lib/theme.ts). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Sistema de diseño de app-quinuaprod.
+ * Paleta: tinta índigo (texto), panoja roja de quinua (acento: el modelo en estudio),
+ * grises azulados para las líneas base y cinco colores para las fases del ciclo del cultivo.
+ * Los colores se declaran una vez, por tema; los componentes usan solo los nombres semánticos.
+ */
+:root {
+  --page: #f4f5fa;
+  --paper: #ffffff;
+  --sunken: #eceef6;
+  --line: #dcdfeb;
+  --line-strong: #b9bed3;
+  --ink: #16142b;
+  --muted: #53577a;
+  --accent: #a3174f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f8e6ee;
+  --reference: #8a8fae;
+  --ok: #1d6b45;
+  --ok-soft: #e2f3ea;
+  --aviso: #8a4b00;
+  --aviso-soft: #fdf0dc;
+
+  --fase-1: #5f9a5b;
+  --fase-2: #2f7a52;
+  --fase-3: #b8921f;
+  --fase-4: #c26a22;
+  --fase-5: #9b2d4d;
+  color-scheme: light;
+}
+
+:root.dark {
+  --page: #0d0c1f;
+  --paper: #16142d;
+  --sunken: #1d1b3a;
+  --line: #2b2951;
+  --line-strong: #46447a;
+  --ink: #ecebfa;
+  --muted: #a6a9ca;
+  --accent: #f0709c;
+  --accent-ink: #1a0610;
+  --accent-soft: #3a1527;
+  --reference: #7d82a6;
+  --ok: #6fd0a0;
+  --ok-soft: #12332a;
+  --aviso: #f0b866;
+  --aviso-soft: #35260d;
+
+  --fase-1: #86c283;
+  --fase-2: #4fb585;
+  --fase-3: #dcb53f;
+  --fase-4: #e8924a;
+  --fase-5: #e0728f;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: 'Public Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Public Sans Variable', ui-sans-serif, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  --color-page: var(--page);
+  --color-paper: var(--paper);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-reference: var(--reference);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-aviso: var(--aviso);
+  --color-aviso-soft: var(--aviso-soft);
+}
+
+@layer base {
+  body {
+    @apply bg-page font-sans text-[0.9375rem] leading-relaxed text-ink antialiased;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  main > * {
+    animation: aparecer 220ms ease-out both;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

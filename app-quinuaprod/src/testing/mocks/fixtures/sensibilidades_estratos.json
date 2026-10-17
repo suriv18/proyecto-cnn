@@ -1,0 +1,164 @@
+[
+ {
+  "modelo": "B1",
+  "estrato": "bajo",
+  "rmse": 224.3088437017,
+  "n": 42
+ },
+ {
+  "modelo": "B1",
+  "estrato": "medio",
+  "rmse": 258.8481795527,
+  "n": 42
+ },
+ {
+  "modelo": "B1",
+  "estrato": "alto",
+  "rmse": 140.474584488,
+  "n": 36
+ },
+ {
+  "modelo": "B2",
+  "estrato": "bajo",
+  "rmse": 187.4280201841,
+  "n": 42
+ },
+ {
+  "modelo": "B2",
+  "estrato": "medio",
+  "rmse": 226.2758611778,
+  "n": 42
+ },
+ {
+  "modelo": "B2",
+  "estrato": "alto",
+  "rmse": 174.1651770127,
+  "n": 36
+ },
+ {
+  "modelo": "B3",
+  "estrato": "bajo",
+  "rmse": 461.8554208482,
+  "n": 42
+ },
+ {
+  "modelo": "B3",
+  "estrato": "medio",
+  "rmse": 552.2342542495,
+  "n": 42
+ },
+ {
+  "modelo": "B3",
+  "estrato": "alto",
+  "rmse": 429.6146460601,
+  "n": 36
+ },
+ {
+  "modelo": "B4",
+  "estrato": "bajo",
+  "rmse": 194.2600799529,
+  "n": 42
+ },
+ {
+  "modelo": "B4",
+  "estrato": "medio",
+  "rmse": 207.078978745,
+  "n": 42
+ },
+ {
+  "modelo": "B4",
+  "estrato": "alto",
+  "rmse": 147.1325358603,
+  "n": 36
+ },
+ {
+  "modelo": "cnn1d",
+  "estrato": "bajo",
+  "rmse": 189.5016906526,
+  "n": 420
+ },
+ {
+  "modelo": "cnn1d",
+  "estrato": "medio",
+  "rmse": 223.6146079309,
+  "n": 420
+ },
+ {
+  "modelo": "cnn1d",
+  "estrato": "alto",
+  "rmse": 176.8554839366,
+  "n": 360
+ },
+ {
+  "modelo": "elastic_net",
+  "estrato": "bajo",
+  "rmse": 186.1058344971,
+  "n": 42
+ },
+ {
+  "modelo": "elastic_net",
+  "estrato": "medio",
+  "rmse": 226.0342038717,
+  "n": 42
+ },
+ {
+  "modelo": "elastic_net",
+  "estrato": "alto",
+  "rmse": 175.2890758257,
+  "n": 36
+ },
+ {
+  "modelo": "random_forest",
+  "estrato": "bajo",
+  "rmse": 182.19913932,
+  "n": 420
+ },
+ {
+  "modelo": "random_forest",
+  "estrato": "medio",
+  "rmse": 226.1716422354,
+  "n": 420
+ },
+ {
+  "modelo": "random_forest",
+  "estrato": "alto",
+  "rmse": 170.7626304214,
+  "n": 360
+ },
+ {
+  "modelo": "svr",
+  "estrato": "bajo",
+  "rmse": 188.1274876955,
+  "n": 42
+ },
+ {
+  "modelo": "svr",
+  "estrato": "medio",
+  "rmse": 229.1238343693,
+  "n": 42
+ },
+ {
+  "modelo": "svr",
+  "estrato": "alto",
+  "rmse": 174.2854741671,
+  "n": 36
+ },
+ {
+  "modelo": "xgboost",
+  "estrato": "bajo",
+  "rmse": 188.5222412868,
+  "n": 420
+ },
+ {
+  "modelo": "xgboost",
+  "estrato": "medio",
+  "rmse": 229.8580164143,
+  "n": 420
+ },
+ {
+  "modelo": "xgboost",
+  "estrato": "alto",
+  "rmse": 178.8895397199,
+  "n": 360
+ }
+]

@@ -1,0 +1,33 @@
+{
+ "x1": {
+  "campo_receptivo_pasos": 5,
+  "predicciones_validas": 1.0,
+  "ejecuciones_reproducibles": 1.0,
+  "semillas_verificadas": [
+   0,
+   1,
+   2
+  ]
+ },
+ "x2": {
+  "fraccion_explicada": 0.5172413793103449,
+  "n_explicadas": 30,
+  "n_predicciones": 58,
+  "importancia_por_predictor": {
+   "precipitacion": 0.11050039283387984,
+   "temperatura_maxima": 0.06515844373352593,
+   "temperatura_minima": 0.10939679978619096,
+   "radiacion_solar": 0.12003734680668761,
+   "ndvi_mean": 0.08295676446126284,
+   "ndvi_max": 0.14570676722942152
+  },
+  "orden_de_predictores": [
+   "ndvi_max",
+   "radiacion_solar",
+   "precipitacion",
+   "temperatura_minima",
+   "ndvi_mean",
+   "temperatura_maxima"
+  ]
+ }
+}

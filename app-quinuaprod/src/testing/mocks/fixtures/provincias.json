@@ -1,0 +1,402 @@
+[
+ {
+  "provincia_id": "AZANGARO",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "SAN ROMAN",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "PUNO",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "EL COLLAO",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "HUANCANE",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CHUCUITO",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "LAMPA",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "MELGAR",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "YUNGUYO",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "SAN ANTONIO DE PUTINA",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "MOHO",
+  "departamento": "PUNO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CARABAYA",
+  "departamento": "PUNO",
+  "clasificacion": "transicion"
+ },
+ {
+  "provincia_id": "SANDIA",
+  "departamento": "PUNO",
+  "clasificacion": "transicion"
+ },
+ {
+  "provincia_id": "VILCAS HUAMAN",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CANGALLO",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "LA MAR",
+  "departamento": "AYACUCHO",
+  "clasificacion": "transicion"
+ },
+ {
+  "provincia_id": "HUAMANGA",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "VICTOR FAJARDO",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "HUANTA",
+  "departamento": "AYACUCHO",
+  "clasificacion": "transicion"
+ },
+ {
+  "provincia_id": "SUCRE",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "LUCANAS",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "HUANCA SANCOS",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "PARINACOCHAS",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "PAUCAR DEL SARA SARA",
+  "departamento": "AYACUCHO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ANDAHUAYLAS",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CHINCHEROS",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ABANCAY",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "AYMARAES",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "GRAU",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "COTABAMBAS",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ANTABAMBA",
+  "departamento": "APURIMAC",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CAYLLOMA",
+  "departamento": "AREQUIPA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CASTILLA",
+  "departamento": "AREQUIPA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CONDESUYOS",
+  "departamento": "AREQUIPA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "LA UNION",
+  "departamento": "AREQUIPA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "AREQUIPA",
+  "departamento": "AREQUIPA",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "CAMANA",
+  "departamento": "AREQUIPA",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "CARAVELI",
+  "departamento": "AREQUIPA",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "ISLAY",
+  "departamento": "AREQUIPA",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "HUANCAYO",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "JAUJA",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CONCEPCION",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CHUPACA",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "TARMA",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "JUNIN",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "YAULI",
+  "departamento": "JUNIN",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "SATIPO",
+  "departamento": "JUNIN",
+  "clasificacion": "selva"
+ },
+ {
+  "provincia_id": "CHANCHAMAYO",
+  "departamento": "JUNIN",
+  "clasificacion": "selva"
+ },
+ {
+  "provincia_id": "ANTA",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CALCA",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CANAS",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CANCHIS",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CHUMBIVILCAS",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ESPINAR",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "PARURO",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "QUISPICANCHI",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "URUBAMBA",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ACOMAYO",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CUSCO",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "PAUCARTAMBO",
+  "departamento": "CUSCO",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "LA CONVENCION",
+  "departamento": "CUSCO",
+  "clasificacion": "selva"
+ },
+ {
+  "provincia_id": "SANTIAGO DE CHUCO",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "JULCAN",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "OTUZCO",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "SANCHEZ CARRION",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "BOLIVAR",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "PATAZ",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "GRAN CHIMU",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "pendiente_verificacion"
+ },
+ {
+  "provincia_id": "ASCOPE",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "CHEPEN",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "PACASMAYO",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "TRUJILLO",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "VIRU",
+  "departamento": "LA LIBERTAD",
+  "clasificacion": "costa_riego"
+ },
+ {
+  "provincia_id": "HUANCAVELICA",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ACOBAMBA",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "ANGARAES",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CASTROVIRREYNA",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "CHURCAMPA",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "HUAYTARA",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ },
+ {
+  "provincia_id": "TAYACAJA",
+  "departamento": "HUANCAVELICA",
+  "clasificacion": "altoandina"
+ }
+]

@@ -1,0 +1,42 @@
+{
+ "modo": "oficial",
+ "vinculante": true,
+ "campanas_permitidas": [
+  2016,
+  2017,
+  2018,
+  2019,
+  2020
+ ],
+ "campanas_de_prueba": [
+  2019,
+  2020
+ ],
+ "n_observaciones": 302,
+ "sha256_tensores": "3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad",
+ "estado_e5": "BORRADOR",
+ "version_e5": "0.1",
+ "fecha_congelamiento_e5": null,
+ "orden_variables": [
+  "precipitacion",
+  "temperatura_maxima",
+  "temperatura_minima",
+  "radiacion_solar",
+  "ndvi_mean",
+  "ndvi_max"
+ ],
+ "orden_fases": [
+  "emergencia",
+  "desarrollo_vegetativo",
+  "floracion",
+  "llenado_grano",
+  "madurez"
+ ],
+ "representacion": "anomalia",
+ "hiperparametros_cnn": {
+  "filtros_capa1": 7,
+  "filtros_capa2": 8,
+  "dropout": 0.20196433231034563,
+  "tasa_aprendizaje": 0.008574055562613458
+ }
+}

@@ -1,0 +1,434 @@
+openapi: 3.1.0
+info:
+  title: API de app-quinuaprod
+  version: 0.1.0
+  summary: Contrato de solo lectura sobre los resultados del piloto de la tesis CNN-1D + SHAP (rendimiento de quinua).
+  description: |
+    Fuente de verdad del contrato entre la UI (app-quinuaprod) y el backend (pendiente, `service-cnn/api`).
+    Cada recurso se deriva de un artefacto REAL de `service-cnn/` (ver `x-fuente`).
+
+    Reglas de honestidad que el backend debe respetar:
+    - Nunca expone campañas externas (2021-2025) mientras E5 no esté congelada; `campana` queda limitada a `Meta.campanas_permitidas`.
+    - Los resultados del piloto son NO VINCULANTES salvo que `Meta.vinculante` sea verdadero.
+    - SHAP describe la función aprendida, no causalidad. La escala es provincia, nunca parcela.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Backend local (FastAPI, pendiente)
+tags:
+  - name: Resumen
+  - name: Cobertura
+  - name: Predicciones
+  - name: Indicadores
+  - name: Explicabilidad
+  - name: Sensibilidades
+  - name: Preespecificacion
+
+paths:
+  /meta:
+    get:
+      tags: [Resumen]
+      operationId: getMeta
+      summary: Estado del piloto, versión de E5 y parámetros globales
+      x-fuente: reports/piloto_oficial/resultados.json (p0, p4, p7), data/processed/metadata.json, configs/preespecificacion.yaml (metadatos)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Meta' } } } }
+
+  /provincias:
+    get:
+      tags: [Cobertura]
+      operationId: listProvincias
+      summary: Las 80 provincias con su departamento y clasificación territorial
+      x-fuente: configs/provincias.csv
+      parameters:
+        - { name: departamento, in: query, schema: { type: string } }
+        - { name: clasificacion, in: query, schema: { $ref: '#/components/schemas/Clasificacion' } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Provincia' } } } } }
+
+  /cobertura/embudo:
+    get:
+      tags: [Cobertura]
+      operationId: getEmbudo
+      summary: Embudo de depuración N0-N5
+      x-fuente: reports/E1_matriz_cobertura_enmendado_2016_2025.json
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/NivelEmbudo' } } } } }
+
+  /cobertura/exclusiones:
+    get:
+      tags: [Cobertura]
+      operationId: listExclusiones
+      summary: Observaciones provincia-campaña excluidas y su motivo
+      x-fuente: data/processed/exclusiones.csv
+      parameters:
+        - { name: campana, in: query, schema: { type: integer } }
+        - { name: motivo, in: query, schema: { $ref: '#/components/schemas/MotivoExclusion' } }
+        - { name: provincia_id, in: query, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Exclusion' } } } } }
+
+  /predicciones:
+    get:
+      tags: [Predicciones]
+      operationId: listPredicciones
+      summary: Predicción vs observado por modelo, campaña de prueba, semilla y provincia
+      x-fuente: reports/piloto_oficial/predicciones.csv
+      parameters:
+        - { name: modelo, in: query, schema: { $ref: '#/components/schemas/Modelo' } }
+        - { name: campana_prueba, in: query, schema: { type: integer } }
+        - { name: provincia_id, in: query, schema: { type: string } }
+        - { name: semilla, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 5000, default: 500 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaPredicciones' } } } }
+        '422': { $ref: '#/components/responses/Problema' }
+
+  /predicciones/inferir:
+    post:
+      tags: [Predicciones]
+      operationId: inferir
+      summary: Inferencia interactiva con el CNN-1D
+      description: |
+        Dos modos. Con `provincia_id` + `campana` y sin `tensor`, el backend usa el tensor ya procesado de esa
+        observación. Con `tensor`, predice sobre el tensor 6x5 enviado. Requiere el modelo serializado
+        (hoy NO existe: el pipeline entrena y evalúa al vuelo). Mientras tanto el backend responde 501.
+        SHAP por celda solo se devuelve si el backend lo calcula; si no, `shap` es null.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SolicitudInferencia' } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ResultadoInferencia' } } } }
+        '404': { $ref: '#/components/responses/Problema' }
+        '422': { $ref: '#/components/responses/Problema' }
+        '501': { $ref: '#/components/responses/Problema' }
+
+  /indicadores/y1:
+    get:
+      tags: [Indicadores]
+      operationId: listIndicadoresY1
+      summary: Exactitud (Y1) por modelo y campaña de prueba
+      x-fuente: reports/piloto_oficial/p11_indicadores_y1.csv
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/IndicadorY1' } } } } }
+
+  /indicadores/x1-x2:
+    get:
+      tags: [Indicadores]
+      operationId: getIndicadoresX1X2
+      summary: Indicadores de modelado (X1) y de explicabilidad (X2)
+      x-fuente: reports/piloto_oficial/resultados.json (p11)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/IndicadoresX1X2' } } } }
+
+  /indicadores/variabilidad-semillas:
+    get:
+      tags: [Indicadores]
+      operationId: listVariabilidadSemillas
+      summary: Dispersión del RMSE entre semillas
+      x-fuente: reports/piloto_oficial/p6_variabilidad_por_semilla.csv
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/VariabilidadSemilla' } } } } }
+
+  /explicabilidad:
+    get:
+      tags: [Explicabilidad]
+      operationId: getExplicabilidad
+      summary: Contribución SHAP agregada por fase y resultados de HE2
+      description: Solo hay agregados por fase y por predictor; no existe SHAP por provincia ni por celda en reports/.
+      x-fuente: reports/piloto_oficial/resultados.json (p8), reports/he2_tecnico/resultados.json
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Explicabilidad' } } } }
+
+  /sensibilidades:
+    get:
+      tags: [Sensibilidades]
+      operationId: listSensibilidades
+      summary: RMSE por variante de sensibilidad, modelo y campaña
+      x-fuente: reports/sensibilidades/sensibilidades_rmse.csv
+      parameters:
+        - { name: variante, in: query, schema: { $ref: '#/components/schemas/VarianteSensibilidad' } }
+        - { name: modelo, in: query, schema: { $ref: '#/components/schemas/Modelo' } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Sensibilidad' } } } } }
+
+  /sensibilidades/estratos:
+    get:
+      tags: [Sensibilidades]
+      operationId: listSensibilidadesEstratos
+      summary: Error por estrato de proporción de quinua
+      x-fuente: reports/sensibilidades/error_por_estrato_de_quinua.csv
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ErrorEstrato' } } } } }
+
+  /preespecificacion:
+    get:
+      tags: [Preespecificacion]
+      operationId: getPreespecificacion
+      summary: Registro E5 de parámetros con su estado y fuente
+      x-fuente: configs/preespecificacion.yaml
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Preespecificacion' } } } }
+
+components:
+  responses:
+    Problema:
+      description: Error (RFC 9457)
+      content:
+        application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } }
+
+  schemas:
+    Problema:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+    Clasificacion:
+      type: string
+      enum: [altoandina, transicion, selva, costa_riego, pendiente_verificacion]
+    Modelo:
+      type: string
+      enum: [cnn1d, elastic_net, random_forest, xgboost, svr, B1, B2, B3, B4]
+    VarianteSensibilidad:
+      type: string
+      enum: [base, sin_transicion, tensor_completo, horizonte_temprano, sin_arrastre_ndvi, con_exclusion_por_altitud]
+    MotivoExclusion:
+      type: string
+      enum: [fuera_del_ambito_altoandino, ciclo_fuera_de_ventana_de_extraccion, tensor_incompleto]
+    Variable:
+      type: string
+      enum: [precipitacion, temperatura_maxima, temperatura_minima, radiacion_solar, ndvi_mean, ndvi_max]
+    Fase:
+      type: string
+      enum: [emergencia, desarrollo_vegetativo, floracion, llenado_grano, madurez]
+
+    HiperparametrosCnn:
+      type: object
+      required: [filtros_capa1, filtros_capa2, dropout, tasa_aprendizaje]
+      properties:
+        filtros_capa1: { type: integer }
+        filtros_capa2: { type: integer }
+        dropout: { type: number }
+        tasa_aprendizaje: { type: number }
+
+    Meta:
+      type: object
+      required: [modo, vinculante, campanas_permitidas, campanas_de_prueba, n_observaciones, sha256_tensores, estado_e5, version_e5, orden_variables, orden_fases, representacion, hiperparametros_cnn]
+      properties:
+        modo: { type: string, enum: [tecnico, oficial] }
+        vinculante: { type: boolean }
+        campanas_permitidas: { type: array, items: { type: integer } }
+        campanas_de_prueba: { type: array, items: { type: integer } }
+        n_observaciones: { type: integer }
+        sha256_tensores: { type: string }
+        estado_e5: { type: string }
+        version_e5: { type: string }
+        fecha_congelamiento_e5: { type: [string, 'null'] }
+        orden_variables: { type: array, items: { $ref: '#/components/schemas/Variable' } }
+        orden_fases: { type: array, items: { $ref: '#/components/schemas/Fase' } }
+        representacion: { type: string, description: 'Representación del objetivo elegida (anomalía respecto de B2).' }
+        hiperparametros_cnn: { $ref: '#/components/schemas/HiperparametrosCnn' }
+
+    Provincia:
+      type: object
+      required: [provincia_id, departamento, clasificacion]
+      properties:
+        provincia_id: { type: string }
+        departamento: { type: string }
+        clasificacion: { $ref: '#/components/schemas/Clasificacion' }
+
+    NivelEmbudo:
+      type: object
+      required: [nivel, n]
+      properties:
+        nivel: { type: string, pattern: '^N[0-5]$' }
+        n: { type: [integer, 'null'], description: 'null cuando el nivel aún no se calcula.' }
+
+    Exclusion:
+      type: object
+      required: [provincia_id, campana, motivo, detalle]
+      properties:
+        provincia_id: { type: string }
+        campana: { type: integer }
+        motivo: { $ref: '#/components/schemas/MotivoExclusion' }
+        detalle: { type: string }
+
+    Prediccion:
+      type: object
+      required: [campana_prueba, modelo, semilla, provincia_id, y_real, y_pred]
+      properties:
+        campana_prueba: { type: integer }
+        modelo: { $ref: '#/components/schemas/Modelo' }
+        semilla: { type: integer }
+        provincia_id: { type: string }
+        y_real: { type: number, description: kg/ha }
+        y_pred: { type: number, description: kg/ha }
+    PaginaPredicciones:
+      type: object
+      required: [total, limit, offset, items]
+      properties:
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        items: { type: array, items: { $ref: '#/components/schemas/Prediccion' } }
+
+    SolicitudInferencia:
+      type: object
+      properties:
+        provincia_id: { type: string }
+        campana: { type: integer }
+        tensor:
+          type: object
+          description: Tensor editado. Si se omite, se usa el procesado de la observación.
+          required: [valores, altitud_media_m, prop_quinua]
+          properties:
+            valores:
+              type: array
+              description: Matriz 6 variables x 5 fases, en el orden de Meta.orden_variables / orden_fases.
+              minItems: 6
+              maxItems: 6
+              items: { type: array, minItems: 5, maxItems: 5, items: { type: number } }
+            altitud_media_m: { type: number }
+            prop_quinua: { type: number, minimum: 0 }
+    ResultadoInferencia:
+      type: object
+      required: [y_pred, y_b2, anomalia, modelo_version, vinculante]
+      properties:
+        y_pred: { type: number, description: kg/ha }
+        y_b2: { type: number, description: 'Línea base provincial B2, kg/ha.' }
+        anomalia: { type: number, description: 'y_pred - y_b2, kg/ha.' }
+        y_real: { type: [number, 'null'], description: Solo si la observación existe y es de una campaña permitida. }
+        shap:
+          type: [array, 'null']
+          description: 'Matriz 6x5 de valores SHAP, o null si no se calculó.'
+          items: { type: array, items: { type: number } }
+        modelo_version: { type: string }
+        vinculante: { type: boolean }
+
+    IndicadorY1:
+      type: object
+      required: [modelo, campana_prueba, rmse, mae, rrmse, r2]
+      properties:
+        modelo: { $ref: '#/components/schemas/Modelo' }
+        campana_prueba: { type: integer }
+        rmse: { type: number }
+        mae: { type: number }
+        rrmse: { type: number, description: '%' }
+        r2: { type: number }
+
+    IndicadoresX1X2:
+      type: object
+      required: [x1, x2]
+      properties:
+        x1:
+          type: object
+          required: [campo_receptivo_pasos, predicciones_validas, ejecuciones_reproducibles, semillas_verificadas]
+          properties:
+            campo_receptivo_pasos: { type: integer }
+            predicciones_validas: { type: number, minimum: 0, maximum: 1 }
+            ejecuciones_reproducibles: { type: number, minimum: 0, maximum: 1 }
+            semillas_verificadas: { type: array, items: { type: integer } }
+        x2:
+          type: object
+          required: [fraccion_explicada, n_explicadas, n_predicciones, importancia_por_predictor, orden_de_predictores]
+          properties:
+            fraccion_explicada: { type: number }
+            n_explicadas: { type: integer }
+            n_predicciones: { type: integer }
+            importancia_por_predictor:
+              type: object
+              description: SHAP absoluto medio por predictor.
+              additionalProperties: { type: number }
+            orden_de_predictores: { type: array, items: { $ref: '#/components/schemas/Variable' } }
+
+    VariabilidadSemilla:
+      type: object
+      required: [modelo, campana_prueba, n_semillas, mediana, q1, q3, minimo, maximo, error_estandar_mediana]
+      properties:
+        modelo: { $ref: '#/components/schemas/Modelo' }
+        campana_prueba: { type: integer }
+        n_semillas: { type: integer }
+        mediana: { type: number }
+        q1: { type: number }
+        q3: { type: number }
+        minimo: { type: number }
+        maximo: { type: number }
+        error_estandar_mediana: { type: number }
+
+    ContribucionPorFase:
+      type: object
+      description: SHAP absoluto medio por fase fenológica.
+      additionalProperties: { type: number }
+    Explicabilidad:
+      type: object
+      required: [piloto_oficial, he2_tecnico]
+      properties:
+        piloto_oficial:
+          type: object
+          required: [contribucion_por_fase, fase_maxima, n_explicadas, campanas]
+          properties:
+            contribucion_por_fase: { $ref: '#/components/schemas/ContribucionPorFase' }
+            fase_maxima: { $ref: '#/components/schemas/Fase' }
+            n_explicadas: { type: integer }
+            campanas: { type: array, items: { type: integer } }
+        he2_tecnico:
+          type: object
+          description: Ejecución técnica de HE2 (no vinculante).
+          required: [vinculante, campanas_evaluadas, contribuciones, aumentos_rmse, w_kendall, jaccard_promedio, he2_respaldada]
+          properties:
+            vinculante: { type: boolean }
+            campanas_evaluadas: { type: array, items: { type: integer } }
+            contribuciones:
+              type: object
+              description: Por campaña (clave en texto) y fase.
+              additionalProperties: { $ref: '#/components/schemas/ContribucionPorFase' }
+            aumentos_rmse:
+              type: object
+              description: Aumento del RMSE al ocluir cada fase, por campaña.
+              additionalProperties: { $ref: '#/components/schemas/ContribucionPorFase' }
+            w_kendall: { type: number }
+            jaccard_promedio: { type: number }
+            he2_respaldada: { type: boolean }
+
+    Sensibilidad:
+      type: object
+      required: [variante, modelo, campana_prueba, rmse, q_frente_a_b2, q_frente_a_b4, cambio_vs_base_pct]
+      properties:
+        variante: { $ref: '#/components/schemas/VarianteSensibilidad' }
+        modelo: { $ref: '#/components/schemas/Modelo' }
+        campana_prueba: { type: integer }
+        rmse: { type: number }
+        q_frente_a_b2: { type: number }
+        q_frente_a_b4: { type: number }
+        cambio_vs_base_pct: { type: number }
+    ErrorEstrato:
+      type: object
+      required: [modelo, estrato, rmse, n]
+      properties:
+        modelo: { $ref: '#/components/schemas/Modelo' }
+        estrato: { type: string, enum: [bajo, medio, alto] }
+        rmse: { type: number }
+        n: { type: integer }
+
+    ParametroE5:
+      type: object
+      required: [valor, estado, fuente]
+      properties:
+        valor: {}
+        estado: { type: string, enum: [fijado_por_tesis, fijado, propuesto, por_decidir_piloto, por_decidir_asesor] }
+        fuente: { type: string }
+    Preespecificacion:
+      type: object
+      required: [metadatos, secciones]
+      properties:
+        metadatos:
+          type: object
+          additionalProperties: true
+        secciones:
+          type: object
+          description: Secciones del registro; cada hoja es un ParametroE5 y puede haber grupos anidados (p. ej. he2).
+          additionalProperties: true

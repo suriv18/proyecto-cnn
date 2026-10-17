@@ -1,0 +1,59 @@
+{
+ "piloto_oficial": {
+  "contribucion_por_fase": {
+   "desarrollo_vegetativo": 0.1348837349457123,
+   "emergencia": 0.09574027440685313,
+   "floracion": 0.1462979009161548,
+   "llenado_grano": 0.1522562434641865,
+   "madurez": 0.10457836111806197
+  },
+  "fase_maxima": "llenado_grano",
+  "n_explicadas": 30,
+  "campanas": [
+   2019,
+   2020
+  ]
+ },
+ "he2_tecnico": {
+  "vinculante": false,
+  "campanas_evaluadas": [
+   2018,
+   2019
+  ],
+  "contribuciones": {
+   "2018": {
+    "emergencia": 0.12748892780804605,
+    "desarrollo_vegetativo": 0.17463176567627064,
+    "floracion": 0.17064666439125745,
+    "llenado_grano": 0.15946797401679685,
+    "madurez": 0.13419871018998794
+   },
+   "2019": {
+    "emergencia": 0.1423160825047959,
+    "desarrollo_vegetativo": 0.16352116506925615,
+    "floracion": 0.18177748960271553,
+    "llenado_grano": 0.14173940542071417,
+    "madurez": 0.12103273585474579
+   }
+  },
+  "aumentos_rmse": {
+   "2018": {
+    "emergencia": 0.0012776613235473632,
+    "desarrollo_vegetativo": -0.0010038256645202638,
+    "floracion": 0.006808948516845703,
+    "llenado_grano": 0.002128458023071289,
+    "madurez": -0.0014969110488891602
+   },
+   "2019": {
+    "emergencia": 0.017860770225524902,
+    "desarrollo_vegetativo": 0.020297801494598387,
+    "floracion": 0.015682578086853027,
+    "llenado_grano": 0.012850511074066161,
+    "madurez": 0.01159369945526123
+   }
+  },
+  "w_kendall": 0.8,
+  "jaccard_promedio": 0.5,
+  "he2_respaldada": false
+ }
+}
