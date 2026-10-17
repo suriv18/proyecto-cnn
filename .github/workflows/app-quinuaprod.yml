@@ -21,6 +21,9 @@ jobs:
           cache: npm
           cache-dependency-path: app-quinuaprod/package-lock.json
       - run: npm ci
+      # Falla si alguien cambió openapi.yaml sin regenerar los tipos, o editó schema.d.ts a mano.
+      - name: Los tipos generados coinciden con el contrato
+        run: npm run gen:api && git diff --exit-code -- src/lib/api/schema.d.ts
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
