@@ -18,7 +18,8 @@ Ninguna pieza escribe datos y no hay datos personales (RNF5). Por defecto la API
 | `docker build` del backend y de la interfaz, y `docker-compose.yml` | Probados con `docker compose up --build`: las dos imágenes construyen, los contenedores quedan `healthy` y corren sin privilegios (usuarios 10001 y 101) |
 | `nginx.conf.template` | Probada: `/` y una ruta directa como `/cobertura` devuelven la interfaz, `/api/v1/meta` llega al backend, `nosniff` y `Referrer-Policy` presentes y `mockServiceWorker.js` no se publica |
 | Predicción por tensor dentro de Docker | Probada en el navegador (ABANCAY 2020 → 2.330 kg/ha, con SHAP), sin `torch` en la imagen |
-| **Sin probar en Docker** | La clave de API y el límite de uso detrás de nginx (solo se probaron con pruebas automáticas); el hosting final; las imágenes en otra arquitectura |
+| Clave de API y límite de uso detrás de nginx | Probados con `docker compose` (límite de 5 por minuto y una clave de prueba): sin clave o con clave errónea → `401`; con clave buena → `200` hasta agotar el cupo y luego `429`; un `X-Forwarded-For` falso enviado desde fuera no evade el límite, porque nginx lo reemplaza |
+| **Sin probar en Docker** | El hosting final; las imágenes en otra arquitectura; varias réplicas de la API (cada una cuenta el límite por separado) |
 
 Antes de publicar, repite el recorrido con tus datos: construye las imágenes, levanta los contenedores (ver abajo) y comprueba `GET /salud` y que la interfaz cargue y navegue.
 
