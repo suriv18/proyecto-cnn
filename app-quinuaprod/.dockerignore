@@ -1,0 +1,9 @@
+# Contexto de construcción de la interfaz (carpeta app-quinuaprod). Lo que no hace falta para `npm run build`.
+node_modules
+dist
+test-results
+playwright-report
+.env
+.env.local
+*.log
+.git

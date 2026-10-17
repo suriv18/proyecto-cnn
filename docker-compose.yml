@@ -1,0 +1,30 @@
+# Interfaz + backend de app-quinuaprod. Ejecutar desde la raíz del repositorio:
+#     docker compose up --build        # luego abrir http://localhost:8080
+#
+# NO PROBADO: se escribió sin poder construir ni levantar las imágenes (el servicio de Docker estaba apagado).
+# Antes de construir deben existir los artefactos del backend (ver service-cnn/Dockerfile).
+services:
+  api:
+    build:
+      context: .                       # la raíz: el Dockerfile necesita el contrato de la interfaz
+      dockerfile: service-cnn/Dockerfile
+    environment:
+      # La interfaz llega a la API por el mismo origen (nginx), así que CORS solo importa si se llama directo.
+      QUINUAPROD_CORS_ORIGINS: http://localhost:8080
+      # nginx fija X-Forwarded-For con el cliente real: el límite de uso se cuenta por cliente, no por el proxy.
+      QUINUAPROD_CONFIAR_PROXY: "true"
+      # QUINUAPROD_LIMITE_POR_MINUTO: "300"   # 0 desactiva el límite
+      # QUINUAPROD_API_KEY: "..."             # ver docs/despliegue.md antes de activarla
+    restart: unless-stopped
+
+  web:
+    build:
+      context: app-quinuaprod
+    environment:
+      API_UPSTREAM: http://api:8000
+    ports:
+      - "8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

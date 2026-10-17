@@ -1,0 +1,40 @@
+# Plantilla de nginx para la interfaz (NO PROBADA: no se pudo ejecutar nginx al escribirla).
+# Las variables ${...} las sustituye la imagen al arrancar; las de nginx ($uri, $host...) no se tocan.
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # Cabeceras de seguridad. nginx no hereda add_header a un location que define los suyos, por eso
+    # cada location repite el include.
+    include /etc/nginx/snippets/seguridad.conf;
+
+    # API: se reenvía al backend. Se fija el cliente real (no se añade a lo que traiga la solicitud) para que
+    # nadie pueda falsear X-Forwarded-For y evadir el límite de uso del backend.
+    location /api/ {
+        proxy_pass ${API_UPSTREAM};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        include /etc/nginx/snippets/seguridad.conf;
+    }
+
+    # Los archivos de /assets llevan la huella en el nombre y cambian en cada versión: caché larga.
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        include /etc/nginx/snippets/seguridad.conf;
+    }
+
+    # Cualquier otra ruta es una pantalla de la aplicación (/cobertura, /hipotesis...): se devuelve index.html,
+    # que no debe cachearse para que una versión nueva se vea de inmediato.
+    location / {
+        try_files $uri /index.html;
+        add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/seguridad.conf;
+    }
+}
