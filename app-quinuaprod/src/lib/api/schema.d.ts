@@ -477,6 +477,8 @@ export interface operations {
                     "application/json": components["schemas"]["Meta"];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     listProvincias: {
@@ -500,6 +502,8 @@ export interface operations {
                     "application/json": components["schemas"]["Provincia"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     getEmbudo: {
@@ -520,6 +524,8 @@ export interface operations {
                     "application/json": components["schemas"]["NivelEmbudo"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     listExclusiones: {
@@ -544,6 +550,8 @@ export interface operations {
                     "application/json": components["schemas"]["Exclusion"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     listPredicciones: {
@@ -571,7 +579,9 @@ export interface operations {
                     "application/json": components["schemas"]["PaginaPredicciones"];
                 };
             };
+            401: components["responses"]["Problema"];
             422: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     inferir: {
@@ -596,8 +606,10 @@ export interface operations {
                     "application/json": components["schemas"]["ResultadoInferencia"];
                 };
             };
+            401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
             422: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
             501: components["responses"]["Problema"];
         };
     };
@@ -619,6 +631,8 @@ export interface operations {
                     "application/json": components["schemas"]["IndicadorY1"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     getIndicadoresX1X2: {
@@ -639,6 +653,8 @@ export interface operations {
                     "application/json": components["schemas"]["IndicadoresX1X2"];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     listVariabilidadSemillas: {
@@ -659,6 +675,8 @@ export interface operations {
                     "application/json": components["schemas"]["VariabilidadSemilla"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     getExplicabilidad: {
@@ -679,6 +697,8 @@ export interface operations {
                     "application/json": components["schemas"]["Explicabilidad"];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     listSensibilidades: {
@@ -702,6 +722,8 @@ export interface operations {
                     "application/json": components["schemas"]["Sensibilidad"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     listSensibilidadesEstratos: {
@@ -722,6 +744,8 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEstrato"][];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     getPreespecificacion: {
@@ -742,6 +766,8 @@ export interface operations {
                     "application/json": components["schemas"]["Preespecificacion"];
                 };
             };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
 }

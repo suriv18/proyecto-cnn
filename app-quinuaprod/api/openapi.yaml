@@ -11,6 +11,8 @@ info:
     - Nunca expone campañas externas (2021-2025) mientras E5 no esté congelada; `campana` queda limitada a `Meta.campanas_permitidas`.
     - Los resultados del piloto son NO VINCULANTES salvo que `Meta.vinculante` sea verdadero.
     - SHAP describe la función aprendida, no causalidad. La escala es provincia, nunca parcela.
+    - El servicio puede limitar las consultas por cliente (429, con `Retry-After`) y, si se publica de forma
+      restringida, exigir la cabecera `X-API-Key` (401). Ambos errores usan `application/problem+json`.
 servers:
   - url: http://localhost:8000/api/v1
     description: Backend local (FastAPI, pendiente)
@@ -31,6 +33,8 @@ paths:
       summary: Estado del piloto, versión de E5 y parámetros globales
       x-fuente: reports/piloto_oficial/resultados.json (p0, p4, p7), data/processed/metadata.json, configs/preespecificacion.yaml (metadatos)
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Meta' } } } }
 
   /provincias:
@@ -43,6 +47,8 @@ paths:
         - { name: departamento, in: query, schema: { type: string } }
         - { name: clasificacion, in: query, schema: { $ref: '#/components/schemas/Clasificacion' } }
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Provincia' } } } } }
 
   /cobertura/embudo:
@@ -52,6 +58,8 @@ paths:
       summary: Embudo de depuración N0-N5
       x-fuente: reports/E1_matriz_cobertura_enmendado_2016_2025.json
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/NivelEmbudo' } } } } }
 
   /cobertura/exclusiones:
@@ -65,6 +73,8 @@ paths:
         - { name: motivo, in: query, schema: { $ref: '#/components/schemas/MotivoExclusion' } }
         - { name: provincia_id, in: query, schema: { type: string } }
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Exclusion' } } } } }
 
   /predicciones:
@@ -81,6 +91,8 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 5000, default: 500 } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaPredicciones' } } } }
         '422': { $ref: '#/components/responses/Problema' }
 
@@ -105,6 +117,8 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/SolicitudInferencia' } } }
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ResultadoInferencia' } } } }
         '404': { $ref: '#/components/responses/Problema' }
         '422': { $ref: '#/components/responses/Problema' }
@@ -117,6 +131,8 @@ paths:
       summary: Exactitud (Y1) por modelo y campaña de prueba
       x-fuente: reports/piloto_oficial/p11_indicadores_y1.csv
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/IndicadorY1' } } } } }
 
   /indicadores/x1-x2:
@@ -126,6 +142,8 @@ paths:
       summary: Indicadores de modelado (X1) y de explicabilidad (X2)
       x-fuente: reports/piloto_oficial/resultados.json (p11)
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/IndicadoresX1X2' } } } }
 
   /indicadores/variabilidad-semillas:
@@ -135,6 +153,8 @@ paths:
       summary: Dispersión del RMSE entre semillas
       x-fuente: reports/piloto_oficial/p6_variabilidad_por_semilla.csv
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/VariabilidadSemilla' } } } } }
 
   /explicabilidad:
@@ -145,6 +165,8 @@ paths:
       description: Solo hay agregados por fase y por predictor; no existe SHAP por provincia ni por celda en reports/.
       x-fuente: reports/piloto_oficial/resultados.json (p8), reports/he2_tecnico/resultados.json
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Explicabilidad' } } } }
 
   /sensibilidades:
@@ -157,6 +179,8 @@ paths:
         - { name: variante, in: query, schema: { $ref: '#/components/schemas/VarianteSensibilidad' } }
         - { name: modelo, in: query, schema: { $ref: '#/components/schemas/Modelo' } }
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Sensibilidad' } } } } }
 
   /sensibilidades/estratos:
@@ -166,6 +190,8 @@ paths:
       summary: Error por estrato de proporción de quinua
       x-fuente: reports/sensibilidades/error_por_estrato_de_quinua.csv
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ErrorEstrato' } } } } }
 
   /preespecificacion:
@@ -175,6 +201,8 @@ paths:
       summary: Registro E5 de parámetros con su estado y fuente
       x-fuente: configs/preespecificacion.yaml
       responses:
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Preespecificacion' } } } }
 
 components:
