@@ -35,6 +35,10 @@ api = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
 ]
+# DVC: orquestación del pipeline (dvc.yaml). Opcional: no se importa desde el código.
+dvc = [
+    "dvc>=3",
+]
 # geodata es opcional a propósito: src/ingestion/gee_client.py inyecta el
 # módulo `ee` en vez de importarlo a nivel de módulo, por lo que toda la
 # lógica de negocio (gee_config.py, gee_series_builder.py) se prueba sin esta
