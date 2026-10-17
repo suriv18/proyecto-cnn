@@ -17,9 +17,9 @@ La UI consume `api/openapi.yaml` (OpenAPI 3.1), que es la fuente de verdad. El b
 | `GET /explicabilidad` | `resultados.json` (p8) y `reports/he2_tecnico/resultados.json` | Implementado |
 | `GET /sensibilidades` y `/sensibilidades/estratos` | `reports/sensibilidades/*.csv` | Implementado |
 | `GET /preespecificacion` | `configs/preespecificacion.yaml` | Implementado |
-| `POST /predicciones/inferir` | Predicciones del piloto (por observación) o el CNN-1D serializado (tensor editado) | Parcial: observaciones del piloto sí; tensor editado responde 501 |
+| `POST /predicciones/inferir` | Predicciones del piloto (por observación) o el CNN-1D serializado (tensor editado) | Implementado. Con tensor necesita el modelo serializado (ver «Modelo serializado»); sin él responde 501 |
 
-El mock de `POST /predicciones/inferir` devuelve la mediana entre semillas del CNN-1D y B2 ya calculadas por el piloto, sin SHAP (`shap: null`). Con `tensor` responde `501`.
+El mock de `POST /predicciones/inferir` devuelve la mediana entre semillas del CNN-1D y B2 ya calculadas por el piloto, sin SHAP (`shap: null`). Con `tensor` valida igual que el backend (provincia y campaña obligatorias, campaña permitida) y responde `501`, porque los mocks no ejecutan el modelo y no inventan predicciones.
 
 ## Reglas que el backend debe cumplir
 
@@ -43,9 +43,24 @@ Desde `service-cnn/`, con las dependencias instaladas (`uv pip install -e ".[api
 - `GET /salud` responde sin necesitar datos (útil para el despliegue).
 - Pruebas: `.venv/Scripts/python.exe -m pytest tests/api`. Validan cada respuesta contra el YAML, la regla de campañas externas y la paridad con los fixtures de la interfaz.
 
+## Modelo serializado
+
+El tensor editado se predice con la CNN-1D del piloto, guardada en `service-cnn/models/cnn1d_piloto/` (no se sube a git):
+
+```sh
+.venv/Scripts/python.exe scripts/export_modelo.py
+```
+
+- **Qué es:** el mismo entrenamiento del último pliego del piloto: campañas 2016-2019, representación en anomalía, hiperparámetros de P7 y semillas 0 a 9. Los toma de `reports/piloto_oficial/resultados.json`.
+- **Se verifica solo:** al terminar compara sus predicciones con `predicciones.csv` del piloto y falla si difieren en más de 0,01 kg/ha (diferencia actual: 0,000035).
+- **Formato:** `pesos.npz`, `preprocesador.npz`, `lineas_base.json` y `modelo.json` (tarjeta con arquitectura, campañas, huella de los pesos y advertencias). Sin `pickle`; el servicio los lee con NumPy y **no necesita PyTorch**.
+- **Cómo predice:** el modelo da la anomalía respecto de la línea base B2. El rendimiento es B2(provincia, campaña) más la mediana de las anomalías de las 10 semillas, como el piloto. Por eso con un tensor la solicitud exige `provincia_id` y `campana`.
+- **Límites:** `y_real` y `shap` van en `null`; una provincia sin historia de entrenamiento responde `404`; las campañas externas se rechazan con `422`. El resultado declara `vinculante` y `modelo_version` (la huella de los pesos).
+
 ## Trabajo pendiente
 
-- **Serializar el CNN-1D** (`torch.save` o ONNX) y versionarlo con DVC. Hoy el pipeline entrena y evalúa al vuelo; sin modelo serializado el tensor editado seguirá respondiendo `501`.
+- **Modelo definitivo:** el modelo serializado es el del piloto, no el de la evaluación confirmatoria. Tras congelar E5 y entrenar con la ventana definitiva hay que volver a exportarlo.
+- **Versionar el modelo:** hoy se regenera con un script y `models/` no se sube a git. Si se quiere versionar con DVC, falta declarar la etapa en `dvc.yaml`.
 - **SHAP por observación** (matriz 6×5): hoy solo se exportan agregados. Si se quiere mostrar, el pipeline debe guardarlos y el contrato `ResultadoInferencia.shap` ya lo admite.
 - **Despliegue:** la API no tiene autenticación ni límites de uso porque solo sirve resultados de investigación sin datos personales. Si se publica, hay que decidir si se restringe el acceso y configurar `QUINUAPROD_CORS_ORIGINS` con el dominio real.
 - **`matplotlib`:** `scripts/build_e3_report.py` lo importa y no está declarado; su prueba falla al recolectarse en un entorno limpio.

@@ -12,8 +12,11 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import yaml
+
+from src.models.inferencia import ModeloCNN1D
 
 Registro = dict[str, Any]
 
@@ -55,6 +58,12 @@ class Repositorio:
         if not ruta.exists():
             raise FileNotFoundError(2, "No existe el archivo", str(ruta.relative_to(self.raiz)))
         return yaml.safe_load(ruta.read_text(encoding="utf-8"))
+
+    @cached_property
+    def modelo(self) -> ModeloCNN1D | None:
+        """La CNN-1D serializada (scripts/export_modelo.py), o None si no se ha generado."""
+        directorio = self.raiz / "models" / "cnn1d_piloto"
+        return ModeloCNN1D.cargar(directorio) if (directorio / "modelo.json").exists() else None
 
     # --- campañas -------------------------------------------------------------------------
 
@@ -153,6 +162,35 @@ class Repositorio:
         return {
             "metadatos": e5["metadatos"],
             "secciones": {k: v for k, v in e5.items() if k != "metadatos"},
+        }
+
+    # --- inferencia sobre un tensor editado ---------------------------------------------------
+
+    def inferir_tensor(
+        self, modelo: ModeloCNN1D, provincia_id: str, campana: int, valores: list[list[float]],
+        altitud_media_m: float, prop_quinua: float,
+    ) -> Registro | None:
+        """Predicción de la CNN-1D serializada sobre un tensor editado.
+
+        El modelo predice la anomalía respecto de B2, así que el rendimiento es B2(provincia, campaña) más la
+        mediana de las anomalías de las semillas (igual que el piloto). Devuelve None si la provincia no tiene
+        historia de entrenamiento: no se inventa una línea base.
+        """
+        y_b2 = modelo.linea_base.predecir(provincia_id, campana)
+        if y_b2 is None:
+            return None
+        covariables = {"altitud_media_m": altitud_media_m, "prop_quinua": prop_quinua}
+        z = np.array([[covariables[c] for c in modelo.tarjeta["covariables"]]], dtype=float)
+        anomalias = modelo.predecir_anomalia(np.array([valores], dtype=float), z)[:, 0]
+        anomalia = float(statistics.median(anomalias))
+        return {
+            "y_pred": y_b2 + anomalia,
+            "y_b2": y_b2,
+            "anomalia": anomalia,
+            "y_real": None,
+            "shap": None,
+            "modelo_version": modelo.version,
+            "vinculante": bool(modelo.tarjeta["vinculante"]),
         }
 
     # --- inferencia sobre una observación del piloto ------------------------------------------

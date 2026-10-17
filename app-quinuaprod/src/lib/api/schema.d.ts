@@ -100,10 +100,17 @@ export interface paths {
         put?: never;
         /**
          * Inferencia interactiva con el CNN-1D
-         * @description Dos modos. Con `provincia_id` + `campana` y sin `tensor`, el backend usa el tensor ya procesado de esa
-         *     observación. Con `tensor`, predice sobre el tensor 6x5 enviado. Requiere el modelo serializado
-         *     (hoy NO existe: el pipeline entrena y evalúa al vuelo). Mientras tanto el backend responde 501.
-         *     SHAP por celda solo se devuelve si el backend lo calcula; si no, `shap` es null.
+         * @description Dos modos.
+         *
+         *     - Sin `tensor`: devuelve la predicción que el piloto ya calculó para `provincia_id` + `campana`
+         *       (mediana de las semillas del CNN-1D), junto con el rendimiento observado.
+         *     - Con `tensor`: predice sobre el tensor 6x5 enviado con la CNN-1D serializada. Exige además
+         *       `provincia_id` y `campana`, porque el modelo predice la anomalía respecto de la línea base B2 de esa
+         *       provincia y campaña, y el rendimiento es B2 más esa anomalía. `y_real` es null. Si el servicio no
+         *       tiene el modelo serializado, responde 501; si la provincia no tiene historia de entrenamiento, 404.
+         *
+         *     El modelo servido es el del piloto (entrenado con campañas de entrenamiento) y su estado se declara en
+         *     `vinculante` y `modelo_version`. SHAP por celda solo se devuelve si el backend lo calcula; si no, `shap` es null.
          */
         post: operations["inferir"];
         delete?: never;
@@ -314,7 +321,7 @@ export interface components {
         SolicitudInferencia: {
             provincia_id?: string;
             campana?: number;
-            /** @description Tensor editado. Si se omite, se usa el procesado de la observación. */
+            /** @description Tensor editado. Si se envía, `provincia_id` y `campana` son obligatorias (línea base B2). */
             tensor?: {
                 /** @description Matriz 6 variables x 5 fases, en el orden de Meta.orden_variables / orden_fases. */
                 valores: number[][];

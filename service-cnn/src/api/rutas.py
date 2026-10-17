@@ -105,16 +105,40 @@ class SolicitudInferencia(BaseModel):
     tensor: Tensor | None = None
 
 
-@router.post("/predicciones/inferir")
-def inferir(solicitud: SolicitudInferencia, repo: Repo):
-    if solicitud.tensor is not None:
-        if any(len(fila) != 5 for fila in solicitud.tensor.valores):
-            raise Problema(422, "Solicitud inválida", "Cada fila del tensor debe tener 5 fases.")
+def _inferir_con_tensor(solicitud: SolicitudInferencia, repo: Repositorio):
+    tensor = solicitud.tensor
+    modelo = repo.modelo
+    v, t = modelo.forma_tensor if modelo else (6, 5)
+    if len(tensor.valores) != v or any(len(fila) != t for fila in tensor.valores):
+        raise Problema(422, "Solicitud inválida", f"El tensor debe ser de {v} variables por {t} fases.")
+    if modelo is None:
         raise Problema(
             501,
             "No implementado",
-            "Predecir sobre un tensor editado requiere el CNN-1D serializado, que aún no existe.",
+            "El servicio no tiene un modelo CNN-1D serializado. Genérelo con scripts/export_modelo.py.",
         )
+    if not solicitud.provincia_id or solicitud.campana is None:
+        raise Problema(
+            422, "Solicitud inválida", "Con un tensor indique también provincia_id y campana: la línea base B2 depende de ellas."
+        )
+    if solicitud.campana not in repo.campanas_permitidas:
+        raise Problema(
+            422,
+            "Campaña no permitida",
+            "Campañas permitidas: " + ", ".join(str(c) for c in repo.campanas_permitidas) + ".",
+        )
+    resultado = repo.inferir_tensor(
+        modelo, solicitud.provincia_id, solicitud.campana, tensor.valores, tensor.altitud_media_m, tensor.prop_quinua
+    )
+    if resultado is None:
+        raise Problema(404, "Sin línea base", "La provincia no tiene historia en el entrenamiento del modelo.")
+    return resultado
+
+
+@router.post("/predicciones/inferir")
+def inferir(solicitud: SolicitudInferencia, repo: Repo):
+    if solicitud.tensor is not None:
+        return _inferir_con_tensor(solicitud, repo)
     if not solicitud.provincia_id or solicitud.campana is None:
         raise Problema(422, "Solicitud inválida", "Indique provincia_id y campana, o un tensor.")
     if solicitud.campana not in repo.campanas_permitidas:
