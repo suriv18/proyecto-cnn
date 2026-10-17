@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const RUTAS = ['/', '/cobertura', '/predicciones', '/indicadores', '/explicabilidad', '/sensibilidades', '/preespecificacion', '/inferencia']
+const RUTAS = ['/', '/cobertura', '/predicciones', '/indicadores', '/explicabilidad', '/sensibilidades', '/hipotesis', '/preespecificacion', '/inferencia']
 
 const filas = (page: Page, region: string | RegExp) =>
   page.getByRole('region', { name: region }).getByRole('row')
@@ -100,6 +100,23 @@ test.describe('Sensibilidades y registro E5', () => {
     await page.getByLabel('Buscar').fill('holm')
     await expect.poll(() => filas(page, 'Parámetros preespecificados').count()).toBeLessThan(antes)
     await expect(page.getByLabel('Metadatos de E5')).toContainText('Sin congelar')
+  })
+})
+
+test.describe('Hipótesis y objetivos', () => {
+  test('muestra la matriz y permite comparar la redacción de la tesis con la propuesta', async ({ page }) => {
+    await page.goto('/hipotesis')
+    await expect(page.getByRole('article', { name: 'Nivel general' })).toContainText('mejor línea base provincial')
+    await page.getByRole('radio', { name: 'Propuesta de coherencia' }).check({ force: true })
+    await expect(page.getByRole('article', { name: 'Nivel específico 1' })).toContainText('Evaluar si la exactitud predictiva')
+    await expect(page.getByRole('heading', { name: 'Definiciones' })).toBeVisible()
+  })
+
+  test('muestra la evidencia descriptiva y avisa que no decide ninguna hipótesis', async ({ page }) => {
+    await page.goto('/hipotesis')
+    await expect(page.getByRole('note').filter({ hasText: 'Ninguna hipótesis está evaluada' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Evidencia descriptiva de HE1 en el piloto' })).toContainText('fuera del margen')
+    await expect(page.getByRole('region', { name: 'Evidencia descriptiva de HE2c en el piloto' })).toContainText('Desarrollo vegetativo')
   })
 })
 

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
-const RUTAS = ['/', '/cobertura', '/predicciones', '/indicadores', '/explicabilidad', '/sensibilidades', '/preespecificacion', '/inferencia']
+const RUTAS = ['/', '/cobertura', '/predicciones', '/indicadores', '/explicabilidad', '/sensibilidades', '/hipotesis', '/preespecificacion', '/inferencia']
 const ETIQUETAS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
 async function auditar(page: Page) {

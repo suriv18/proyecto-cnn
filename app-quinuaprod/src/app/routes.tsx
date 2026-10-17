@@ -22,6 +22,7 @@ export const routes: RouteObject[] = [
       { path: 'indicadores', lazy: pagina(() => import('@/features/indicadores/IndicadoresPage')) },
       { path: 'explicabilidad', lazy: pagina(() => import('@/features/explicabilidad/ExplicabilidadPage')) },
       { path: 'sensibilidades', lazy: pagina(() => import('@/features/sensibilidades/SensibilidadesPage')) },
+      { path: 'hipotesis', lazy: pagina(() => import('@/features/hipotesis/HipotesisPage')) },
       { path: 'preespecificacion', lazy: pagina(() => import('@/features/preespecificacion/PreespecificacionPage')) },
       { path: 'inferencia', lazy: pagina(() => import('@/features/inferencia/InferenciaPage')) },
       { path: '*', Component: NotFound },

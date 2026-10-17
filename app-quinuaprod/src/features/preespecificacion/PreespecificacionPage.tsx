@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Tabla } from '@/components/Tabla'
 import { formatEtiqueta } from '@/lib/format'
 import { usePreespecificacion } from './api/queries'
-import { aplanar, contarPorEstado, textoValor, type EstadoE5, type ParametroPlano } from './aplanar'
+import { aplanar, contarPorEstado, textoValor, type EstadoE5, type ParametroPlano } from '@/lib/aplanar'
 
 const TODOS = ''
 

@@ -7,6 +7,7 @@ const PANTALLAS = [
   { ruta: '/indicadores', enlace: 'Indicadores', titulo: 'Indicadores' },
   { ruta: '/explicabilidad', enlace: 'Explicabilidad', titulo: 'Explicabilidad' },
   { ruta: '/sensibilidades', enlace: 'Sensibilidades', titulo: 'Sensibilidades' },
+  { ruta: '/hipotesis', enlace: 'Hipótesis y objetivos', titulo: 'Hipótesis y objetivos' },
   { ruta: '/preespecificacion', enlace: 'Registro E5', titulo: 'Registro E5' },
   { ruta: '/inferencia', enlace: 'Predicción interactiva', titulo: 'Predicción interactiva' },
 ]

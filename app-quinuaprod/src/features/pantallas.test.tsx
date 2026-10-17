@@ -194,3 +194,60 @@ describe('Predicción interactiva', () => {
     expect(alerta).toHaveTextContent(/serializado/)
   })
 })
+
+describe('Hipótesis y objetivos', () => {
+  it('declara que ninguna hipótesis está evaluada', async () => {
+    await renderApp('/hipotesis')
+    const aviso = (await screen.findAllByRole('note')).find((n) => n.textContent?.includes('Ninguna hipótesis está evaluada'))
+    expect(aviso).toHaveTextContent(/campañas externas siguen protegidas/)
+  })
+
+  it('muestra por defecto la redacción de la tesis v3 en tres niveles', async () => {
+    await renderApp('/hipotesis')
+    expect(await screen.findByRole('article', { name: 'Nivel general' })).toHaveTextContent('mejor línea base provincial')
+    expect(screen.getByRole('article', { name: 'Nivel específico 1' })).toHaveTextContent('¿En qué medida el modelado temporal')
+    expect(screen.getByRole('article', { name: 'Nivel específico 2' })).toBeInTheDocument()
+    expect(screen.queryByText('Definiciones')).not.toBeInTheDocument()
+  })
+
+  it('cambia a la propuesta de coherencia y muestra las definiciones', async () => {
+    const user = userEvent.setup()
+    await renderApp('/hipotesis')
+    await screen.findByRole('article', { name: 'Nivel general' })
+    await user.click(screen.getByRole('radio', { name: 'Propuesta de coherencia' }))
+    expect(screen.getByRole('article', { name: 'Nivel específico 1' })).toHaveTextContent('Evaluar si la exactitud predictiva')
+    expect(screen.getByRole('article', { name: 'Nivel general' })).toHaveTextContent('B*')
+    expect(screen.getByRole('heading', { name: 'Definiciones' })).toBeInTheDocument()
+  })
+
+  it('HE1: toma δ de E5 y marca el margen con símbolo y texto, no solo con color', async () => {
+    await renderApp('/hipotesis')
+    expect(await screen.findByText(/Margen δ \(según E5\)/)).toBeInTheDocument()
+    const tabla = await screen.findByRole('region', { name: 'Evidencia descriptiva de HE1 en el piloto' })
+    const filas = filasDe(tabla)
+    expect(filas).toHaveLength(2)
+    expect(filas[1]).toHaveTextContent('2020')
+    expect(filas[1]).toHaveTextContent(/\+14[.,]3 %, fuera del margen/)
+    expect(filas[0]).toHaveTextContent(/-5[.,]7 %, dentro del margen/)
+  })
+
+  it('HE2: la fase máxima y su concordancia salen de los datos y del conjunto crítico de E5', async () => {
+    await renderApp('/hipotesis')
+    const tabla = await screen.findByRole('region', { name: 'Evidencia descriptiva de HE2c en el piloto' })
+    const filas = filasDe(tabla)
+    expect(filas).toHaveLength(2)
+    expect(filas[0]).toHaveTextContent('2018')
+    expect(filas[0]).toHaveTextContent('Desarrollo vegetativo')
+    expect(filas[0]).toHaveTextContent('No')
+    expect(filas[1]).toHaveTextContent('Floración')
+    expect(filas[1]).toHaveTextContent('Sí')
+    expect(within(tabla).getByRole('columnheader', { name: /floración o llenado de grano/i })).toBeInTheDocument()
+  })
+
+  it('la hipótesis general figura como conjuntiva y sin evaluar', async () => {
+    await renderApp('/hipotesis')
+    expect(await screen.findByText('Sin evaluar')).toBeInTheDocument()
+    expect(screen.getByText('HE1a')).toBeInTheDocument()
+    expect(screen.getByText('HE2c')).toBeInTheDocument()
+  })
+})
