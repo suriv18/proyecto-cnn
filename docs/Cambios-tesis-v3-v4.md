@@ -54,6 +54,7 @@ Cada cifra se puede reproducir con el repositorio: `scripts/build_e3_report.py` 
 ### Qué no se alineó (queda pendiente)
 
 - **Resultados de la evaluación confirmatoria.** Existen (`service-cnn/docs/crisp/evaluacion-confirmatoria-oficial/`) pero no se redactaron en la tesis; depende de que decidas cómo y cuándo.
+- **Rango plausible del rendimiento (§4.7, criterio de exclusión 3):** el texto dice que «el rango plausible y la tolerancia por redondeo se definirán antes de H1». El análisis no definió un rango numérico: marcó los extremos y los conservó (máximo 4 311 y mínimo 282 kg/ha; el 5 000 kg/ha previo era Chepén 2024, costa con riego, ya excluida). Decide si el texto debe decir eso o si quieres fijar un rango; no lo reescribí.
 - **Gran Chimú** sigue sin clasificación definitiva (`pendiente_verificacion` en `configs/provincias.csv`); el texto lo dice, pero la verificación con la fuente territorial oficial la tienes que hacer tú.
 - **Cronograma, hitos y presupuesto:** H2 (cierre del piloto y registro de preespecificación) y los costos «tras el ensayo piloto» no se actualizaron.
 - **Parámetros de ajuste** (30 ensayos por modelo, 47 épocas máximas, diez semillas): están en E5; el texto solo menciona las diez semillas y no se añadieron los otros.
@@ -61,6 +62,7 @@ Cada cifra se puede reproducir con el repositorio: `scripts/build_e3_report.py` 
 ## Qué revisar tú
 
 1. **Ábrelo en Word.** No pude abrirlo ni renderizarlo (no hay Word ni LibreOffice en el equipo de desarrollo). Lo verifiqué así: el validador de esquema del skill de `.docx` pasó; al rechazar todas las revisiones, los 1 234 párrafos son idénticos a los de la v3; y no hay identificadores de revisión repetidos. Con la segunda capa lo repetí: el validador pasó, al rechazar solo esa capa vuelve exactamente el texto anterior (1 234 párrafos iguales) y los ids de revisión no se repiten. No he visto el resultado en pantalla.
+   **Revisión mecánica ya hecha (2026-10-17)** sobre el texto con todos los cambios aceptados: ningún resto de lo retirado fuera de las frases que explican por qué no se usa (Holm, remuestreo, Wilcoxon, valor p, permutación, «tres benchmarks»); todas las menciones dicen cinco campañas externas, nivel 0,5⁵ = 0,031, y los valores p binomiales de §3.3.5 (0,010 con 5 de 5 y 0,087 con 4 de 5) los recalculé y son correctos; las cifras N0 a N5, 302 + 299 = 601 y 674 − 44 − 29 = 601 cuadran. Lo que esa revisión no puede juzgar es el estilo, la redacción en pantalla ni los números de página.
 2. **Actualiza los campos** (índice, referencias cruzadas) con *Ctrl+A* y *F9*: se editaron párrafos y el índice podría cambiar de página.
 3. **Revisa las citas.** Se quitaron tres referencias porque dejaron de citarse; si alguna se cita en otro lugar que no encontré, hay que restaurarla.
 4. **Marca temporal de los cambios.** Todas las revisiones llevan la fecha 2026-10-17.
