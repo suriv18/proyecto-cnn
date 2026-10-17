@@ -26,6 +26,9 @@ function sinServiceWorkerDeMocks(mode: string): Plugin {
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), sinServiceWorkerDeMocks(mode)],
   resolve: { alias: { '@': '/src' } },
+  // `npm run dev` y `vite preview`: /api/v1 va al backend local. Con `--mode mocks` MSW responde antes de llegar aquí.
+  server: { proxy: { '/api': process.env.QUINUAPROD_API_PROXY ?? 'http://localhost:8000' } },
+  preview: { proxy: { '/api': process.env.QUINUAPROD_API_PROXY ?? 'http://localhost:8000' } },
   test: {
     environment: 'jsdom',
     env: { VITE_API_URL: 'http://localhost:3000/api/v1' },

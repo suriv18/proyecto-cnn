@@ -8,10 +8,11 @@ Desde esta carpeta:
 
 ```sh
 npm ci
-npm run dev -- --mode mocks
+npm run dev:mocks     # sin backend: MSW con las instantáneas reales del piloto
+npm run dev           # con el backend real en http://localhost:8000 (proxy de /api)
 ```
 
-El modo `mocks` activa MSW con las instantáneas reales del piloto, sin necesitar un backend. Para usar un servidor real, configura `.env.local` a partir de `.env.example`, establece `VITE_USE_MOCKS=false` y ajusta `VITE_API_URL`; después ejecuta `npm run dev`. Las variables `VITE_*` son públicas y no deben contener secretos.
+`npm run dev:mocks` activa MSW y no necesita backend. `npm run dev` reenvía `/api` a `http://localhost:8000`; si el backend corre en otra dirección, define `QUINUAPROD_API_PROXY` antes de arrancar. Para llamar a una API en otro origen, configura `.env.local` a partir de `.env.example` y ajusta `VITE_API_URL` (la API debe permitir ese origen por CORS). Las variables `VITE_*` son públicas y no deben contener secretos.
 
 ## Estructura
 
