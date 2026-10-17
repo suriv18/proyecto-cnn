@@ -40,16 +40,16 @@ stages:
       - data/raw
 
   preprocess:
-    # --exploratorio: el respaldo departamental usa todo el histórico, NO válido
-    # para la evaluación definitiva; la ventana de entrenamiento por pliegue se
-    # fija en el piloto (H2, docs/crisp/F3). El gate de la máscara sigue activo:
+    # --campanas-entrenamiento: el respaldo departamental se estima solo con 2016-2020, la ventana inicial
+    # fijada en E5 (v1.1): sin fuga y válido para la evaluación definitiva. Antes usaba --exploratorio (todo el
+    # histórico); el contenido resultó idéntico (ver la enmienda de E5). El gate de la máscara sigue activo:
     # el stage falla mientras amplitud_ndvi_min no esté calibrada.
     cmd: >-
       python scripts/run_preprocessing.py
       --archivo-sisagri ${preprocesamiento.sisagri_path}
       --datos-raw data/raw
       --salida data/processed
-      --exploratorio
+      --campanas-entrenamiento 2016 2017 2018 2019 2020
       --dias-antes-de-cosecha ${preprocesamiento.dias_antes_de_cosecha}
     deps:
       - scripts/run_preprocessing.py

@@ -1,4 +1,4 @@
-# Preespecificación (E5) — CONGELADA v1.0 el 2026-10-17. Fase F3 de CRISP-ML(Q), hito H2.
+# Preespecificación (E5) — CONGELADA el 2026-10-17; v1.1 (enmienda de la huella de los datos, mismo día). Fase F3 de CRISP-ML(Q), hito H2.
 #
 # Fuente única de verdad del registro fechado de hipótesis, márgenes, comparador,
 # umbrales de HE2, horizontes, espacios de búsqueda y reglas de depuración
@@ -18,13 +18,13 @@
 
 metadatos:
   estado_documento: "CONGELADO"
-  version: "1.0"
+  version: "1.1"
   fecha_borrador: "2026-10-10"
   fecha_congelamiento: "2026-10-17"
   # Commit sobre el que se congeló: el último antes del commit del congelamiento (un commit no puede contener su propio hash).
   commit_congelamiento: "47c43a7cbf36b7ef6af4cb7030f1191a80c19a46"
   # SHA-256 de data/processed/tensores.npz (los datos no se versionan en git; la huella permite comprobar que son los mismos).
-  sha256_conjunto_de_datos: "3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad"
+  sha256_conjunto_de_datos: "15d7f9446cb3717e72514432efc223bb41d5732a7107a7c30b79b61947ee4f44"
 
 hipotesis:
   nivel_de_significancia: {valor: 0.05, estado: fijado_por_tesis, fuente: "3.3"}
@@ -124,4 +124,5 @@ sensibilidad:
 
 politica_de_desviaciones:
   enmiendas_antes_del_congelamiento: {valor: "2026-10-17: simplificación de la evaluación. Retirados n_bootstrap, semilla_bootstrap, contraste_de_apoyo, correccion_por_multiplicidad, familia_de_contrastes, valor_p_estabilidad y valor_p_fidelidad; se agregan reporte_de_apoyo_he1 y secundarios_descriptivos. No cambian HE1a, HE2c ni la conjunción HG", estado: fijado, fuente: "Decisión del autor sin mirar las campañas externas; falta reflejarla en 3.3.1, 3.3.3, 3.3.4 y 4.14 de la tesis"}
+  enmiendas_posteriores_al_congelamiento: {valor: "2026-10-17 (v1.1): nueva huella de los datos. El conjunto procesado se regeneró sin --exploratorio, con el respaldo departamental estimado solo con las campañas 2016-2020 (--campanas-entrenamiento). Los arreglos X, Z e imputado, las observaciones, las exclusiones y la fenología son idénticos a los del conjunto exploratorio; cambian solo los metadatos (exploratorio y campanas_entrenamiento) y los bytes del archivo tensores.npz. Huella anterior: 3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad; huella nueva: 15d7f9446cb3717e72514432efc223bb41d5732a7107a7c30b79b61947ee4f44. No cambia ningún umbral, margen, comparador ni regla de decisión", estado: fijado, fuente: "Decisión del autor antes de evaluar las campañas externas; exigida por la compuerta de la evaluación confirmatoria (src/evaluation/confirmatory_runner.py). De las campañas 2021-2025 solo se hicieron comparaciones booleanas de igualdad entre ambos conjuntos (X, Z, imputado y observaciones), sin ver ningún valor ni magnitud"}
   regla: {valor: "toda desviación posterior al congelamiento se registra como enmienda fechada y trazable; no se ajustan umbrales, márgenes ni comparador tras ver resultados de las campañas externas", estado: fijado_por_tesis, fuente: "4.18 y 6"}

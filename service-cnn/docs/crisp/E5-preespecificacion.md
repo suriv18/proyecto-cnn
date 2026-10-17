@@ -1,12 +1,12 @@
 # E5 · Preespecificación (registro fechado)
 
-**Estado:** CONGELADO · **Versión:** 1.0 · **Borrador:** 2026-10-10 · **Congelado:** 2026-10-17
+**Estado:** CONGELADO · **Versión:** 1.1 · **Borrador:** 2026-10-10 · **Congelado:** 2026-10-17
 
-**Commit del congelamiento:** `47c43a7cbf36b7ef6af4cb7030f1191a80c19a46` · **SHA-256 de `tensores.npz`:** `3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad`
+**Commit del congelamiento:** `47c43a7cbf36b7ef6af4cb7030f1191a80c19a46` · **SHA-256 de `tensores.npz`:** `15d7f9446cb3717e72514432efc223bb41d5732a7107a7c30b79b61947ee4f44`
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **79 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
@@ -143,6 +143,7 @@ Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
 | `enmiendas_antes_del_congelamiento` | 2026-10-17: simplificación de la evaluación. Retirados n_bootstrap, semilla_bootstrap, contraste_de_apoyo, correccion_por_multiplicidad, familia_de_contrastes, valor_p_estabilidad y valor_p_fidelidad; se agregan reporte_de_apoyo_he1 y secundarios_descriptivos. No cambian HE1a, HE2c ni la conjunción HG | `fijado` | Decisión del autor sin mirar las campañas externas; falta reflejarla en 3.3.1, 3.3.3, 3.3.4 y 4.14 de la tesis |
+| `enmiendas_posteriores_al_congelamiento` | 2026-10-17 (v1.1): nueva huella de los datos. El conjunto procesado se regeneró sin --exploratorio, con el respaldo departamental estimado solo con las campañas 2016-2020 (--campanas-entrenamiento). Los arreglos X, Z e imputado, las observaciones, las exclusiones y la fenología son idénticos a los del conjunto exploratorio; cambian solo los metadatos (exploratorio y campanas_entrenamiento) y los bytes del archivo tensores.npz. Huella anterior: 3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad; huella nueva: 15d7f9446cb3717e72514432efc223bb41d5732a7107a7c30b79b61947ee4f44. No cambia ningún umbral, margen, comparador ni regla de decisión | `fijado` | Decisión del autor antes de evaluar las campañas externas; exigida por la compuerta de la evaluación confirmatoria (src/evaluation/confirmatory_runner.py). De las campañas 2021-2025 solo se hicieron comparaciones booleanas de igualdad entre ambos conjuntos (X, Z, imputado y observaciones), sin ver ningún valor ni magnitud |
 | `regla` | toda desviación posterior al congelamiento se registra como enmienda fechada y trazable; no se ajustan umbrales, márgenes ni comparador tras ver resultados de las campañas externas | `fijado_por_tesis` | 4.18 y 6 |
 
 **Política de desviaciones:** toda desviación posterior al congelamiento se registra como enmienda fechada y trazable; no se ajustan umbrales, márgenes ni comparador tras ver resultados de las campañas externas
