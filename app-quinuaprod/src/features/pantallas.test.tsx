@@ -142,10 +142,10 @@ describe('Registro E5', () => {
     expect(estados).toHaveTextContent('Fijado por tesis')
     expect(estados).not.toHaveTextContent('Propuesto')
     const meta = await screen.findByLabelText('Metadatos de E5')
-    expect(meta).toHaveTextContent('Congelado v1.0')
+    expect(meta).toHaveTextContent('Congelado v1.1')
     expect(meta).toHaveTextContent('2026-10-17')
     expect(meta).toHaveTextContent('47c43a7')
-    expect(meta).toHaveTextContent('3a44df55')
+    expect(meta).toHaveTextContent('15d7f944')
   })
 
   it('busca por texto y filtra por estado', async () => {

@@ -15,7 +15,7 @@
  "n_observaciones": 302,
  "sha256_tensores": "3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad",
  "estado_e5": "CONGELADO",
- "version_e5": "1.0",
+ "version_e5": "1.1",
  "fecha_congelamiento_e5": "2026-10-17",
  "orden_variables": [
   "precipitacion",
