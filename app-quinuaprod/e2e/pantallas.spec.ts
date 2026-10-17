@@ -99,7 +99,7 @@ test.describe('Sensibilidades y registro E5', () => {
     const antes = await filas(page, 'Parámetros preespecificados').count()
     await page.getByLabel('Buscar').fill('bootstrap')
     await expect.poll(() => filas(page, 'Parámetros preespecificados').count()).toBeLessThan(antes)
-    await expect(page.getByLabel('Metadatos de E5')).toContainText('Sin congelar')
+    await expect(page.getByLabel('Metadatos de E5')).toContainText('2026-10-17')
   })
 })
 

@@ -54,6 +54,20 @@ export default function PreespecificacionPage() {
               <Dato etiqueta="Congelamiento">
                 {metadatos.fecha_congelamiento ? textoValor(metadatos.fecha_congelamiento) : 'Sin congelar'}
               </Dato>
+              {metadatos.commit_congelamiento ? (
+                <Dato etiqueta="Commit">
+                  <span title={textoValor(metadatos.commit_congelamiento)}>
+                    {textoValor(metadatos.commit_congelamiento).slice(0, 7)}
+                  </span>
+                </Dato>
+              ) : null}
+              {metadatos.sha256_conjunto_de_datos ? (
+                <Dato etiqueta="Huella de los datos">
+                  <span title={textoValor(metadatos.sha256_conjunto_de_datos)}>
+                    {textoValor(metadatos.sha256_conjunto_de_datos).slice(0, 8)}
+                  </span>
+                </Dato>
+              ) : null}
               <Dato etiqueta="Parámetros">{parametros.length}</Dato>
             </Datos>
 

@@ -77,8 +77,8 @@ export default function HipotesisPage() {
       />
 
       <p role="note" className="mb-8 rounded-r-lg border-l-4 border-accent bg-accent-soft p-4 text-sm">
-        <strong className="font-semibold">Ninguna hipótesis está evaluada.</strong> Las campañas externas siguen
-        protegidas hasta congelar E5. Lo que se muestra aquí es evidencia descriptiva del piloto, calculada sobre
+        <strong className="font-semibold">Ninguna hipótesis está evaluada.</strong> E5 ya está congelada, pero las
+        campañas externas siguen protegidas hasta la evaluación confirmatoria. Lo que se muestra aquí es evidencia descriptiva del piloto, calculada sobre
         campañas de entrenamiento: sirve para entender el problema, no decide HE1, HE2 ni la hipótesis general.
       </p>
 

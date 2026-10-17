@@ -62,7 +62,7 @@ También es la etapa `serializar_modelo` de `dvc.yaml`. Se ejecuta **de forma ai
 
 ## Trabajo pendiente
 
-- **Modelo definitivo:** el modelo serializado es el del piloto, no el de la evaluación confirmatoria. Tras congelar E5 y entrenar con la ventana definitiva hay que volver a exportarlo.
+- **Modelo definitivo:** el modelo serializado es el del piloto, no el de la evaluación confirmatoria. E5 ya está congelada (2026-10-17); al entrenar con la ventana definitiva hay que volver a exportarlo.
 - **Almacenamiento remoto del modelo:** la etapa de DVC ya existe, pero no hay un remoto configurado (`dvc push`); `models/` no se sube a git. Para desplegar, el modelo se genera en el servidor con el script o se copia la carpeta.
 - **SHAP en modo observación:** solo se calcula con un tensor. Para mostrarlo al consultar una observación del piloto haría falta leer su tensor de `data/processed` (parquet) desde el servicio.
 - **Despliegue:** la API no tiene autenticación ni límites de uso porque solo sirve resultados de investigación sin datos personales. Si se publica, hay que decidir si se restringe el acceso y configurar `QUINUAPROD_CORS_ORIGINS` con el dominio real.

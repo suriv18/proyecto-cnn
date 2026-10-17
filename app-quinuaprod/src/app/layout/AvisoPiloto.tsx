@@ -19,7 +19,7 @@ export function AvisoPiloto() {
         E5 {formatEtiqueta(data.estado_e5.toLowerCase())} v{data.version_e5}
       </Chip>
       <span>
-        Se muestran las campañas de entrenamiento y prueba; las campañas externas permanecen protegidas hasta congelar E5.
+        Se muestran las campañas de entrenamiento y prueba; las campañas externas permanecen protegidas hasta la evaluación confirmatoria.
       </span>
     </div>
   )

@@ -37,6 +37,7 @@ const ETIQUETAS: Record<string, string> = {
   oficial: 'Oficial',
   tecnico: 'Técnico',
   borrador: 'Borrador',
+  congelado: 'Congelado',
   fijado_por_tesis: 'Fijado por tesis',
   fijado: 'Fijado',
   propuesto: 'Propuesto',

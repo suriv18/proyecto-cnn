@@ -116,4 +116,4 @@ Si publicas la interfaz con otra API, pasa `--build-arg VITE_API_URL=https://api
 2. Reexporta los fixtures si cambiaron los resultados (`npm run export:fixtures`) y revisa las pruebas que dependen de conteos exactos.
 3. Reconstruye la imagen y la interfaz.
 
-Al congelar E5 y evaluar las campañas externas, esta guía deja de ser suficiente: hay que decidir qué se publica de esos resultados, con qué rotulado y desde cuándo (ver la enmienda de alcance).
+E5 está congelada desde el 2026-10-17. Al evaluar las campañas externas, esta guía deja de ser suficiente: hay que decidir qué se publica de esos resultados, con qué rotulado y desde cuándo (ver la enmienda de alcance).

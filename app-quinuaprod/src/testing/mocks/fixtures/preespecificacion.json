@@ -1,11 +1,11 @@
 {
  "metadatos": {
-  "estado_documento": "BORRADOR",
-  "version": "0.1",
+  "estado_documento": "CONGELADO",
+  "version": "1.0",
   "fecha_borrador": "2026-10-10",
-  "fecha_congelamiento": null,
-  "commit_congelamiento": null,
-  "sha256_conjunto_de_datos": null
+  "fecha_congelamiento": "2026-10-17",
+  "commit_congelamiento": "47c43a7cbf36b7ef6af4cb7030f1191a80c19a46",
+  "sha256_conjunto_de_datos": "3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad"
  },
  "secciones": {
   "hipotesis": {
