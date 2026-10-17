@@ -1,6 +1,8 @@
 # E5 · Preespecificación (registro fechado)
 
-**Estado:** BORRADOR · **Versión:** 0.1 · **Borrador:** 2026-10-10 · **Congelado:** no
+**Estado:** CONGELADO · **Versión:** 1.0 · **Borrador:** 2026-10-10 · **Congelado:** 2026-10-17
+
+**Commit del congelamiento:** `47c43a7cbf36b7ef6af4cb7030f1191a80c19a46` · **SHA-256 de `tensores.npz`:** `3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad`
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 

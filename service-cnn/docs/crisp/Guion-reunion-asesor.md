@@ -6,7 +6,7 @@ Duración sugerida: 45 minutos. Orden por impacto: primero lo que puede cambiar 
 - `docs/crisp/Resumen-para-el-asesor.md` (o la página publicada) y `docs/crisp/Cambios-tesis-v2-v3.html`.
 - La tesis `docs/Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`.
 - El informe del piloto: `docs/crisp/Piloto-oficial-informe.md`.
-- El pre-registro: `docs/crisp/E5-preespecificacion-BORRADOR.md`.
+- El pre-registro: `docs/crisp/E5-preespecificacion.md`.
 
 ## 1. Apertura (3 min)
 - Estado: la preparación de datos, el modelado y el piloto están hechos; el código de evaluación está listo y probado. **No se ha tocado ninguna campaña externa (2021–2025).**

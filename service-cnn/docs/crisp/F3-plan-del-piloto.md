@@ -1,7 +1,7 @@
 # F3 · Plan del ensayo piloto (actividad 7, hito H2)
 
 **Estado:** BORRADOR · **Fecha:** 2026-10-10 · **Entregables que habilita:** E5 (preespecificación congelada), H2
-**Documentos relacionados:** [F3-modelado](F3-modelado.md) · [E5 (borrador)](E5-preespecificacion-BORRADOR.md) · [E3](E3-informe-depuracion-eda.md) · `configs/preespecificacion.yaml`
+**Documentos relacionados:** [F3-modelado](F3-modelado.md) · [E5 (congelada)](E5-preespecificacion.md) · [E3](E3-informe-depuracion-eda.md) · `configs/preespecificacion.yaml`
 
 ## 1. Propósito
 

@@ -23,7 +23,7 @@ Cada fase tiene una ficha con: requisitos y métricas de calidad, riesgos, tarea
 ## Informes entregados
 
 - [E3 · Informe de depuración y análisis exploratorio](E3-informe-depuracion-eda.md) — generado por `scripts/build_e3_report.py`.
-- [E5 · Preespecificación (BORRADOR)](E5-preespecificacion-BORRADOR.md) — generada desde `configs/preespecificacion.yaml` con `scripts/render_e5.py`; no puede congelarse con decisiones pendientes.
+- [E5 · Preespecificación (CONGELADA v1.0)](E5-preespecificacion.md) — generada desde `configs/preespecificacion.yaml` con `scripts/render_e5.py`; no puede congelarse con decisiones pendientes.
 - [F3 · Plan del ensayo piloto](F3-plan-del-piloto.md) — reglas de decisión preespecificadas y protección de las campañas externas.
 
 ## Desviaciones conocidas respecto del plan

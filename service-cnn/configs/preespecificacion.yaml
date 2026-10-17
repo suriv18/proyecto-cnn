@@ -1,4 +1,4 @@
-# Preespecificación (E5) — BORRADOR. Fase F3 de CRISP-ML(Q), hito H2.
+# Preespecificación (E5) — CONGELADA v1.0 el 2026-10-17. Fase F3 de CRISP-ML(Q), hito H2.
 #
 # Fuente única de verdad del registro fechado de hipótesis, márgenes, comparador,
 # umbrales de HE2, horizontes, espacios de búsqueda y reglas de depuración
@@ -17,12 +17,14 @@
 # ningún umbral después de ver resultados de las campañas externas.
 
 metadatos:
-  estado_documento: "BORRADOR"
-  version: "0.1"
+  estado_documento: "CONGELADO"
+  version: "1.0"
   fecha_borrador: "2026-10-10"
-  fecha_congelamiento: null
-  commit_congelamiento: null
-  sha256_conjunto_de_datos: null   # se registra al congelar (data/processed/tensores.npz)
+  fecha_congelamiento: "2026-10-17"
+  # Commit sobre el que se congeló: el último antes del commit del congelamiento (un commit no puede contener su propio hash).
+  commit_congelamiento: "47c43a7cbf36b7ef6af4cb7030f1191a80c19a46"
+  # SHA-256 de data/processed/tensores.npz (los datos no se versionan en git; la huella permite comprobar que son los mismos).
+  sha256_conjunto_de_datos: "3a44df550568e9affae2b9e2da584a519c360242ad6efe7991ebc67de3d3c1ad"
 
 hipotesis:
   nivel_de_significancia: {valor: 0.05, estado: fijado_por_tesis, fuente: "3.3"}

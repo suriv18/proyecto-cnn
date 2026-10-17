@@ -174,6 +174,9 @@ def render_markdown(prereg: dict) -> str:
         f"**Estado:** {meta['estado_documento']} · **Versión:** {meta['version']} · **Borrador:** {meta['fecha_borrador']} · "
         f"**Congelado:** {meta['fecha_congelamiento'] or 'no'}",
         "",
+        f"**Commit del congelamiento:** `{meta.get('commit_congelamiento') or 'sin registrar'}` · "
+        f"**SHA-256 de `tensores.npz`:** `{meta.get('sha256_conjunto_de_datos') or 'sin registrar'}`",
+        "",
         "> Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; "
         "no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).",
         "",

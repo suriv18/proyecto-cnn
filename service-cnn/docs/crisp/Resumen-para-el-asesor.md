@@ -20,7 +20,7 @@ Tesis: *Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de qui
 - Control de fugas: todo lo que aprende (imputación, estandarización, línea base, fenología de respaldo) se ajusta solo con el entrenamiento; validación de origen móvil; las campañas externas no se cargan en el piloto (prueba de fuga por permutación: **pasa** en los 5 modelos). Suite de tests: 598 pasan.
 - **Tesis v3:** parte de la base WMSR (con la enmienda del periodo), incorpora el título y la metodología CRISP-ML(Q) y reajusta la formulación: el modelo es la CNN-1D y SHAP es la herramienta de interpretabilidad. Hipótesis, contrastes, operacionalización y matriz de consistencia quedan alineados con lo que se ejecuta. 119 cambios, revisables lado a lado en la página de cambios.
 - Implementado desde la última versión: referencia B4 (persistencia), corrección de Holm, valores p propuestos para los 3 criterios de HE2, `evaluate_he2` y oclusión de cada fase.
-- Informe de depuración y EDA: `docs/crisp/E3-informe-depuracion-eda.md`. Pre-registro en borrador: `docs/crisp/E5-preespecificacion-BORRADOR.md`. Plan y resultados del piloto: `docs/crisp/F3-plan-del-piloto.md`.
+- Informe de depuración y EDA: `docs/crisp/E3-informe-depuracion-eda.md`. Pre-registro (congelado el 2026-10-17): `docs/crisp/E5-preespecificacion.md`. Plan y resultados del piloto: `docs/crisp/F3-plan-del-piloto.md`.
 
 ## 2. Resultados de la corrida técnica (NO VINCULANTE)
 

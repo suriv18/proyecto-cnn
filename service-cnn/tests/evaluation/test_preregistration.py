@@ -7,6 +7,9 @@ el registro dejaría de ser una garantía; estas pruebas lo detectan.
 from __future__ import annotations
 
 import copy
+import hashlib
+import re
+from pathlib import Path
 
 import pytest
 
@@ -166,11 +169,35 @@ class TestCongelamiento:
             assert_can_freeze(listo)
 
 
+class TestCongelamientoRegistrado:
+    """E5 está congelada: el registro debe estar completo y ser verificable contra los datos."""
+
+    def test_el_registro_real_pasa_la_puerta_de_congelamiento(self, prereg):
+        assert_can_freeze(prereg)
+
+    def test_los_metadatos_del_congelamiento_estan_completos(self, prereg):
+        meta = prereg["metadatos"]
+
+        assert meta["estado_documento"] == "CONGELADO"
+        assert meta["fecha_congelamiento"] and meta["fecha_congelamiento"] >= meta["fecha_borrador"]
+        assert re.fullmatch(r"[0-9a-f]{40}", meta["commit_congelamiento"])
+        assert re.fullmatch(r"[0-9a-f]{64}", meta["sha256_conjunto_de_datos"])
+
+    def test_la_huella_registrada_es_la_de_los_tensores(self, prereg):
+        tensores = Path("data/processed/tensores.npz")
+        if not tensores.exists():
+            pytest.skip("data/processed/tensores.npz no se versiona; solo se comprueba donde existe")
+
+        real = hashlib.sha256(tensores.read_bytes()).hexdigest()
+
+        assert prereg["metadatos"]["sha256_conjunto_de_datos"] == real
+
+
 class TestRenderizado:
     def test_el_texto_incluye_el_estado_y_la_lista_de_pendientes(self, prereg):
         texto = render_markdown(prereg)
 
-        assert "BORRADOR" in texto
+        assert "CONGELADO" in texto
         assert "Decisiones pendientes" in texto
         assert "| `por_decidir_asesor` | 0 |" in texto and "| `propuesto` | 0 |" in texto
         assert "fijado_por_tesis" in texto
