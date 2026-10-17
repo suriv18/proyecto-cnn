@@ -22,6 +22,9 @@ venv/
 /service-cnn/reports/*
 !/service-cnn/reports/.gitkeep
 
+# CNN-1D serializada para el servicio (se regenera con scripts/export_modelo.py)
+/service-cnn/models/*
+
 # OS
 .DS_Store
 Thumbs.db
