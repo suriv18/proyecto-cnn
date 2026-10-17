@@ -149,7 +149,7 @@ describe('Registro E5', () => {
     await renderApp('/preespecificacion')
     const tabla = await screen.findByRole('region', { name: 'Parámetros preespecificados' })
     const total = filasDe(tabla).length
-    await user.type(screen.getByLabelText('Buscar'), 'holm')
+    await user.type(screen.getByLabelText('Buscar'), 'bootstrap')
     await waitFor(() => expect(filasDe(tabla).length).toBeLessThan(total))
     expect(filasDe(tabla).length).toBeGreaterThan(0)
     await user.clear(screen.getByLabelText('Buscar'))

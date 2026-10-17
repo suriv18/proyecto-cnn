@@ -10,7 +10,7 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "export:fixtures": "../service-cnn/.venv/Scripts/python.exe scripts/export_fixtures.py",
+    "export:fixtures": "node scripts/export_fixtures.mjs",
     "gen:api": "openapi-typescript api/openapi.yaml -o src/lib/api/schema.d.ts",
     "preview": "vite preview"
   },

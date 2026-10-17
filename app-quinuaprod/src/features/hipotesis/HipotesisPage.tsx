@@ -109,7 +109,7 @@ export default function HipotesisPage() {
           filas={[
             { etiqueta: 'Criterio primario (HE1a)', texto: 'q < δ en todas las campañas externas, frente a XGBoost y frente a B*, con q = RMSE(CNN-1D) / RMSE(referencia) − 1.' },
             { etiqueta: 'Margen δ (según E5)', texto: delta === undefined ? '—' : formatPorcentaje(delta) },
-            { etiqueta: 'Regla de decisión', texto: 'Regla exacta de signos: nivel de significancia 0,5ⁿ (0,031 con cinco campañas). Wilcoxon pareado y equivalencia práctica bayesiana como apoyo.' },
+            { etiqueta: 'Regla de decisión', texto: 'Regla exacta de signos: nivel de significancia 0,5ⁿ (0,031 con cinco campañas). Se reportan la mediana de q y el rango por campaña, sin contrastes de apoyo.' },
             { etiqueta: 'Exploratorio (HE1b)', texto: 'Ganancia de habilidad SS = 1 − MSE(CNN-1D) / MSE(B*). No condiciona la decisión.' },
             { etiqueta: 'Indicadores (Y1)', texto: 'RMSE, MAE, rRMSE y R².' },
           ]}
@@ -130,7 +130,7 @@ export default function HipotesisPage() {
               texto: `La fase de máxima contribución SHAP pertenece al conjunto preespecificado: ${criticas ? criticas.map(formatEtiqueta).join(' o ').toLowerCase() : '—'} (según E5).`,
             },
             { etiqueta: 'Regla de decisión', texto: 'Binomial exacta unilateral sobre las campañas externas, con probabilidad de azar 0,4: con cinco campañas solo 5 de 5 aciertos da p < 0,05.' },
-            { etiqueta: 'Secundarios', texto: 'Estabilidad entre campañas (HE2a: W de Kendall y Jaccard corregido por azar) y fidelidad por oclusión (HE2b). Se corrigen con Holm y no compensan al criterio primario.' },
+            { etiqueta: 'Secundarios', texto: 'Estabilidad entre campañas (HE2a: W de Kendall y Jaccard corregido por azar) y fidelidad por oclusión (HE2b). Se reportan como cifras, sin valor p ni corrección, y no deciden HE2 ni compensan al criterio primario.' },
             { etiqueta: 'Indicadores (Y2)', texto: 'W de Kendall, estabilidad de las fases principales, aumento del RMSE por oclusión, rango de la fase máxima y coincidencia de la fase máxima.' },
           ]}
         />

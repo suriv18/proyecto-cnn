@@ -4,7 +4,7 @@
 
 > Generado desde `configs/preespecificacion.yaml` (fuente única de verdad) con `python scripts/render_e5.py`; no se edita a mano. Fase F3 de CRISP-ML(Q), hito H2 (sección 4.18 de la tesis).
 
-Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
+Contiene **78 parámetros**. Solo puede congelarse cuando no quede ninguno `propuesto` ni `por_decidir_*`; después, todo cambio exige una enmienda fechada y trazable.
 
 ## Decisiones pendientes
 
@@ -36,21 +36,16 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 | `unidad_del_contraste` | campaña externa | `fijado_por_tesis` | 3.3 |
 | `estadistico_he1a` | q_f(R) = RMSE(CNN-1D)/RMSE(R) - 1 con R en {XGBoost, B*}; H0: mediana >= 0.05 | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1; antes solo frente a XGBoost |
 | `estadistico_he1b` | exploratorio: skill score SS_f = 1 - MSE(CNN-1D)/MSE(B*) (Murphy, 1988); H0: mediana(SS_f) <= 0 | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2; antes: Δ_f frente a B2, confirmatorio |
-| `intervalo_de_confianza` | regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); intervalos por bloques solo descriptivos | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos |
-| `n_bootstrap` | 10000 | `fijado` | Piloto oficial (2026-10-10): solo para los intervalos descriptivos por bloques; la decisión de HE1a usa la regla exacta de signos (con 5 campañas hay 5^5 = 3125 remuestreos distintos) |
-| `semilla_bootstrap` | 2026 | `fijado` | reproducibilidad. Cerrado con el piloto oficial (2026-10-10, ronda 2); sin cambios |
-| `contraste_de_apoyo` | Wilcoxon pareado unilateral, equivalencia práctica bayesiana (ROPE ±5 %), Hodges-Lehmann y correlación biserial de rangos | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.1 y 4.14 |
+| `intervalo_de_confianza` | regla exacta de signos: q_f(R) < 0.05 en todas las campañas externas (nivel 0.5^n); se reporta el rango de q por campaña, sin intervalos bootstrap | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 4.14; con 5 bloques el bootstrap tiene 3125 remuestreos distintos |
+| `reporte_de_apoyo_he1` | descriptivo, sin contraste: mediana de q_f(R) y rango por campaña frente a XGBoost y B*. No se calculan Wilcoxon, equivalencia bayesiana, Hodges-Lehmann, correlación biserial ni intervalos bootstrap | `fijado` | Simplificación decidida por el autor el 2026-10-17 (docs/Propuesta-coherencia-problema-objetivos-hipotesis.md, sección 7): reemplaza a n_bootstrap, semilla_bootstrap y contraste_de_apoyo. No decide HE1; la decisión es solo la regla exacta de signos |
 | `he1_se_respalda_si` | se cumple HE1a (HE1b es exploratoria) | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.2 |
 | `he2.estabilidad_w_kendall_minimo` | 0.7 | `fijado_por_tesis` | 3.3.3 |
 | `he2.estabilidad_jaccard_minimo` | 0.5 | `fijado_por_tesis` | 3.3.3 |
 | `he2.n_fases_principales` | 3 | `fijado_por_tesis` | 3.3.3 |
 | `he2.fases_criticas_horizonte_principal` | floracion, llenado_grano | `fijado_por_tesis` | 3.3.5 (Vásquez et al., 2024) |
 | `he2.fases_criticas_horizonte_temprano` | floracion | `fijado_por_tesis` | 3.3.5 |
-| `he2.correccion_por_multiplicidad` | holm | `fijado_por_tesis` | 3.3.5 |
-| `he2.familia_de_contrastes` | estabilidad, fidelidad | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.5; la concordancia es el criterio primario y queda fuera de la familia corregida |
-| `he2.valor_p_estabilidad` | permutación de las fases dentro de cada campaña (10 000 permutaciones, semilla 2026); p = max(p de W de Kendall, p del Jaccard medio de las 3 fases principales) | `fijado_por_tesis` | src/explainability/he2_pvalues.py; los umbrales W >= 0.70 y J >= 0.50 se conservan como criterio de magnitud |
-| `he2.valor_p_fidelidad` | aleatorización exacta con el rango del aumento de RMSE de la fase de mayor contribución entre las 5 fases ocluidas, sumado entre campañas; los empates van en contra | `fijado_por_tesis` | src/explainability/he2_pvalues.py; amplía el control único de 3.3.4 a las 4 fases restantes (todas de igual duración); tesis v3, 3.3.4: sustituye al control único, que con 5 campañas no pasa Holm |
-| `he2.valor_p_concordancia` | binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) | `fijado_por_tesis` | src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.0167 |
+| `he2.secundarios_descriptivos` | estabilidad (W de Kendall y J corregido por azar) y fidelidad (aumento del RMSE por oclusión y rango de la fase máxima) se reportan como cifras, sin valor p ni corrección por multiplicidad. No deciden HE2 ni compensan a la concordancia; W >= 0.70 y J >= 0.50 quedan como referencias de magnitud | `fijado` | Simplificación decidida por el autor el 2026-10-17 (docs/Propuesta-coherencia-problema-objetivos-hipotesis.md, sección 7): reemplaza a correccion_por_multiplicidad, familia_de_contrastes, valor_p_estabilidad y valor_p_fidelidad. Con 5 campañas esas pruebas casi no tienen potencia; las cifras se reportan completas |
+| `he2.valor_p_concordancia` | binomial exacta unilateral sobre las campañas, p0 = fases del referente / fases totales (0.4 principal, 0.2 temprano) | `fijado_por_tesis` | src/explainability/he2_pvalues.py; con 5 campañas solo 5/5 aciertos da p < 0.05 (p = 0.010; con 4 de 5, p = 0.087) |
 | `he2.he2_se_respalda_si` | se cumple la concordancia agronómica (primaria); estabilidad y fidelidad son secundarias | `fijado_por_tesis` | Tesis v3 (decisión del autor; el asesor la revisa): 3.3.5 |
 | `hipotesis_general_conjuntiva` | sí | `fijado_por_tesis` | 3.1 |
 
@@ -145,6 +140,7 @@ Contiene **82 parámetros**. Solo puede congelarse cuando no quede ninguno `prop
 
 | Parámetro | Valor | Estado | Fuente |
 |---|---|---|---|
+| `enmiendas_antes_del_congelamiento` | 2026-10-17: simplificación de la evaluación. Retirados n_bootstrap, semilla_bootstrap, contraste_de_apoyo, correccion_por_multiplicidad, familia_de_contrastes, valor_p_estabilidad y valor_p_fidelidad; se agregan reporte_de_apoyo_he1 y secundarios_descriptivos. No cambian HE1a, HE2c ni la conjunción HG | `fijado` | Decisión del autor sin mirar las campañas externas; falta reflejarla en 3.3.1, 3.3.3, 3.3.4 y 4.14 de la tesis |
 | `regla` | toda desviación posterior al congelamiento se registra como enmienda fechada y trazable; no se ajustan umbrales, márgenes ni comparador tras ver resultados de las campañas externas | `fijado_por_tesis` | 4.18 y 6 |
 
 **Política de desviaciones:** toda desviación posterior al congelamiento se registra como enmienda fechada y trazable; no se ajustan umbrales, márgenes ni comparador tras ver resultados de las campañas externas

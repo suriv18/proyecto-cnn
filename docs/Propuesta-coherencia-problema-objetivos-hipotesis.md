@@ -1,6 +1,6 @@
 # Coherencia entre problema, objetivos e hipótesis
 
-**Estado:** propuesta de trabajo del autor. No modifica `Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx` ni `configs/preespecificacion.yaml`.
+**Estado:** propuesta de trabajo del autor. No modifica `Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`. La simplificación de la sección 7 ya se aplicó a `configs/preespecificacion.yaml` el 2026-10-17; la redacción de problema, objetivos e hipótesis sigue sin pasar a la tesis.
 **Base de la revisión:** tesis v3 (capítulos 1, 3 y 4, anexos 01 y 02), `docs/01-analisis-sistema.md`, `docs/02-arquitectura-tecnica.md`, y los resultados del piloto de `service-cnn/reports/` (campañas de entrenamiento 2016-2020; **no vinculantes**).
 
 ## 1. Regla para cambiar algo
@@ -137,6 +137,6 @@ Hecho:
 Pendiente (requiere editar el docx o la preespecificación):
 
 1. **Tesis (docx):** §1.2, §1.4, §3.1, §3.2, Anexo 02, Anexo 01 (denominación de Y2), §1.5 (horizonte y «cuatro benchmarks»), §4.3, Tabla 8 (rol de B4) y §3.4 (definición de B*); si se acepta la simplificación de la sección 7, también §3.3.1, §3.3.3, §3.3.4 y §4.14. La incoherencia H9 (`docs/01` y `docs/02`) ya está corregida.
-2. **`configs/preespecificacion.yaml`:** revisar que los textos de `hipotesis` coincidan con la nueva redacción y, si se acepta la simplificación, retirar los siete parámetros de la sección 7. E5 se regenera con `scripts/render_e5.py`, y `check_consistency_with_code` debe volver a pasar.
+2. **`configs/preespecificacion.yaml`:** **hecho (2026-10-17)**: se retiraron los siete parámetros de la sección 7 y se agregaron `reporte_de_apoyo_he1`, `secundarios_descriptivos` y una entrada de enmienda; E5 se regeneró y `check_consistency_with_code` sigue limpio. Se corrigió además `valor_p_concordancia` (decía «p < 0.0167», que era del esquema anterior con Holm; ahora dice p < 0.05). La tesis (docx) debe reflejar el mismo cambio, o E5 y la tesis quedarán distintos.
 3. **app-quinuaprod:** pantalla «Hipótesis y objetivos», alineada con esta redacción (no se pidió por ahora).
 4. **`app-quinuaprod/docs/enmienda-alcance-ui.md`:** habla de decisiones del asesor; cambiarlo a decisiones abiertas del autor mientras no haya asesor (no se pidió por ahora).
