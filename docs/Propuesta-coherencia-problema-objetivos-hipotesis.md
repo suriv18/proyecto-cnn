@@ -1,6 +1,6 @@
 # Coherencia entre problema, objetivos e hipótesis
 
-**Estado:** propuesta de trabajo del autor. No modifica `Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`. La simplificación de la sección 7 ya se aplicó a `configs/preespecificacion.yaml` el 2026-10-17; la redacción de problema, objetivos e hipótesis sigue sin pasar a la tesis.
+**Estado:** propuesta de trabajo del autor. No modifica `Proyecto_Tesis_Maestria_UNMSM_WMSR_v3.docx`. La simplificación de la sección 7 ya se aplicó a `configs/preespecificacion.yaml` el 2026-10-17; la redacción de problema, objetivos e hipótesis y esa simplificación están aplicadas, como cambios con control de versiones, en `Proyecto_Tesis_Maestria_UNMSM_WMSR_v4.docx` (ver `docs/Cambios-tesis-v3-v4.md`); falta que la revises y aceptes en Word.
 **Base de la revisión:** tesis v3 (capítulos 1, 3 y 4, anexos 01 y 02), `docs/01-analisis-sistema.md`, `docs/02-arquitectura-tecnica.md`, y los resultados del piloto de `service-cnn/reports/` (campañas de entrenamiento 2016-2020; **no vinculantes**).
 
 ## 1. Regla para cambiar algo
