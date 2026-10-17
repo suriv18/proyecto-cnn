@@ -20,6 +20,7 @@ from src.evaluation.confirmatory_runner import (
     ConfirmatoryConfig,
     ConfirmatoryGateError,
     comprobar_puertas,
+    marcar_ejecucion,
     parametros_de_e5,
     run_confirmatory,
     save_confirmatory_results,
@@ -139,6 +140,23 @@ class TestProcedimiento:
         assert "ENSAYO, NO VINCULANTE" in (tmp_path / "informe_confirmatorio.md").read_text(encoding="utf-8")
         resumen = json.loads((tmp_path / "resultados.json").read_text(encoding="utf-8"))
         assert resumen["p0"]["vinculante"] is False and resumen["he1"]["campanas"] == [2019, 2020]
+
+
+class TestMarcaDeEjecucion:
+    def test_al_completarse_conserva_la_hora_de_inicio(self, tmp_path):
+        marcar_ejecucion(tmp_path, "iniciada", "2026-10-17T22:30:12+00:00")
+        al_iniciar = json.loads((tmp_path / ARCHIVO_DE_EJECUCION).read_text(encoding="utf-8"))
+
+        marcar_ejecucion(tmp_path, "completada", "2026-10-17T22:30:12+00:00", "2026-10-17T23:07:23+00:00")
+        al_terminar = json.loads((tmp_path / ARCHIVO_DE_EJECUCION).read_text(encoding="utf-8"))
+
+        assert al_iniciar == {"inicio": "2026-10-17T22:30:12+00:00", "estado": "iniciada"}
+        assert al_terminar == {"inicio": "2026-10-17T22:30:12+00:00", "estado": "completada", "fin": "2026-10-17T23:07:23+00:00"}
+
+    def test_su_existencia_impide_repetir_la_corrida_oficial(self, tmp_path):
+        marcar_ejecucion(tmp_path, "iniciada", "2026-10-17T22:30:12+00:00")
+
+        assert (tmp_path / ARCHIVO_DE_EJECUCION).exists()
 
 
 class TestPuertasDeE5YDeLosDatos:

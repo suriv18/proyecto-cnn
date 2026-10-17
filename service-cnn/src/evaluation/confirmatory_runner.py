@@ -231,6 +231,21 @@ def _explicar_pliego(
     return promedio(contribuciones), promedio(aumentos), diferencia
 
 
+def _ahora() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def marcar_ejecucion(salida: Path, estado: str, inicio: str, fin: str | None = None) -> None:
+    """Escribe la marca de control de la corrida oficial; su sola existencia impide repetirla.
+
+    `inicio` es la hora en que arrancó la corrida y se conserva en todas las escrituras.
+    """
+    marca = {"inicio": inicio, "estado": estado}
+    if fin is not None:
+        marca["fin"] = fin
+    (Path(salida) / ARCHIVO_DE_EJECUCION).write_text(json.dumps(marca, indent=2), encoding="utf-8")
+
+
 def run_confirmatory(cfg: ConfirmatoryConfig) -> ConfirmatoryResults:
     """Ejecuta la evaluación confirmatoria (o su ensayo) y devuelve los resultados y las decisiones.
 
@@ -240,11 +255,10 @@ def run_confirmatory(cfg: ConfirmatoryConfig) -> ConfirmatoryResults:
     prereg, parametros = comprobar_puertas(cfg)
     salida = Path(cfg.directorio_salida)
     oficial = cfg.modo == "oficial"
+    inicio = _ahora()
     if oficial:
         salida.mkdir(parents=True, exist_ok=True)
-        (salida / ARCHIVO_DE_EJECUCION).write_text(
-            json.dumps({"inicio": datetime.now(timezone.utc).isoformat(), "estado": "iniciada"}, indent=2), encoding="utf-8"
-        )
+        marcar_ejecucion(salida, "iniciada", inicio)
 
     # En el ensayo solo se leen las campañas de entrenamiento del piloto; en la corrida oficial, todas.
     if oficial:
@@ -305,10 +319,7 @@ def run_confirmatory(cfg: ConfirmatoryConfig) -> ConfirmatoryResults:
         verificaciones={"max_diferencia_prediccion_cnn_reentrenada_kg_ha": diferencias},
     )
     if oficial:
-        (salida / ARCHIVO_DE_EJECUCION).write_text(
-            json.dumps({"inicio": p0["fecha"], "fin": datetime.now(timezone.utc).isoformat(), "estado": "completada"}, indent=2),
-            encoding="utf-8",
-        )
+        marcar_ejecucion(salida, "completada", inicio, _ahora())
     return resultados
 
 

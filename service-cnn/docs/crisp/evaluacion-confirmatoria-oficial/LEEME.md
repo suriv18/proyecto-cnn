@@ -44,7 +44,7 @@ Se ejecutó una sola vez, sin ajuste manual. Ningún umbral, margen ni comparado
 
 ## Nota sobre `ejecucion_confirmatoria.json`
 
-Los campos `inicio` y `fin` muestran el mismo instante (23:07:23 UTC). El código escribió `inicio` con la fecha del final de la corrida y sobrescribió la hora real de arranque, que fue 22:30 UTC. Es un defecto de registro del control de ejecución; no afecta a ningún resultado. El archivo se conserva tal como salió.
+Los campos `inicio` y `fin` muestran el mismo instante (23:07:23 UTC). El código escribió `inicio` con la fecha del final de la corrida y sobrescribió la hora real de arranque, que fue 22:30 UTC. Es un defecto de registro del control de ejecución; no afecta a ningún resultado. El archivo se conserva tal como salió. El código se corrigió después de esta corrida (`marcar_ejecucion` en `src/evaluation/confirmatory_runner.py` conserva ahora la hora de inicio y tiene prueba); esta ejecución, que usó el código anterior, no se repite.
 
 ## Cómo comprobar la integridad
 
