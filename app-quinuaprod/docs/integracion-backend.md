@@ -1,23 +1,23 @@
 # Integración con el backend
 
-La UI consume `api/openapi.yaml` (OpenAPI 3.1), que es la fuente de verdad. Hoy responde MSW con una instantánea real de `service-cnn/`; el backend aún no existe. Este documento describe qué falta y cómo hacer el cambio.
+La UI consume `api/openapi.yaml` (OpenAPI 3.1), que es la fuente de verdad. El backend de solo lectura ya existe en `service-cnn/src/api` (FastAPI) y cumple ese contrato; la interfaz sigue usando por defecto los mocks de MSW con una instantánea de los mismos artefactos. Este documento describe cómo ejecutar el backend, qué falta y cómo cambiar de mocks al servicio real.
 
 ## Endpoints y su origen
 
 | Endpoint | Origen en `service-cnn/` | Estado |
 |---|---|---|
-| `GET /meta` | `reports/piloto_oficial/resultados.json` (p0, p4, p7), `data/processed/metadata.json`, `configs/preespecificacion.yaml` | Por implementar |
-| `GET /provincias` | `configs/provincias.csv` | Por implementar |
-| `GET /cobertura/embudo` | `reports/E1_matriz_cobertura_enmendado_2016_2025.json` | Por implementar |
-| `GET /cobertura/exclusiones` | `data/processed/exclusiones.csv` | Por implementar |
-| `GET /predicciones` | `reports/piloto_oficial/predicciones.csv` | Por implementar |
-| `GET /indicadores/y1` | `reports/piloto_oficial/p11_indicadores_y1.csv` | Por implementar |
-| `GET /indicadores/x1-x2` | `reports/piloto_oficial/resultados.json` (p11) | Por implementar |
-| `GET /indicadores/variabilidad-semillas` | `reports/piloto_oficial/p6_variabilidad_por_semilla.csv` | Por implementar |
-| `GET /explicabilidad` | `resultados.json` (p8) y `reports/he2_tecnico/resultados.json` | Por implementar |
-| `GET /sensibilidades` y `/sensibilidades/estratos` | `reports/sensibilidades/*.csv` | Por implementar |
-| `GET /preespecificacion` | `configs/preespecificacion.yaml` | Por implementar |
-| `POST /predicciones/inferir` | Predicciones del piloto (por observación) o el CNN-1D serializado (tensor editado) | Parcial: ver abajo |
+| `GET /meta` | `reports/piloto_oficial/resultados.json` (p0, p4, p7), `data/processed/metadata.json`, `configs/preespecificacion.yaml` | Implementado |
+| `GET /provincias` | `configs/provincias.csv` | Implementado |
+| `GET /cobertura/embudo` | `reports/E1_matriz_cobertura_enmendado_2016_2025.json` | Implementado |
+| `GET /cobertura/exclusiones` | `data/processed/exclusiones.csv` | Implementado |
+| `GET /predicciones` | `reports/piloto_oficial/predicciones.csv` | Implementado |
+| `GET /indicadores/y1` | `reports/piloto_oficial/p11_indicadores_y1.csv` | Implementado |
+| `GET /indicadores/x1-x2` | `reports/piloto_oficial/resultados.json` (p11) | Implementado |
+| `GET /indicadores/variabilidad-semillas` | `reports/piloto_oficial/p6_variabilidad_por_semilla.csv` | Implementado |
+| `GET /explicabilidad` | `resultados.json` (p8) y `reports/he2_tecnico/resultados.json` | Implementado |
+| `GET /sensibilidades` y `/sensibilidades/estratos` | `reports/sensibilidades/*.csv` | Implementado |
+| `GET /preespecificacion` | `configs/preespecificacion.yaml` | Implementado |
+| `POST /predicciones/inferir` | Predicciones del piloto (por observación) o el CNN-1D serializado (tensor editado) | Parcial: observaciones del piloto sí; tensor editado responde 501 |
 
 El mock de `POST /predicciones/inferir` devuelve la mediana entre semillas del CNN-1D y B2 ya calculadas por el piloto, sin SHAP (`shap: null`). Con `tensor` responde `501`.
 
@@ -29,13 +29,26 @@ El mock de `POST /predicciones/inferir` devuelve la mediana entre semillas del C
 4. **Valores no calculados.** Usar `null` (por ejemplo `NivelEmbudo.n` de N5, `shap`), nunca `0` ni cadenas vacías.
 5. **Paginación.** `GET /predicciones` acepta `limit` (máximo 5000) y `offset`; la UI pide 5000 por campaña de prueba (2160 filas).
 
-## Trabajo pendiente en `service-cnn/`
+## Ejecutar el backend
 
-- Crear `service-cnn/api/` (FastAPI) de solo lectura que valide sus respuestas contra el OpenAPI. Los artefactos de `reports/` están ignorados por git y se regeneran con DVC; el servicio debe leer de ahí o de una instantánea versionada.
-- **Declarar `pyarrow`** en `pyproject.toml`: el pipeline lee y escribe parquet y el entorno actual no lo tiene, por lo que `pd.read_parquet` falla.
+Desde `service-cnn/`, con las dependencias instaladas (`uv pip install -e ".[api,dev]"`):
+
+```sh
+.venv/Scripts/python.exe -m uvicorn src.api.main:app --port 8000
+```
+
+- Lee los artefactos de `reports/`, `data/processed/` y `configs/`. Si faltan, responde `503` con instrucciones.
+- `/docs` muestra el contrato de la interfaz (`openapi.yaml`) cuando el monorepo está completo.
+- `QUINUAPROD_RAIZ` cambia el directorio de datos y `QUINUAPROD_CORS_ORIGINS` los orígenes permitidos (por defecto, los de Vite: 5173 y 4173).
+- `GET /salud` responde sin necesitar datos (útil para el despliegue).
+- Pruebas: `.venv/Scripts/python.exe -m pytest tests/api`. Validan cada respuesta contra el YAML, la regla de campañas externas y la paridad con los fixtures de la interfaz.
+
+## Trabajo pendiente
+
 - **Serializar el CNN-1D** (`torch.save` o ONNX) y versionarlo con DVC. Hoy el pipeline entrena y evalúa al vuelo; sin modelo serializado el tensor editado seguirá respondiendo `501`.
 - **SHAP por observación** (matriz 6×5): hoy solo se exportan agregados. Si se quiere mostrar, el pipeline debe guardarlos y el contrato `ResultadoInferencia.shap` ya lo admite.
-- CORS para el origen de la UI.
+- **Despliegue:** la API no tiene autenticación ni límites de uso porque solo sirve resultados de investigación sin datos personales. Si se publica, hay que decidir si se restringe el acceso y configurar `QUINUAPROD_CORS_ORIGINS` con el dominio real.
+- **`matplotlib`:** `scripts/build_e3_report.py` lo importa y no está declarado; su prueba falla al recolectarse en un entorno limpio.
 
 ## Cambiar de mocks al backend real
 

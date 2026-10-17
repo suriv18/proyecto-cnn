@@ -18,11 +18,22 @@ dependencies = [
     "optuna>=4.0",
     "torch>=2.4",
     "shap>=0.46",
+    # El pipeline lee y escribe parquet (data/raw, data/processed); sin pyarrow pd.read_parquet falla.
+    "pyarrow>=15",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    # Pruebas del servicio: TestClient de FastAPI y validacion de respuestas contra el contrato OpenAPI.
+    "httpx>=0.27",
+    "jsonschema>=4.22",
+]
+# Servicio de solo lectura que expone los resultados del piloto (src/api). Opcional a proposito:
+# el pipeline de entrenamiento y evaluacion no lo necesita.
+api = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
 ]
 # geodata es opcional a propósito: src/ingestion/gee_client.py inyecta el
 # módulo `ee` en vez de importarlo a nivel de módulo, por lo que toda la
