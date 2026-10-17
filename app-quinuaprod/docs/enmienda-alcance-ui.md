@@ -1,6 +1,6 @@
 # Enmienda de alcance: visor de resultados (app-quinuaprod)
 
-**Estado:** BORRADOR para revisión del asesor. No modifica la tesis ni el registro E5; propone el texto de una enmienda.
+**Estado:** BORRADOR del autor, sin revisión de terceros. No modifica la tesis ni el registro E5; propone el texto de una enmienda.
 
 ## Qué cambia
 
@@ -28,7 +28,7 @@ Se propone añadir **app-quinuaprod**, un visor web de **solo lectura** de los r
 | Registro E5 | `configs/preespecificacion.yaml` |
 | Predicción interactiva | Predicciones del piloto; el tensor editado requiere un modelo serializado que hoy no existe |
 
-## Decisiones que requieren al asesor
+## Decisiones abiertas del autor
 
 1. ¿Se acepta ampliar el alcance a un visor de solo lectura? ¿Con qué audiencia (asesor, jurado, tomadores de decisión)?
 2. ¿Puede la pantalla de predicción interactiva aceptar un tensor editado? Exige serializar el CNN-1D tras el entrenamiento definitivo y decidir cómo se versiona el modelo.
