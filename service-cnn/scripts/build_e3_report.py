@@ -268,7 +268,7 @@ def main() -> None:
     ap.add_argument("--altitud", type=Path, default=Path("configs/altitud_cultivo_por_provincia.csv"))
     ap.add_argument("--area-cultivo", type=Path, default=Path("configs/area_cultivo_por_provincia.csv"))
     ap.add_argument("--mascara", type=Path, default=Path("data/manifest/mascara_agricola.yaml"))
-    ap.add_argument("--calibracion", type=Path, default=Path("reports/calibracion_mascara_amplitud.json"))
+    ap.add_argument("--calibracion", type=Path, default=Path("reports/calibracion_mascara_amplitud_2016_2020.json"))
     ap.add_argument("--sisagri-cache", type=Path, default=Path("data/interim/sisagri_quinua_8deptos.parquet"))
     ap.add_argument("--campanas-entrenamiento", type=int, nargs="+", default=[2016, 2017, 2018, 2019, 2020])
     ap.add_argument("--salida", type=Path, default=Path("docs/crisp/E3-informe-depuracion-eda.md"))
@@ -473,7 +473,7 @@ def main() -> None:
 
 **Fase CRISP-ML(Q):** F2 · Preparación de datos (actividades 3-5 del cronograma) · **Entregable:** E3
 **Proyecto:** Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana
-**Generado:** {hoy} · **Commit:** `{git_commit()}` · **Estado del conjunto:** `exploratorio = {str(meta['exploratorio']).lower()}` (no válido aún para la evaluación definitiva)
+**Generado:** {hoy} · **Commit:** `{git_commit()}` · **Estado del conjunto:** `exploratorio = {str(meta['exploratorio']).lower()}` ({'no válido aún para la evaluación definitiva' if meta['exploratorio'] else 'respaldo departamental estimado solo con ' + str(entren_camp[0]) + '–' + str(entren_camp[-1]) + ': válido para la evaluación definitiva'})
 
 > Este informe se regenera con `python scripts/build_e3_report.py`; ninguna cifra se transcribe a mano.
 > Las relaciones predictor–rendimiento y la distribución del objetivo usan **solo las campañas de entrenamiento
@@ -619,7 +619,7 @@ La quinua de Castilla se produce en la sierra (Pampacolca y Viraco) y no en la p
 3. **Potencia**: con {len(set(obs.campana_id) - set(entren_camp))} campañas externas los contrastes confirmatorios tendrán poca potencia; se reportarán tamaños de efecto e intervalos además de valores p.
 4. **Imputación y horizonte**: las celdas imputadas se marcan (`X_imputado`) y pueden usarse para análisis de sensibilidad; las ventanas ya respetan el horizonte de 30 días.
 5. **Escalas muy distintas** (radiación del orden de 10⁸ J/m² frente a NDVI < 1): la estandarización debe ajustarse solo con entrenamiento por pliegue.
-6. **Respaldo fenológico**: la alineación actual usó el nivel primario en el 100 % de las observaciones; el respaldo departamental por pliego queda disponible (`estimate_departmental_modal_dates`) para cuando se defina la ventana de entrenamiento.
+6. **Respaldo fenológico**: la alineación actual usó el nivel primario en el 100 % de las observaciones; el respaldo departamental (`estimate_departmental_modal_dates`) se estima solo con las campañas de entrenamiento (2016–2020, ventana inicial de E5) y no se necesitó.
 
 ## 9. Reproducibilidad
 
@@ -628,7 +628,7 @@ python scripts/run_ingestion.py --gee-project-id cnn-sentinel      # series crud
 python scripts/calibrate_mask_amplitude.py                          # umbral de amplitud NDVI
 python scripts/derive_altitud_cultivo.py                            # altitud del cultivo por provincia y covariable estática
 python scripts/derive_area_cultivo.py                               # área de cultivo por provincia (requiere GEE)
-python scripts/run_preprocessing.py --archivo-sisagri <SISAGRI.xlsx> --exploratorio --dias-antes-de-cosecha 30
+python scripts/run_preprocessing.py --archivo-sisagri <SISAGRI.xlsx> --campanas-entrenamiento 2016 2017 2018 2019 2020 --dias-antes-de-cosecha 30
 python scripts/build_e3_report.py                                   # este informe
 ```
 

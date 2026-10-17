@@ -2,7 +2,7 @@
 
 **Fase CRISP-ML(Q):** F2 · Preparación de datos (actividades 3-5 del cronograma) · **Entregable:** E3
 **Proyecto:** Modelo CNN-1D interpretable con SHAP para predecir el rendimiento de quinua en la sierra peruana
-**Generado:** 2026-10-10 · **Commit:** `5429ba0` · **Estado del conjunto:** `exploratorio = true` (no válido aún para la evaluación definitiva)
+**Generado:** 2026-10-17 · **Commit:** `fa61141` · **Estado del conjunto:** `exploratorio = false` (respaldo departamental estimado solo con 2016–2020: válido para la evaluación definitiva)
 
 > Este informe se regenera con `python scripts/build_e3_report.py`; ninguna cifra se transcribe a mano.
 > Las relaciones predictor–rendimiento y la distribución del objetivo usan **solo las campañas de entrenamiento
@@ -22,8 +22,8 @@
 | Artefacto | Ruta | sha256 (16 primeros) |
 |---|---|---|
 | Series crudas GEE | data/raw/gee_series_crudo.parquet | 6e7a991a53c8eba2… |
-| Tensores V×T | data/processed/tensores.npz | 3a44df550568e9af… |
-| Observaciones | data/processed/observaciones.parquet | f3b787f3b91eaf6e… |
+| Tensores V×T | data/processed/tensores.npz | 15d7f9446cb3717e… |
+| Observaciones | data/processed/observaciones.parquet | 3d651afd1e25aed8… |
 
 Fuentes: SIEA-MIDAGRI (rendimiento y siembra, `SISAGRI.xlsx`); CHIRPS v2.0 (precipitación); ERA5-Land DAILY_AGGR (temperaturas y radiación); MODIS MOD13Q1 V061 (NDVI, 250 m) sobre la máscara agrícola (ESA WorldCover v200 2021 + SRTM). Procedencia por variable, hashes y el incidente de extracción: `data/manifest/gee_series_climaticas_espectrales.yaml`.
 
@@ -209,7 +209,7 @@ La quinua de Castilla se produce en la sierra (Pampacolca y Viraco) y no en la p
 3. **Potencia**: con 5 campañas externas los contrastes confirmatorios tendrán poca potencia; se reportarán tamaños de efecto e intervalos además de valores p.
 4. **Imputación y horizonte**: las celdas imputadas se marcan (`X_imputado`) y pueden usarse para análisis de sensibilidad; las ventanas ya respetan el horizonte de 30 días.
 5. **Escalas muy distintas** (radiación del orden de 10⁸ J/m² frente a NDVI < 1): la estandarización debe ajustarse solo con entrenamiento por pliegue.
-6. **Respaldo fenológico**: la alineación actual usó el nivel primario en el 100 % de las observaciones; el respaldo departamental por pliego queda disponible (`estimate_departmental_modal_dates`) para cuando se defina la ventana de entrenamiento.
+6. **Respaldo fenológico**: la alineación actual usó el nivel primario en el 100 % de las observaciones; el respaldo departamental (`estimate_departmental_modal_dates`) se estima solo con las campañas de entrenamiento (2016–2020, ventana inicial de E5) y no se necesitó.
 
 ## 9. Reproducibilidad
 
@@ -218,7 +218,7 @@ python scripts/run_ingestion.py --gee-project-id cnn-sentinel      # series crud
 python scripts/calibrate_mask_amplitude.py                          # umbral de amplitud NDVI
 python scripts/derive_altitud_cultivo.py                            # altitud del cultivo por provincia y covariable estática
 python scripts/derive_area_cultivo.py                               # área de cultivo por provincia (requiere GEE)
-python scripts/run_preprocessing.py --archivo-sisagri <SISAGRI.xlsx> --exploratorio --dias-antes-de-cosecha 30
+python scripts/run_preprocessing.py --archivo-sisagri <SISAGRI.xlsx> --campanas-entrenamiento 2016 2017 2018 2019 2020 --dias-antes-de-cosecha 30
 python scripts/build_e3_report.py                                   # este informe
 ```
 
