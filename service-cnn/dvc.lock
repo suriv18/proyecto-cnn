@@ -26,3 +26,58 @@ stages:
       hash: md5
       md5: 6ad3ad369c8efac947d28ff2dcc92dbc
       size: 81
+  serializar_modelo:
+    cmd: python scripts/export_modelo.py --procesado data/processed --piloto 
+      reports/piloto_oficial --salida models/cnn1d_piloto
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 7405d8f25f94724d6144eb55f0a21f0b.dir
+      size: 188792
+      nfiles: 9
+    - path: reports/piloto_oficial/predicciones.csv
+      hash: md5
+      md5: e8e21d8a12db51be1e80023545d70acc
+      size: 267039
+    - path: reports/piloto_oficial/resultados.json
+      hash: md5
+      md5: 8379ec0b817f9a29a061bd6d0e4163ae
+      size: 2891
+    - path: scripts/export_modelo.py
+      hash: md5
+      md5: 4b66dbfcec10ee08576317a4c8a3f478
+      size: 5090
+    - path: src/evaluation/experiment_runner.py
+      hash: md5
+      md5: 16268764ab5c3f06ae77781e2b95f127
+      size: 13596
+    - path: src/evaluation/fold_builder.py
+      hash: md5
+      md5: 9ddee37f0a4f09aa824cf73452827316
+      size: 9512
+    - path: src/features/target_transform.py
+      hash: md5
+      md5: d4ff1c89a66bc1ac2dcb98494db5528e
+      size: 4680
+    - path: src/models/cnn1d.py
+      hash: md5
+      md5: 3a83949f18cc5918ded19a9025cf2c16
+      size: 4741
+    - path: src/models/cnn1d_trainer.py
+      hash: md5
+      md5: 1dea2728c63ae2ea9ab18a96c4b76388
+      size: 7297
+    - path: src/models/exportacion.py
+      hash: md5
+      md5: 7bff9bee117717c1f4e046eb886e1fca
+      size: 5967
+    - path: src/models/inferencia.py
+      hash: md5
+      md5: 5c9641db9e665410bf79533afc01a14f
+      size: 8137
+    outs:
+    - path: models/cnn1d_piloto
+      hash: md5
+      md5: b0e9261fdbab824e868e2eea3a8c8a11.dir
+      size: 91101
+      nfiles: 5

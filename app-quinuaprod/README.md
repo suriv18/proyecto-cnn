@@ -71,7 +71,7 @@ La adaptación local conserva `lib/api` como infraestructura compartida y crea �
 - **Accesibilidad (axe, WCAG 2.1 AA):** todas las pantallas en tema claro y oscuro, y el menú móvil abierto.
 - **Datos:** ninguna pantalla muestra campañas externas 2021-2025; una prueba e2e lo verifica.
 
-Integración con el backend: [docs/integracion-backend.md](docs/integracion-backend.md). Cambio de alcance respecto de la tesis: [docs/enmienda-alcance-ui.md](docs/enmienda-alcance-ui.md).
+Integración con el backend: [docs/integracion-backend.md](docs/integracion-backend.md). Despliegue: [docs/despliegue.md](docs/despliegue.md). Cambio de alcance respecto de la tesis: [docs/enmienda-alcance-ui.md](docs/enmienda-alcance-ui.md).
 
 ## Validación y generación
 

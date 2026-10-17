@@ -51,17 +51,20 @@ El tensor editado se predice con la CNN-1D del piloto, guardada en `service-cnn/
 .venv/Scripts/python.exe scripts/export_modelo.py
 ```
 
+También es la etapa `serializar_modelo` de `dvc.yaml`. Se ejecuta **de forma aislada** para que DVC no relance la ingesta contra Earth Engine: `dvc repro -s serializar_modelo` (con el `.venv` en el `PATH`). `dvc status serializar_modelo` indica si el modelo está al día respecto de los datos, el código y los resultados del piloto.
+
 - **Qué es:** el mismo entrenamiento del último pliego del piloto: campañas 2016-2019, representación en anomalía, hiperparámetros de P7 y semillas 0 a 9. Los toma de `reports/piloto_oficial/resultados.json`.
 - **Se verifica solo:** al terminar compara sus predicciones con `predicciones.csv` del piloto y falla si difieren en más de 0,01 kg/ha (diferencia actual: 0,000035).
-- **Formato:** `pesos.npz`, `preprocesador.npz`, `lineas_base.json` y `modelo.json` (tarjeta con arquitectura, campañas, huella de los pesos y advertencias). Sin `pickle`; el servicio los lee con NumPy y **no necesita PyTorch**.
+- **Formato:** `pesos.npz`, `preprocesador.npz`, `fondo.npz` (referencia de SHAP), `lineas_base.json` y `modelo.json` (tarjeta con arquitectura, campañas, huella de los pesos y advertencias). Sin `pickle`; el servicio los lee con NumPy y **no necesita PyTorch**.
 - **Cómo predice:** el modelo da la anomalía respecto de la línea base B2. El rendimiento es B2(provincia, campaña) más la mediana de las anomalías de las 10 semillas, como el piloto. Por eso con un tensor la solicitud exige `provincia_id` y `campana`.
-- **Límites:** `y_real` y `shap` van en `null`; una provincia sin historia de entrenamiento responde `404`; las campañas externas se rechazan con `422`. El resultado declara `vinculante` y `modelo_version` (la huella de los pesos).
+- **SHAP:** con un tensor, `shap` trae la matriz de variables por fases en kg/ha de la anomalía, promediada entre las 10 semillas. Se calcula en NumPy (DeepLIFT con regla de reescalado, el algoritmo de `shap.DeepExplainer`) con un fondo de 100 filas del entrenamiento guardado en `fondo.npz`, el mismo que usa el piloto. Reproduce al `shap` de la biblioteca y las contribuciones por fase que el piloto publicó en P8 (diferencia de ~1e-9), y cumple la precisión local. Describe lo que aprendió el modelo, no causalidad; las covariables no están en la matriz. En modo observación `shap` sigue en `null`.
+- **Límites:** `y_real` va en `null`; una provincia sin historia de entrenamiento responde `404`; las campañas externas se rechazan con `422`. El resultado declara `vinculante` y `modelo_version` (la huella de los pesos).
 
 ## Trabajo pendiente
 
 - **Modelo definitivo:** el modelo serializado es el del piloto, no el de la evaluación confirmatoria. Tras congelar E5 y entrenar con la ventana definitiva hay que volver a exportarlo.
-- **Versionar el modelo:** hoy se regenera con un script y `models/` no se sube a git. Si se quiere versionar con DVC, falta declarar la etapa en `dvc.yaml`.
-- **SHAP por observación** (matriz 6×5): hoy solo se exportan agregados. Si se quiere mostrar, el pipeline debe guardarlos y el contrato `ResultadoInferencia.shap` ya lo admite.
+- **Almacenamiento remoto del modelo:** la etapa de DVC ya existe, pero no hay un remoto configurado (`dvc push`); `models/` no se sube a git. Para desplegar, el modelo se genera en el servidor con el script o se copia la carpeta.
+- **SHAP en modo observación:** solo se calcula con un tensor. Para mostrarlo al consultar una observación del piloto haría falta leer su tensor de `data/processed` (parquet) desde el servicio.
 - **Despliegue:** la API no tiene autenticación ni límites de uso porque solo sirve resultados de investigación sin datos personales. Si se publica, hay que decidir si se restringe el acceso y configurar `QUINUAPROD_CORS_ORIGINS` con el dominio real.
 - **`matplotlib`:** `scripts/build_e3_report.py` lo importa y no está declarado; su prueba falla al recolectarse en un entorno limpio.
 

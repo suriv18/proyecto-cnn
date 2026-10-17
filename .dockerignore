@@ -1,0 +1,30 @@
+# Contexto de construcción desde la raíz del repositorio: se excluye todo y se permite solo lo que
+# service-cnn/Dockerfile copia. Así no se envía al daemon el .venv, node_modules ni los datos crudos
+# (DATA_PERFIL_PRODUCTIVO_CULTIVO pesa cientos de MB).
+*
+
+!service-cnn/Dockerfile
+!service-cnn/src/__init__.py
+!service-cnn/src/api
+!service-cnn/src/models/__init__.py
+!service-cnn/src/models/inferencia.py
+!service-cnn/src/explainability/__init__.py
+!service-cnn/src/explainability/shap_numpy.py
+!service-cnn/configs/provincias.csv
+!service-cnn/configs/preespecificacion.yaml
+!service-cnn/data/processed/exclusiones.csv
+!service-cnn/data/processed/metadata.json
+!service-cnn/reports/E1_matriz_cobertura_enmendado_2016_2025.json
+!service-cnn/reports/piloto_oficial/resultados.json
+!service-cnn/reports/piloto_oficial/predicciones.csv
+!service-cnn/reports/piloto_oficial/p11_indicadores_y1.csv
+!service-cnn/reports/piloto_oficial/p6_variabilidad_por_semilla.csv
+!service-cnn/reports/he2_tecnico/resultados.json
+!service-cnn/reports/sensibilidades/sensibilidades_rmse.csv
+!service-cnn/reports/sensibilidades/error_por_estrato_de_quinua.csv
+!service-cnn/models/cnn1d_piloto
+!app-quinuaprod/api/openapi.yaml
+
+# Lo que no debe entrar aunque esté dentro de una carpeta permitida.
+**/__pycache__
+**/*.pyc

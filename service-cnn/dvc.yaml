@@ -111,3 +111,29 @@ stages:
       - reports/resultados_por_pliegue
     outs:
       - reports/E6_interpretabilidad
+
+  serializar_modelo:
+    # Serializa la CNN-1D del piloto (el mismo entrenamiento de su último pliego) para el servicio de
+    # solo lectura (src/api). Usa las campañas permitidas del piloto, así que no toca las externas.
+    # Verifica contra predicciones.csv y falla si el modelo no reproduce al piloto.
+    # El piloto (scripts/run_pilot.py) no es una etapa de DVC: sus resultados entran aquí como dependencias.
+    cmd: >-
+      python scripts/export_modelo.py
+      --procesado data/processed
+      --piloto reports/piloto_oficial
+      --salida models/cnn1d_piloto
+    deps:
+      - scripts/export_modelo.py
+      - src/models/exportacion.py
+      - src/models/inferencia.py
+      - src/explainability/shap_step.py
+      - src/models/cnn1d.py
+      - src/models/cnn1d_trainer.py
+      - src/evaluation/experiment_runner.py
+      - src/evaluation/fold_builder.py
+      - src/features/target_transform.py
+      - data/processed
+      - reports/piloto_oficial/resultados.json
+      - reports/piloto_oficial/predicciones.csv
+    outs:
+      - models/cnn1d_piloto
