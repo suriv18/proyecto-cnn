@@ -1,4 +1,4 @@
-# Plantilla de nginx para la interfaz (NO PROBADA: no se pudo ejecutar nginx al escribirla).
+# Plantilla de nginx para la interfaz (probada con la imagen de la interfaz y docker compose).
 # Las variables ${...} las sustituye la imagen al arrancar; las de nginx ($uri, $host...) no se tocan.
 server {
     listen 8080;

@@ -1,7 +1,7 @@
 # Interfaz + backend de app-quinuaprod. Ejecutar desde la raíz del repositorio:
 #     docker compose up --build        # luego abrir http://localhost:8080
 #
-# NO PROBADO: se escribió sin poder construir ni levantar las imágenes (el servicio de Docker estaba apagado).
+# Probado: las dos imágenes construyen, los contenedores quedan «healthy» y la interfaz en :8080 consulta la API por nginx.
 # Antes de construir deben existir los artefactos del backend (ver service-cnn/Dockerfile).
 services:
   api:

@@ -8,7 +8,7 @@
 # así no hace falta CORS. Para llamar a otra URL, fíjala al construir:
 #     docker build --build-arg VITE_API_URL=https://api.ejemplo.org/api/v1 -t quinuaprod-web app-quinuaprod
 #
-# NO PROBADO: este archivo y nginx.conf.template se escribieron sin poder construir la imagen.
+# Probado con `docker compose up --build`: la imagen construye y corre como usuario sin privilegios.
 FROM node:24-alpine AS compilar
 WORKDIR /app
 COPY package.json package-lock.json ./

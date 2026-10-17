@@ -15,10 +15,12 @@ Ninguna pieza escribe datos y no hay datos personales (RNF5). Por defecto la API
 | Límite de uso y clave de API (`src/api/acceso.py`) | Probado: 18 pruebas, incluidas las cabeceras CORS en los errores 401 y 429 |
 | Lista de archivos de la imagen del backend (`COPY` y `.dockerignore`) | Probada: se replicó en un directorio y se ejecutó solo con `pandas`, `pyyaml`, `fastapi` y `uvicorn` (sin `torch` ni `shap`); todos los endpoints respondieron 200 |
 | El build de la interfaz no publica los mocks | Probado: sin `--mode mocks` el `dist` no contiene `mockServiceWorker.js` ni el código de MSW |
-| **`docker build` del backend y de la interfaz, y `docker-compose.yml`** | **No probados**: en el equipo de desarrollo el servicio de Docker estaba apagado |
-| **`nginx.conf.template`** | **No probada**: no se pudo ejecutar nginx al escribirla |
+| `docker build` del backend y de la interfaz, y `docker-compose.yml` | Probados con `docker compose up --build`: las dos imágenes construyen, los contenedores quedan `healthy` y corren sin privilegios (usuarios 10001 y 101) |
+| `nginx.conf.template` | Probada: `/` y una ruta directa como `/cobertura` devuelven la interfaz, `/api/v1/meta` llega al backend, `nosniff` y `Referrer-Policy` presentes y `mockServiceWorker.js` no se publica |
+| Predicción por tensor dentro de Docker | Probada en el navegador (ABANCAY 2020 → 2.330 kg/ha, con SHAP), sin `torch` en la imagen |
+| **Sin probar en Docker** | La clave de API y el límite de uso detrás de nginx (solo se probaron con pruebas automáticas); el hosting final; las imágenes en otra arquitectura |
 
-Antes de publicar, construye las imágenes, levanta los contenedores (ver abajo) y comprueba `GET /salud` y que la interfaz cargue y navegue.
+Antes de publicar, repite el recorrido con tus datos: construye las imágenes, levanta los contenedores (ver abajo) y comprueba `GET /salud` y que la interfaz cargue y navegue.
 
 ## Backend
 
@@ -84,7 +86,7 @@ El servidor de estáticos debe:
 2. Servir `/assets/*` con caché larga: los nombres llevan huella y cambian en cada versión. `index.html` no debe cachearse.
 3. Opcional pero recomendable: `X-Content-Type-Options: nosniff` y `Referrer-Policy: same-origin`.
 
-### Con Docker (no probado)
+### Con Docker
 
 `app-quinuaprod/Dockerfile` compila la interfaz y la sirve con nginx sin privilegios; `nginx.conf.template` ya cumple las tres reglas anteriores y reenvía `/api/` al backend (`API_UPSTREAM`), de modo que la interfaz y la API comparten origen y no hace falta CORS:
 
