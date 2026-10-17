@@ -95,13 +95,20 @@ describe('POST /predicciones/inferir', () => {
     expect(data?.shap).toBeNull()
   })
 
-  it('501 si se envía un tensor editado (no hay modelo serializado)', async () => {
+  const tensor = { valores: Array.from({ length: 6 }, () => [0, 0, 0, 0, 0]), altitud_media_m: 3800, prop_quinua: 0.1 }
+
+  it('501 si se envía un tensor editado (los mocks no incluyen el modelo)', async () => {
     const { response } = await api.POST('/predicciones/inferir', {
-      body: {
-        tensor: { valores: Array.from({ length: 6 }, () => [0, 0, 0, 0, 0]), altitud_media_m: 3800, prop_quinua: 0.1 },
-      },
+      body: { provincia_id: ref.provincia_id, campana: 2020, tensor },
     })
     expect(response.status).toBe(501)
+  })
+
+  it('con un tensor exige provincia y campaña, y rechaza campañas externas', async () => {
+    const sinProvincia = await api.POST('/predicciones/inferir', { body: { campana: 2020, tensor } })
+    expect(sinProvincia.response.status).toBe(422)
+    const externa = await api.POST('/predicciones/inferir', { body: { provincia_id: ref.provincia_id, campana: 2022, tensor } })
+    expect(externa.response.status).toBe(422)
   })
 
   it('422 para una campaña no permitida y 404 fuera de las campañas de prueba', async () => {

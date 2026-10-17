@@ -19,3 +19,11 @@ export const useObservacionesDisponibles = (campana: number | undefined) =>
       return pagina.items.map((p) => p.provincia_id).sort()
     },
   })
+
+/** Provincias del ámbito del análisis: las de otros regímenes (selva, costa con riego) no tienen historia de entrenamiento. */
+export const useProvinciasDelAnalisis = () =>
+  useQuery({
+    queryKey: ['provincias', 'analisis'],
+    queryFn: async () => unwrap(await api.GET('/provincias')),
+    select: (todas) => todas.filter((p) => p.clasificacion === 'altoandina' || p.clasificacion === 'transicion'),
+  })

@@ -182,16 +182,18 @@ describe('Predicción interactiva', () => {
     expect(within(form).queryByRole('region', { name: 'Resultado de la inferencia' })).not.toBeInTheDocument()
   })
 
-  it('un tensor completo recibe «No implementado» (sin modelo serializado)', async () => {
+  it('un tensor completo, con provincia y campaña, recibe «No implementado» de los datos de demostración', async () => {
     const user = userEvent.setup()
     await renderApp('/inferencia')
     const form = await screen.findByRole('form', { name: 'Inferencia sobre un tensor editado' })
     await waitFor(() => expect(within(form).getAllByRole('spinbutton').length).toBe(32))
+    await waitFor(() => expect(within(form).getByLabelText('Provincia')).not.toHaveValue(''))
+    expect(within(form).getByLabelText('Campaña')).toHaveValue('2020')
     for (const campo of within(form).getAllByRole('spinbutton')) fireEvent.change(campo, { target: { value: '1' } })
     await user.click(within(form).getByRole('button', { name: 'Predecir con el tensor' }))
     const alerta = await within(form).findByRole('alert')
     expect(alerta).toHaveTextContent('No implementado')
-    expect(alerta).toHaveTextContent(/serializado/)
+    expect(alerta).toHaveTextContent(/modelo CNN-1D/)
   })
 })
 

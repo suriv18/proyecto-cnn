@@ -23,8 +23,9 @@ export default function InferenciaPage() {
         titulo="Tensor editado"
         descripcion={
           <span role="note">
-            Predice sobre un tensor que usted escribe. Requiere el modelo CNN-1D serializado en el servidor; mientras no
-            exista, la respuesta es «No implementado».
+            Predice con la CNN-1D del piloto sobre un tensor que usted escribe. El modelo se entrenó solo con campañas de
+            entrenamiento y su estado se indica en el resultado. Si el servidor no tiene el modelo serializado, la
+            respuesta es «No implementado».
           </span>
         }
       >

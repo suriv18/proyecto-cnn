@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { CLASE_BOTON } from '@/components/Boton'
-import { CLASE_CONTROL } from '@/components/Campo'
+import { CLASE_CONTROL, Campo } from '@/components/Campo'
 import { useEstadoPiloto } from '@/lib/api/useEstadoPiloto'
 import { colorFase, etiquetaFaseCorta } from '@/lib/fases'
 import { formatEtiqueta } from '@/lib/format'
-import { useInferir } from './api/queries'
+import { useInferir, useProvinciasDelAnalisis } from './api/queries'
 import { ErrorInferencia, ResultadoInferencia } from './ResultadoInferencia'
 import { tensorSchema, type TensorForm } from './tensorSchema'
 
@@ -16,6 +17,13 @@ export function FormTensor() {
   const variables = piloto.data?.orden_variables ?? []
   const fases = piloto.data?.orden_fases ?? []
   const inferir = useInferir()
+  // La línea base B2 depende de la provincia y de la campaña; el modelo predice la anomalía respecto de ella.
+  const provincias = useProvinciasDelAnalisis().data ?? []
+  const campanas = piloto.data?.campanas_permitidas ?? []
+  const [provinciaElegida, setProvincia] = useState('')
+  const [campanaElegida, setCampana] = useState('')
+  const provincia = provinciaElegida || provincias[0]?.provincia_id || ''
+  const campana = campanaElegida || String(campanas.at(-1) ?? '')
   // Sin valores iniciales a propósito: no se propone ningún dato que no sea del usuario.
   const { register, handleSubmit, formState: { errors } } = useForm<TensorForm>({ resolver: zodResolver(tensorSchema) })
 
@@ -25,9 +33,36 @@ export function FormTensor() {
       noValidate
       className="rounded-lg border border-line bg-paper p-5"
       onSubmit={handleSubmit((t) =>
-        inferir.mutate({ tensor: { valores: t.valores, altitud_media_m: t.altitud_media_m, prop_quinua: t.prop_quinua } }),
+        inferir.mutate({
+          provincia_id: provincia,
+          campana: Number(campana),
+          tensor: { valores: t.valores, altitud_media_m: t.altitud_media_m, prop_quinua: t.prop_quinua },
+        }),
       )}
     >
+      <div className="mb-5 flex flex-wrap items-end gap-4">
+        <Campo
+          etiqueta="Provincia"
+          valor={provincia}
+          onChange={(v) => {
+            setProvincia(v)
+            inferir.reset()
+          }}
+          opciones={provincias.map((p) => ({ valor: p.provincia_id, etiqueta: p.provincia_id }))}
+        />
+        <Campo
+          etiqueta="Campaña"
+          valor={campana}
+          onChange={(v) => {
+            setCampana(v)
+            inferir.reset()
+          }}
+          opciones={campanas.map((c) => ({ valor: String(c), etiqueta: String(c) }))}
+        />
+        <p className="max-w-md pb-2 text-xs text-muted">
+          El modelo predice la anomalía respecto de la línea base B2 de esta provincia y campaña; el rendimiento es B2 más esa anomalía.
+        </p>
+      </div>
       <div className="relative overflow-auto" role="region" aria-label="Tensor de entrada" tabIndex={0}>
         <table className="text-sm">
           <caption className="sr-only">Valores por variable y fase</caption>
@@ -82,7 +117,7 @@ export function FormTensor() {
         </p>
       )}
 
-      <button type="submit" disabled={inferir.isPending} className={`${CLASE_BOTON} mt-5`}>
+      <button type="submit" disabled={inferir.isPending || !provincia} className={`${CLASE_BOTON} mt-5`}>
         {inferir.isPending ? 'Calculando…' : 'Predecir con el tensor'}
       </button>
       {inferir.isError && <ErrorInferencia error={inferir.error} />}

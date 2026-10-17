@@ -100,13 +100,20 @@ export const handlers = [
     return HttpResponse.json(body)
   }),
 
-  // Sin modelo serializado no se puede inferir sobre un tensor editado (501). Para una observación
-  // de las campañas de prueba se devuelve la predicción REAL ya calculada por el piloto
-  // (mediana de semillas del CNN-1D y B2); SHAP por celda no existe en reports/, por eso es null.
+  // Los mocks no ejecutan el modelo: con un tensor validan igual que el backend (provincia y campaña
+  // obligatorias, campaña permitida) y responden 501, porque inventar una predicción sería falsear datos.
+  // Para una observación de las campañas de prueba se devuelve la predicción REAL ya calculada por el
+  // piloto (mediana de semillas del CNN-1D y B2); SHAP por celda no existe en reports/, por eso es null.
   http.post(`${BASE}/predicciones/inferir`, async ({ request }) => {
     const req = (await request.json()) as Schemas['SolicitudInferencia']
     if (req.tensor) {
-      return problema(501, 'No implementado', 'Predecir sobre un tensor editado requiere el CNN-1D serializado, que aún no existe.')
+      if (!req.provincia_id || req.campana === undefined) {
+        return problema(422, 'Solicitud inválida', 'Con un tensor indique también provincia_id y campana: la línea base B2 depende de ellas.')
+      }
+      if (!DB.meta.campanas_permitidas.includes(req.campana)) {
+        return problema(422, 'Campaña no permitida', `Campañas permitidas: ${DB.meta.campanas_permitidas.join(', ')}.`)
+      }
+      return problema(501, 'No implementado', 'Los datos de demostración no incluyen el modelo CNN-1D; use el backend para predecir sobre un tensor.')
     }
     if (!req.provincia_id || req.campana === undefined) {
       return problema(422, 'Solicitud inválida', 'Indique provincia_id y campana, o un tensor.')
